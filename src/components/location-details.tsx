@@ -10,7 +10,7 @@ import { ScrollArea } from './ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Calendar as CalendarIcon, Info } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { format, addDays, parse, getDay, eachDayOfInterval } from 'date-fns';
@@ -101,7 +101,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
     return allBookings;
   }, [location, selectedDates]);
   
-  const isTimeSlotUnavailable = (time: string, checkDate: Date | undefined): boolean => {
+  const isTimeSlotUnavailable = useCallback((time: string, checkDate: Date | undefined): boolean => {
     if (!checkDate) return false;
 
     const day = getDay(checkDate); // Sunday = 0, Monday = 1, etc.
@@ -124,19 +124,9 @@ export function LocationDetails({ location }: LocationDetailsProps) {
     }
 
     return false;
-  };
+  }, []);
 
-  const isTimeSlotBooked = (time: string, checkDate: Date) => {
-    const checkTime = parse(time, 'HH:mm', checkDate).getTime();
-
-    return locationBookingsForDay(checkDate).some(booking => {
-        const bookingStart = new Date(booking.startTime).getTime();
-        const bookingEnd = new Date(booking.endTime).getTime();
-        return checkTime >= bookingStart && checkTime < bookingEnd;
-    });
-  };
-  
-  const locationBookingsForDay = (day: Date) => {
+  const locationBookingsForDay = useCallback((day: Date) => {
     if (!location) return [];
     const formattedDate = format(day, "yyyy-MM-dd");
     return bookings.filter(b => 
@@ -144,9 +134,19 @@ export function LocationDetails({ location }: LocationDetailsProps) {
         format(new Date(b.startTime), "yyyy-MM-dd") === formattedDate &&
         b.status === 'approved'
     );
-  }
+  }, [location]);
 
-  const isTimeSlotDisabled = (time: string) => {
+  const isTimeSlotBooked = useCallback((time: string, checkDate: Date) => {
+    const checkTime = parse(time, 'HH:mm', checkDate).getTime();
+
+    return locationBookingsForDay(checkDate).some(booking => {
+        const bookingStart = new Date(booking.startTime).getTime();
+        const bookingEnd = new Date(booking.endTime).getTime();
+        return checkTime >= bookingStart && checkTime < bookingEnd;
+    });
+  }, [locationBookingsForDay]);
+  
+  const isTimeSlotDisabled = useCallback((time: string) => {
     if (selectedDates.length === 0) return true;
     for(const day of selectedDates) {
         if (isTimeSlotBooked(time, day) || isTimeSlotUnavailable(time, day)) {
@@ -154,7 +154,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
         }
     }
     return false;
-  }
+  }, [selectedDates, isTimeSlotBooked, isTimeSlotUnavailable]);
 
   const isRangeInvalid = useMemo(() => {
     if(!startTime || !endTime || selectedDates.length === 0) return false;
@@ -170,7 +170,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
         }
     }
     return false;
-  }, [startTime, endTime, selectedDates]);
+  }, [startTime, endTime, selectedDates, isTimeSlotBooked, isTimeSlotUnavailable]);
 
 
   const availableEndTimes = useMemo(() => {
@@ -189,7 +189,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
     // e.g. if 10:00 is available, you can book until 10:30
     return timeSlots.slice(startIndex + 1, endIndex + 1);
     
-  }, [startTime, date, isTimeSlotDisabled]);
+  }, [startTime, isTimeSlotDisabled]);
 
 
   if (!location) {
@@ -300,7 +300,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                       )}
                   </div>
                   <div className="md:col-span-2">
-                    <Button onClick={handleBooking} className="w-full" disabled={!!isRangeInvalid && (!date?.from || !date?.to || !startTime || !endTime)}>
+                    <Button onClick={handleBooking} className="w-full" disabled={isRangeInvalid || !date?.from || !startTime || !endTime}>
                         Book Now
                     </Button>
                   </div>

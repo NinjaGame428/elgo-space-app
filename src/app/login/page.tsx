@@ -21,7 +21,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     // This is a mock authentication.
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // await new Promise(resolve => setTimeout(resolve, 1000));
     
     localStorage.setItem('isLoggedIn', 'true');
     localStorage.setItem('userEmail', email);
