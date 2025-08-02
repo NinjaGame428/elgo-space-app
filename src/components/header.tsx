@@ -13,8 +13,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, Building2 } from 'lucide-react';
+import { User, Building2, Sun, Moon } from 'lucide-react';
 import { useSidebar } from './ui/sidebar';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 export function Header() {
   const t = useTranslations('Header');
@@ -54,13 +56,9 @@ export function Header() {
     router.refresh(); 
   };
 
-  const handleLocaleChange = (newLocale: string) => {
+  const handleLocaleChange = (isFrench: boolean) => {
+    const newLocale = isFrench ? 'fr' : 'en';
     router.replace(pathname, { locale: newLocale });
-  };
-
-  const toggleLocale = () => {
-    const newLocale = locale === 'en' ? 'fr' : 'en';
-    handleLocaleChange(newLocale);
   };
 
   const isAdmin = userEmail === 'test@example.com';
@@ -68,7 +66,7 @@ export function Header() {
   if (!isMounted) {
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container flex h-16 items-center max-w-[1550px] px-4">
+            <div className="flex h-16 items-center px-4 md:px-6">
                 <div className="mr-auto flex items-center">
                    {isAuthenticated && (
                        <Button variant="ghost" size="icon" className="md:hidden mr-2" onClick={toggleSidebar}>
@@ -87,7 +85,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center max-w-[1550px] px-4">
+      <div className="flex h-16 items-center px-4 md:px-6">
         <div className="mr-auto flex items-center">
             {isAuthenticated && (
                 <Button variant="ghost" size="icon" className="md:hidden mr-2" onClick={toggleSidebar}>
@@ -100,9 +98,16 @@ export function Header() {
             </Link>
         </div>
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" onClick={toggleLocale} size="sm">
-            {locale === 'en' ? 'FR' : 'EN'}
-          </Button>
+          <div className="flex items-center space-x-2">
+            <Label htmlFor="language-switch" className="font-semibold">EN</Label>
+            <Switch
+              id="language-switch"
+              checked={locale === 'fr'}
+              onCheckedChange={handleLocaleChange}
+              aria-label="Language switch"
+            />
+            <Label htmlFor="language-switch" className="font-semibold">FR</Label>
+          </div>
 
           <nav className="flex items-center">
             {isAuthenticated ? (
