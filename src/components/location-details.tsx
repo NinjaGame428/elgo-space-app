@@ -328,7 +328,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                     selected={approvedBookingsForLocation}
                     className="rounded-md p-0"
                     classNames={{
-                        day_selected: "bg-destructive/80 text-destructive-foreground hover:bg-destructive/90 focus:bg-destructive/90",
+                        day_selected: "bg-chart-5/80 text-primary-foreground hover:bg-chart-5/90 focus:bg-chart-5/90",
                     }}
                 />
               </div>
@@ -358,3 +358,5 @@ export function LocationDetails({ location }: LocationDetailsProps) {
     </div>
   );
 }
+
+    
