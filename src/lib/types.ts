@@ -1,3 +1,4 @@
+
 import type { ElementType } from 'react';
 
 export interface Amenity {
@@ -18,4 +19,13 @@ export interface Location {
   imageUrl: string;
   bookables: BookableItem[];
   amenities: Amenity[];
+}
+
+export interface Booking {
+  id: string;
+  locationId: string;
+  userEmail: string;
+  startTime: string;
+  endTime: string;
+  status: 'pending' | 'approved' | 'rejected';
 }

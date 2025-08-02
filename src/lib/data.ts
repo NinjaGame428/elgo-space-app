@@ -1,5 +1,10 @@
-import type { Location } from '@/lib/types';
+
+import type { Location, Booking } from '@/lib/types';
 import { Clock, Coffee, Printer, Phone, Wifi, Car, UtensilsCrossed } from 'lucide-react';
+import { addHours, formatISO } from 'date-fns';
+
+const today = new Date();
+const tomorrow = addHours(new Date(), 24);
 
 export const locations: Location[] = [
   {
@@ -77,4 +82,39 @@ export const locations: Location[] = [
       { name: 'Kitchenette', icon: UtensilsCrossed },
     ],
   },
+];
+
+export const bookings: Booking[] = [
+    {
+        id: 'booking-1',
+        locationId: 'secretariat',
+        userEmail: 'user1@example.com',
+        startTime: formatISO(addHours(new Date(today.setHours(10, 0, 0, 0)), 0)),
+        endTime: formatISO(addHours(new Date(today.setHours(10, 0, 0, 0)), 1)),
+        status: 'approved'
+    },
+    {
+        id: 'booking-2',
+        locationId: 'integration',
+        userEmail: 'user2@example.com',
+        startTime: formatISO(addHours(new Date(today.setHours(14, 0, 0, 0)), 0)),
+        endTime: formatISO(addHours(new Date(today.setHours(14, 0, 0, 0)), 2)),
+        status: 'pending'
+    },
+     {
+        id: 'booking-3',
+        locationId: 'sanctuaire',
+        userEmail: 'user3@example.com',
+        startTime: formatISO(addHours(new Date(tomorrow.setHours(11, 0, 0, 0)), 0)),
+        endTime: formatISO(addHours(new Date(tomorrow.setHours(11, 0, 0, 0)), 3)),
+        status: 'approved'
+    },
+     {
+        id: 'booking-4',
+        locationId: 'secretariat',
+        userEmail: 'user4@example.com',
+        startTime: formatISO(addHours(new Date(tomorrow.setHours(15, 0, 0, 0)), 0)),
+        endTime: formatISO(addHours(new Date(tomorrow.setHours(15, 0, 0, 0)), 1)),
+        status: 'rejected'
+    }
 ];
