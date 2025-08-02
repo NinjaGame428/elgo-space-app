@@ -17,6 +17,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { useTranslations } from 'next-intl';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 export default function DashboardPage() {
     const t = useTranslations('DashboardPage');
@@ -29,18 +30,19 @@ export default function DashboardPage() {
     
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
     const [isAdmin, setIsAdmin] = useState(false);
+    const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
     useEffect(() => {
-        const loggedInEmail = localStorage.getItem('userEmail');
+        const loggedInEmail = typeof window !== 'undefined' ? localStorage.getItem('userEmail') : null;
         if (loggedInEmail !== 'test@example.com') {
             router.push('/login');
             return;
         }
         setIsAdmin(true);
 
-        const storedBookings = localStorage.getItem('bookings');
-        const storedLocations = localStorage.getItem('locations');
-        const storedUsers = localStorage.getItem('users');
+        const storedBookings = typeof window !== 'undefined' ? localStorage.getItem('bookings') : null;
+        const storedLocations = typeof window !== 'undefined' ? localStorage.getItem('locations') : null;
+        const storedUsers = typeof window !== 'undefined' ? localStorage.getItem('users') : null;
 
         setBookings(storedBookings ? JSON.parse(storedBookings) : initialBookings);
         setLocations(storedLocations ? JSON.parse(storedLocations) : initialLocations);
@@ -49,7 +51,7 @@ export default function DashboardPage() {
     }, [router]);
 
     useEffect(() => {
-        if (isAdmin) {
+        if (isAdmin && typeof window !== 'undefined') {
             localStorage.setItem('bookings', JSON.stringify(bookings));
             localStorage.setItem('locations', JSON.stringify(locations));
             localStorage.setItem('users', JSON.stringify(users));
@@ -57,8 +59,10 @@ export default function DashboardPage() {
     }, [bookings, locations, users, isAdmin]);
 
     const handleLogout = () => {
-        localStorage.removeItem('isLoggedIn');
-        localStorage.removeItem('userEmail');
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userEmail');
+        }
         router.push('/');
     };
 
@@ -92,6 +96,16 @@ export default function DashboardPage() {
     }, [bookings, selectedDate]);
 
     const bookedDates = useMemo(() => bookings.map(b => new Date(b.startTime)), [bookings]);
+
+    const handleBookingClick = (booking: Booking) => {
+        setSelectedBooking(booking);
+    };
+    
+    const selectedBookingLocation = useMemo(() => {
+        if (!selectedBooking) return null;
+        return locations.find(l => l.id === selectedBooking.locationId);
+    }, [selectedBooking, locations]);
+
 
     if (!isAdmin) {
         return <div className="flex items-center justify-center min-h-screen">{t('loading')}</div>;
@@ -137,7 +151,7 @@ export default function DashboardPage() {
                                         bookingsForSelectedDay.map(booking => {
                                             const location = locations.find(l => l.id === booking.locationId);
                                             return (
-                                                <div key={booking.id} className="p-4 border rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                                <div key={booking.id} className="p-4 border rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 cursor-pointer hover:bg-muted/50" onClick={() => handleBookingClick(booking)}>
                                                     <div>
                                                         <p className="font-semibold">{location?.name || t('unknownLocation')}</p>
                                                         <p className="text-sm text-muted-foreground">
@@ -146,31 +160,40 @@ export default function DashboardPage() {
                                                         <p className="text-sm">{t('bookedBy', { email: booking.userEmail })}</p>
                                                     </div>
                                                     <div className="flex items-center gap-2">
-                                                        {booking.status === 'pending' && (
-                                                            <>
-                                                                <Button size="sm" onClick={() => handleApproval(booking.id, 'approved')}>{t('approve')}</Button>
-                                                                <Button size="sm" variant="destructive" onClick={() => handleApproval(booking.id, 'rejected')}>{t('reject')}</Button>
-                                                            </>
-                                                        )}
+                                                        {booking.status === 'pending' && <Badge variant="secondary">{t('pending')}</Badge>}
                                                         {booking.status === 'approved' && <Badge>{t('approved')}</Badge>}
                                                         {booking.status === 'rejected' && <Badge variant="destructive">{t('rejected')}</Badge>}
-                                                         <AlertDialog>
-                                                            <AlertDialogTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                                    <Trash2 className="h-4 w-4 text-destructive"/>
+                                                        <DropdownMenu onOpenChange={(open) => { if (open) { setSelectedBooking(booking) } }}>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
+                                                                    <MoreHorizontal className="h-4 w-4"/>
                                                                 </Button>
-                                                            </AlertDialogTrigger>
-                                                            <AlertDialogContent>
-                                                                <AlertDialogHeader>
-                                                                    <AlertDialogTitle>{t('areYouSure')}</AlertDialogTitle>
-                                                                    <AlertDialogDescription>{t('deleteBookingWarning')}</AlertDialogDescription>
-                                                                </AlertDialogHeader>
-                                                                <AlertDialogFooter>
-                                                                    <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-                                                                    <AlertDialogAction onClick={() => deleteBooking(booking.id)}>{t('delete')}</AlertDialogAction>
-                                                                </AlertDialogFooter>
-                                                            </AlertDialogContent>
-                                                        </AlertDialog>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                                                                {booking.status === 'pending' && (
+                                                                    <>
+                                                                        <DropdownMenuItem onClick={() => handleApproval(booking.id, 'approved')}>{t('approve')}</DropdownMenuItem>
+                                                                        <DropdownMenuItem onClick={() => handleApproval(booking.id, 'rejected')}>{t('reject')}</DropdownMenuItem>
+                                                                        <DropdownMenuSeparator />
+                                                                    </>
+                                                                )}
+                                                                <AlertDialog>
+                                                                    <AlertDialogTrigger asChild>
+                                                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">{t('delete')}</DropdownMenuItem>
+                                                                    </AlertDialogTrigger>
+                                                                    <AlertDialogContent>
+                                                                        <AlertDialogHeader>
+                                                                            <AlertDialogTitle>{t('areYouSure')}</AlertDialogTitle>
+                                                                            <AlertDialogDescription>{t('deleteBookingWarning')}</AlertDialogDescription>
+                                                                        </AlertDialogHeader>
+                                                                        <AlertDialogFooter>
+                                                                            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+                                                                            <AlertDialogAction onClick={() => deleteBooking(booking.id)}>{t('delete')}</AlertDialogAction>
+                                                                        </AlertDialogFooter>
+                                                                    </AlertDialogContent>
+                                                                </AlertDialog>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
                                                     </div>
                                                 </div>
                                             );
@@ -312,6 +335,40 @@ export default function DashboardPage() {
                     </CardContent>
                 </Card>
             </main>
+
+            <Dialog open={!!selectedBooking} onOpenChange={(isOpen) => !isOpen && setSelectedBooking(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{t('bookingDetails')}</DialogTitle>
+                        <DialogDescription>{t('bookingDetailsDescription')}</DialogDescription>
+                    </DialogHeader>
+                    {selectedBooking && (
+                        <div className="space-y-4">
+                            <div>
+                                <h4 className="font-semibold">{t('location')}</h4>
+                                <p>{selectedBookingLocation?.name}</p>
+                                <p className="text-sm text-muted-foreground">{selectedBookingLocation?.address}</p>
+                            </div>
+                            <div>
+                                <h4 className="font-semibold">{t('user')}</h4>
+                                <p>{selectedBooking.userEmail}</p>
+                            </div>
+                            <div>
+                                <h4 className="font-semibold">{t('dateTime')}</h4>
+                                <p>{format(new Date(selectedBooking.startTime), 'PPP, p')} - {format(new Date(selectedBooking.endTime), 'p')}</p>
+                            </div>
+                            <div>
+                                <h4 className="font-semibold">{t('status')}</h4>
+                                <Badge variant={
+                                    selectedBooking.status === 'approved' ? 'default' :
+                                    selectedBooking.status === 'rejected' ? 'destructive' : 'secondary'
+                                }>{t(selectedBooking.status as any)}</Badge>
+                            </div>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
+
         </div>
     );
 }

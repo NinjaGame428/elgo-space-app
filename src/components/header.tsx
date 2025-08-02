@@ -25,13 +25,17 @@ export function Header() {
   
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
     const checkAuthStatus = () => {
-      const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
-      const email = localStorage.getItem('userEmail');
-      setIsAuthenticated(loggedIn);
-      setUserEmail(email);
+      if (typeof window !== 'undefined') {
+          const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
+          const email = localStorage.getItem('userEmail');
+          setIsAuthenticated(loggedIn);
+          setUserEmail(email);
+      }
     };
     checkAuthStatus();
     
@@ -40,8 +44,10 @@ export function Header() {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('userEmail');
+    if (typeof window !== 'undefined') {
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('userEmail');
+    }
     setIsAuthenticated(false);
     setUserEmail(null);
     router.push('/');
@@ -53,6 +59,21 @@ export function Header() {
   };
 
   const isAdmin = userEmail === 'test@example.com';
+
+  if (!isMounted) {
+    return (
+        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <div className="container flex h-16 items-center max-w-[1550px] px-4">
+                <div className="mr-auto flex">
+                  <Link href="/" className="flex items-center space-x-2">
+                    <Building2 className="h-6 w-6" />
+                    <span className="font-bold text-lg">{t('title')}</span>
+                  </Link>
+                </div>
+            </div>
+        </header>
+    );
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">

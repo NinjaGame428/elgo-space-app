@@ -13,7 +13,8 @@ import { useTranslations } from 'next-intl';
 import type { Location } from '@/lib/types';
 import { allAmenities, locations as initialLocations } from '@/lib/data';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import Image from 'next/image';
 
 export default function AddRoomPage() {
     const t = useTranslations('AddRoomPage');
@@ -65,6 +66,17 @@ export default function AddRoomPage() {
         );
     };
 
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImageUrl(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     return (
         <div className="flex flex-col min-h-screen bg-background">
              <header className="flex items-center p-4 border-b">
@@ -88,9 +100,31 @@ export default function AddRoomPage() {
                                 <Label htmlFor="address">{t('addressLabel')}</Label>
                                 <Input id="address" value={address} onChange={e => setAddress(e.target.value)} required />
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="imageUrl">{t('imageUrlLabel')}</Label>
-                                <Input id="imageUrl" value={imageUrl} onChange={e => setImageUrl(e.target.value)} />
+                             <div className="space-y-2">
+                                <Label>{t('imageLabel')}</Label>
+                                <Tabs defaultValue="url">
+                                    <TabsList className="grid w-full grid-cols-2">
+                                        <TabsTrigger value="url">{t('urlTab')}</TabsTrigger>
+                                        <TabsTrigger value="upload">{t('uploadTab')}</TabsTrigger>
+                                    </TabsList>
+                                    <TabsContent value="url" className="pt-2">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="imageUrl" className="sr-only">{t('imageUrlLabel')}</Label>
+                                            <Input id="imageUrl" value={imageUrl} onChange={e => setImageUrl(e.target.value)} />
+                                        </div>
+                                    </TabsContent>
+                                    <TabsContent value="upload" className="pt-2">
+                                        <div className="space-y-2">
+                                             <Label htmlFor="imageUpload" className="sr-only">{t('imageUploadLabel')}</Label>
+                                            <Input id="imageUpload" type="file" accept="image/*" onChange={handleImageUpload} />
+                                        </div>
+                                    </TabsContent>
+                                </Tabs>
+                                {imageUrl && (
+                                    <div className="mt-4 relative h-48 w-full rounded-md overflow-hidden border">
+                                        <Image src={imageUrl} alt="Room preview" layout="fill" objectFit="cover" />
+                                    </div>
+                                )}
                             </div>
                             <div className="space-y-2">
                                 <Label>{t('amenitiesLabel')}</Label>
