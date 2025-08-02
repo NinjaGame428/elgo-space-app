@@ -194,21 +194,21 @@ export function LocationDetails({ location }: LocationDetailsProps) {
 
   if (!location) {
     return (
-      <div className="hidden lg:flex items-center justify-center h-full text-muted-foreground p-8">
+      <div className="hidden lg:flex items-center justify-center h-full text-muted-foreground p-8 bg-card rounded-lg shadow-sm border">
         <p className="text-lg">Select a location to see details</p>
       </div>
     );
   }
 
   return (
-    <ScrollArea className="h-full w-full">
-      <div className={cn("bg-card")}>
+    <ScrollArea className="h-full w-full rounded-lg border bg-card shadow-sm">
+      <div className={cn("bg-card rounded-lg")}>
         <div className="relative w-full h-60 md:h-80">
           <Image
             src={location.imageUrl}
             alt={location.name}
             fill
-            className="object-cover"
+            className="object-cover rounded-t-lg"
             data-ai-hint="office workspace"
             sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
@@ -219,119 +219,121 @@ export function LocationDetails({ location }: LocationDetailsProps) {
             <CardDescription className="text-base pt-1">{location.address}</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
-            <h3 className="text-xl font-semibold mb-4">Book Your Spot</h3>
-            <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                    <h4 className="font-medium mb-2">1. Select Date Range</h4>
-                     <Popover>
-                        <PopoverTrigger asChild>
-                        <Button
-                            variant={"outline"}
-                            className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !date && "text-muted-foreground"
-                            )}
-                        >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {date?.from ? (
-                                date.to ? (
-                                    <>
-                                    {format(date.from, "LLL dd, y")} -{" "}
-                                    {format(date.to, "LLL dd, y")}
-                                    </>
-                                ) : (
-                                    format(date.from, "LLL dd, y")
-                                )
-                                ) : (
-                                <span>Pick a date range</span>
-                            )}
-                        </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                            mode="range"
-                            selected={date}
-                            onSelect={setDate}
-                            disabled={(day) => day < new Date(new Date().setHours(0,0,0,0)) || day > addDays(new Date(), 60)}
-                            initialFocus
-                            numberOfMonths={2}
-                        />
-                        </PopoverContent>
-                    </Popover>
-                    <div className="mt-4">
-                        <h4 className="font-medium mb-2">Public Availability</h4>
-                        <Calendar
-                            mode="multiple"
-                            selected={bookings.filter(b => b.status === 'approved' && b.locationId === location.id).map(b => new Date(b.startTime))}
-                            className="rounded-md border p-0"
-                            classNames={{
-                                day_selected: "bg-destructive text-destructive-foreground hover:bg-destructive/90 focus:bg-destructive/90",
-                            }}
-                         />
-                         <p className="text-xs text-muted-foreground mt-1">Red dates are fully booked.</p>
-                    </div>
-                </div>
+            <div className="bg-muted/50 p-4 rounded-lg">
+              <h3 className="text-xl font-semibold mb-4">Book Your Spot</h3>
+              <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                      <h4 className="font-medium mb-2 text-sm">1. Select Date Range</h4>
+                       <Popover>
+                          <PopoverTrigger asChild>
+                          <Button
+                              variant={"outline"}
+                              className={cn(
+                              "w-full justify-start text-left font-normal bg-background",
+                              !date && "text-muted-foreground"
+                              )}
+                          >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {date?.from ? (
+                                  date.to ? (
+                                      <>
+                                      {format(date.from, "LLL dd, y")} -{" "}
+                                      {format(date.to, "LLL dd, y")}
+                                      </>
+                                  ) : (
+                                      format(date.from, "LLL dd, y")
+                                  )
+                                  ) : (
+                                  <span>Pick a date range</span>
+                              )}
+                          </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                              mode="range"
+                              selected={date}
+                              onSelect={setDate}
+                              disabled={(day) => day < new Date(new Date().setHours(0,0,0,0)) || day > addDays(new Date(), 60)}
+                              initialFocus
+                              numberOfMonths={2}
+                          />
+                          </PopoverContent>
+                      </Popover>
+                  </div>
 
-                <div>
-                    <h4 className="font-medium mb-2">2. Select Time</h4>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <Label>From</Label>
-                            <Select value={startTime || ''} onValueChange={setStartTime} disabled={!date?.from}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Start time" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {timeSlots.map(time => (
-                                        <SelectItem key={time} value={time} disabled={isTimeSlotDisabled(time)}>
-                                            {time}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                         <div>
-                            <Label>To</Label>
-                             <Select value={endTime || ''} onValueChange={setEndTime} disabled={!startTime}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="End time" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {availableEndTimes.map(time => (
-                                       <SelectItem key={time} value={time}>
-                                         {time}
-                                       </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-                     {isRangeInvalid && (
-                        <p className="text-sm text-destructive mt-2">The selected time range is unavailable or already booked.</p>
-                    )}
-
-                    <Button onClick={handleBooking} className="w-full mt-6" disabled={!!isRangeInvalid && (!date?.from || !date?.to || !startTime || !endTime)}>
-                      Book Now
+                  <div>
+                      <h4 className="font-medium mb-2 text-sm">2. Select Time</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                          <div>
+                              <Label className="text-xs">From</Label>
+                              <Select value={startTime || ''} onValueChange={setStartTime} disabled={!date?.from}>
+                                  <SelectTrigger>
+                                      <SelectValue placeholder="Start time" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                      {timeSlots.map(time => (
+                                          <SelectItem key={time} value={time} disabled={isTimeSlotDisabled(time)}>
+                                              {time}
+                                          </SelectItem>
+                                      ))}
+                                  </SelectContent>
+                              </Select>
+                          </div>
+                           <div>
+                              <Label className="text-xs">To</Label>
+                               <Select value={endTime || ''} onValueChange={setEndTime} disabled={!startTime}>
+                                  <SelectTrigger>
+                                      <SelectValue placeholder="End time" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                      {availableEndTimes.map(time => (
+                                         <SelectItem key={time} value={time}>
+                                           {time}
+                                         </SelectItem>
+                                      ))}
+                                  </SelectContent>
+                              </Select>
+                          </div>
+                      </div>
+                       {isRangeInvalid && (
+                          <p className="text-sm text-destructive mt-2">The selected time range is unavailable or already booked.</p>
+                      )}
+                  </div>
+                  <div className="md:col-span-2">
+                    <Button onClick={handleBooking} className="w-full" disabled={!!isRangeInvalid && (!date?.from || !date?.to || !startTime || !endTime)}>
+                        Book Now
                     </Button>
-                </div>
+                  </div>
+              </div>
             </div>
 
             <Separator className="my-6" />
+
+            <div>
+              <h3 className="text-xl font-semibold mb-4">Availability</h3>
+              <p className="text-sm text-muted-foreground mb-4">Red dates indicate days with existing approved bookings.</p>
+              <div className="flex justify-center p-4 rounded-lg bg-muted/50">
+                <Calendar
+                    mode="multiple"
+                    selected={bookings.filter(b => b.status === 'approved' && b.locationId === location.id).map(b => new Date(b.startTime))}
+                    className="rounded-md p-0"
+                    classNames={{
+                        day_selected: "bg-destructive/80 text-destructive-foreground hover:bg-destructive/90 focus:bg-destructive/90",
+                    }}
+                />
+              </div>
+            </div>
             
-            <Alert className="mb-6">
-                <Info className="h-4 w-4" />
-                <AlertTitle>Friendly Reminder</AlertTitle>
-                <AlertDescription>
-                    Please leave the room clean and tidy for the next person. Thank you!
-                </AlertDescription>
-            </Alert>
+            <Separator className="my-6" />
             
             <div>
               <h3 className="text-xl font-semibold mb-4">Amenities</h3>
-              <div className="grid grid-cols-2 gap-y-4 gap-x-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-2">
                 {location.amenities.map((amenity) => (
                   <div key={amenity.name} className="flex items-center gap-3">
-                    <amenity.icon className="w-5 h-5 text-primary" />
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
+                      <amenity.icon className="w-5 h-5" />
+                    </div>
                     <span className="text-sm text-foreground">{amenity.name}</span>
                   </div>
                 ))}

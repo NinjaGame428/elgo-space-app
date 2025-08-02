@@ -37,12 +37,12 @@ export default function Home() {
   const showDetails = isMobile && selectedLocation;
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-screen bg-background/80 backdrop-blur-sm">
       <Header />
-      <main className="flex flex-1 overflow-hidden">
-        <div className="flex-1 lg:grid lg:grid-cols-[480px_1fr]">
-          <aside className={cn("lg:border-r border-border flex-col h-full", isMobile && showDetails ? "hidden" : "flex")}>
-            <div className="p-4 border-b bg-card">
+      <main className="flex flex-1 overflow-hidden p-4 gap-4">
+        <div className="flex-1 lg:grid lg:grid-cols-[480px_1fr] gap-4">
+          <aside className={cn("border bg-card rounded-lg shadow-sm flex-col h-full", isMobile && showDetails ? "hidden" : "flex")}>
+            <div className="p-4 border-b">
               <h1 className="text-2xl font-bold mb-4">Locations</h1>
               <div className="flex gap-2">
                 <div className="relative w-full">
@@ -89,7 +89,7 @@ export default function Home() {
 
           <section className={cn("flex-1 flex flex-col h-full", isMobile && !showDetails ? "hidden" : "flex")}>
               {isMobile && showDetails && (
-                  <div className="p-2 border-b bg-card">
+                  <div className="p-2 border-b bg-card rounded-t-lg">
                       <Button variant="ghost" size="sm" onClick={() => setSelectedLocation(null)}>
                           <ArrowLeft className="h-4 w-4 mr-2" />
                           Back to list

@@ -18,8 +18,8 @@ export function LocationCard({ location, isSelected, onClick }: LocationCardProp
     <Card
       onClick={onClick}
       className={cn(
-        'cursor-pointer transition-all duration-200 hover:shadow-lg border-2',
-        isSelected ? 'border-primary shadow-lg' : 'border-transparent'
+        'cursor-pointer transition-all duration-200 hover:shadow-md border-2',
+        isSelected ? 'border-primary shadow-md' : 'border-card hover:border-primary/50'
       )}
     >
       <CardHeader className="p-0">
