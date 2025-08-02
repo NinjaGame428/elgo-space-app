@@ -12,10 +12,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
-import { User, Building2, Languages } from 'lucide-react';
+import { User, Building2 } from 'lucide-react';
 
 export function Header() {
   const t = useTranslations('Header');
@@ -58,6 +56,11 @@ export function Header() {
     router.replace(pathname, { locale: newLocale });
   };
 
+  const toggleLocale = () => {
+    const newLocale = locale === 'en' ? 'fr' : 'en';
+    handleLocaleChange(newLocale);
+  };
+
   const isAdmin = userEmail === 'test@example.com';
 
   if (!isMounted) {
@@ -85,20 +88,9 @@ export function Header() {
           </Link>
         </div>
         <div className="flex items-center space-x-4">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Languages className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{t('language')}</DropdownMenuLabel>
-              <DropdownMenuRadioGroup value={locale} onValueChange={handleLocaleChange}>
-                <DropdownMenuRadioItem value="en">{t('english')}</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="fr">{t('french')}</DropdownMenuRadioItem>
-              </DropdownMenuRadioGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Button variant="ghost" onClick={toggleLocale} size="sm">
+            {locale.toUpperCase()}
+          </Button>
 
           <nav className="flex items-center">
             {isAuthenticated ? (
