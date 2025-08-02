@@ -1,51 +1,22 @@
 
-'use client';
-
-import { NextIntlClientProvider, useMessages } from 'next-intl';
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
 import { Toaster } from "@/components/ui/toaster";
 import { Header } from '@/components/header';
-import { SidebarProvider, Sidebar } from '@/components/ui/sidebar';
-import { AppSidebar } from '@/components/app-sidebar';
-import { usePathname } from 'next/navigation';
-
-function InnerLayout({ children, locale }: { children: React.ReactNode; locale: string; }) {
-  const pathname = usePathname();
-  // Using startsWith to correctly handle nested routes under /login or /signup
-  const isAuthPage = pathname.startsWith(`/${locale}/login`) || pathname.startsWith(`/${locale}/signup`);
-  const isHomePage = pathname === `/${locale}` || pathname === `/${locale}/`;
-  const showSidebar = !isHomePage && !isAuthPage;
-
-  return (
-    <SidebarProvider>
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <div className="flex flex-1">
-          {showSidebar && (
-            <Sidebar>
-              <AppSidebar />
-            </Sidebar>
-          )}
-          <div className="flex-1">
-            <main className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl">
-              {children}
-            </main>
-          </div>
-        </div>
-      </div>
-      <Toaster />
-    </SidebarProvider>
-  );
-}
+import { SidebarProvider } from '@/components/ui/sidebar';
+import { InnerLayout } from '@/components/inner-layout';
 
 // Server component Root Layout
-export default function LocaleLayout({
+export default async function LocaleLayout({
   children,
   params: {locale}
 }: {
   children: React.ReactNode;
   params: {locale: string};
 }) {
-  const messages = useMessages();
+  // Providing all messages to the client
+  // side is the easiest way to get started
+  const messages = await getMessages();
 
   return (
     <html lang={locale}>
@@ -59,7 +30,15 @@ export default function LocaleLayout({
       </head>
       <body className="antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <InnerLayout locale={locale}>{children}</InnerLayout>
+          <SidebarProvider>
+            <div className="flex flex-col min-h-screen">
+              <Header />
+              <InnerLayout locale={locale}>
+                  {children}
+              </InnerLayout>
+            </div>
+            <Toaster />
+          </SidebarProvider>
         </NextIntlClientProvider>
       </body>
     </html>
