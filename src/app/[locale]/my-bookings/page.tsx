@@ -10,7 +10,6 @@ import { format, isAfter } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import type { Booking, Location } from '@/lib/types';
 import { Link } from '@/navigation';
-import { Header } from '@/components/header';
 import { useTranslations } from 'next-intl';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -53,7 +52,7 @@ export default function MyBookingsPage() {
     const { upcomingBookings, pastBookings } = useMemo(() => {
         const now = new Date();
         return userBookings.reduce((acc, booking) => {
-            if (isAfter(new Date(booking.endTime), now)) {
+            if (isAfter(new Date(booking.endTime), now) && booking.status !== 'rejected') {
                 acc.upcomingBookings.push(booking);
             } else {
                 acc.pastBookings.push(booking);
@@ -80,7 +79,10 @@ export default function MyBookingsPage() {
 
     const BookingCard = ({ booking }: { booking: Booking }) => {
         const location = locations.find(l => l.id === booking.locationId);
-        const isUpcoming = isAfter(new Date(booking.endTime), new Date());
+        const isUpcoming = isAfter(new Date(booking.endTime), new Date()) && booking.status !== 'rejected';
+        
+        const isCancelled = booking.status === 'rejected';
+
         return (
             <div 
                 className={`p-4 border rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${!isUpcoming && 'cursor-pointer hover:bg-muted/50'}`}
@@ -94,8 +96,8 @@ export default function MyBookingsPage() {
                 </div>
                 <div className="flex items-center gap-2">
                     <Badge variant={
-                        booking.status === 'approved' ? 'default' :
-                        booking.status === 'rejected' ? 'destructive' : 'secondary'
+                        isCancelled ? 'destructive' :
+                        booking.status === 'approved' ? 'default' : 'secondary'
                     }>{t(booking.status as any)}</Badge>
                     {isUpcoming && (
                         <DropdownMenu>
@@ -132,42 +134,39 @@ export default function MyBookingsPage() {
     };
 
     return (
-        <div className="flex flex-col min-h-screen bg-background">
-            <Header />
-            <main className="flex-1 p-4 md:p-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>{t('yourReservations')}</CardTitle>
-                        <CardDescription>{t('reservationsDescription')}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Tabs defaultValue="upcoming">
-                            <TabsList className="grid w-full grid-cols-2">
-                                <TabsTrigger value="upcoming">{t('upcoming')}</TabsTrigger>
-                                <TabsTrigger value="past">{t('past')}</TabsTrigger>
-                            </TabsList>
-                            <TabsContent value="upcoming" className="pt-4">
-                                <div className="space-y-4">
-                                    {upcomingBookings.length > 0 ? (
-                                        upcomingBookings.map(booking => <BookingCard key={booking.id} booking={booking} />)
-                                    ) : (
-                                        <p className="text-muted-foreground text-center py-8">{t('noUpcomingBookings')}</p>
-                                    )}
-                                </div>
-                            </TabsContent>
-                            <TabsContent value="past" className="pt-4">
-                                <div className="space-y-4">
-                                    {pastBookings.length > 0 ? (
-                                        pastBookings.map(booking => <BookingCard key={booking.id} booking={booking} />)
-                                    ) : (
-                                        <p className="text-muted-foreground text-center py-8">{t('noPastBookings')}</p>
-                                    )}
-                                </div>
-                            </TabsContent>
-                        </Tabs>
-                    </CardContent>
-                </Card>
-            </main>
+        <div className="flex flex-col flex-1 p-4 md:p-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>{t('yourReservations')}</CardTitle>
+                    <CardDescription>{t('reservationsDescription')}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Tabs defaultValue="upcoming">
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="upcoming">{t('upcoming')}</TabsTrigger>
+                            <TabsTrigger value="past">{t('past')}</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="upcoming" className="pt-4">
+                            <div className="space-y-4">
+                                {upcomingBookings.length > 0 ? (
+                                    upcomingBookings.map(booking => <BookingCard key={booking.id} booking={booking} />)
+                                ) : (
+                                    <p className="text-muted-foreground text-center py-8">{t('noUpcomingBookings')}</p>
+                                )}
+                            </div>
+                        </TabsContent>
+                        <TabsContent value="past" className="pt-4">
+                            <div className="space-y-4">
+                                {pastBookings.length > 0 ? (
+                                    pastBookings.map(booking => <BookingCard key={booking.id} booking={booking} />)
+                                ) : (
+                                    <p className="text-muted-foreground text-center py-8">{t('noPastBookings')}</p>
+                                )}
+                            </div>
+                        </TabsContent>
+                    </Tabs>
+                </CardContent>
+            </Card>
 
             <Dialog open={!!selectedBooking} onOpenChange={(isOpen) => !isOpen && setSelectedBooking(null)}>
                 <DialogContent>

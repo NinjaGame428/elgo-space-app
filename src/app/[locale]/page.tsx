@@ -3,7 +3,6 @@
 
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Header } from '@/components/header';
 import { LocationCard } from '@/components/location-card';
 import { LocationDetails } from '@/components/location-details';
 import { locations as allLocations } from '@/lib/data';
@@ -33,8 +32,6 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      <Header />
       <main className="flex-1 grid md:grid-cols-2 gap-8 p-4 md:p-6">
         <div className="flex flex-col">
           <div className="p-4 space-y-4 border rounded-lg bg-card shadow-sm">
@@ -75,6 +72,5 @@ export default function HomePage() {
             <LocationDetails location={selectedLocation} />
         </div>
       </main>
-    </div>
   );
 }

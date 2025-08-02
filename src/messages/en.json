@@ -12,6 +12,12 @@
     "english": "English",
     "french": "French"
   },
+  "Sidebar": {
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "myBookings": "My Bookings",
+    "adminDashboard": "Admin Dashboard"
+  },
   "Home": {
     "locations": "Locations",
     "searchPlaceholder": "Search locations...",
@@ -36,7 +42,7 @@
     "bookingFailedTitle": "Booking Failed",
     "bookingFailedDescription": "Please select a date range, start time, and end time.",
     "availability": "Availability",
-    "availabilityDesc": "Orange dates indicate days with existing approved bookings.",
+    "availabilityDesc": "Red dates indicate days with existing approved bookings.",
     "amenities": "Amenities"
   },
   "LoginPage": {
@@ -188,7 +194,7 @@
     "unknownLocation": "Unknown Location",
     "pending": "Pending",
     "approved": "Approved",
-    "rejected": "Rejected",
+    "rejected": "Cancelled",
     "upcoming": "Upcoming",
     "past": "Past",
     "noUpcomingBookings": "You have no upcoming bookings.",

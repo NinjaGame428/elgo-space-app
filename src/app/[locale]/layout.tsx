@@ -1,7 +1,11 @@
+
 import {NextIntlClientProvider} from 'next-intl';
 import {getMessages} from 'next-intl/server';
 import { Toaster } from "@/components/ui/toaster";
 import {notFound} from 'next/navigation';
+import { Header } from '@/components/header';
+import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
+import { AppSidebar } from '@/components/app-sidebar';
 
 const locales = ['en', 'fr'];
  
@@ -31,9 +35,21 @@ export default async function LocaleLayout({
       </head>
       <body className="antialiased">
         <NextIntlClientProvider messages={messages}>
-          <div className="max-w-[1550px] mx-auto">
-            {children}
-          </div>
+          <SidebarProvider>
+            <div className="flex flex-col min-h-screen">
+              <Header />
+              <div className="flex flex-1">
+                <Sidebar>
+                  <AppSidebar />
+                </Sidebar>
+                <SidebarInset>
+                  <main className="flex-1">
+                    {children}
+                  </main>
+                </SidebarInset>
+              </div>
+            </div>
+          </SidebarProvider>
           <Toaster />
         </NextIntlClientProvider>
       </body>

@@ -14,14 +14,15 @@ import { Link } from '@/navigation';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { MoreHorizontal, Trash2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Header } from '@/components/header';
+import { fr, enUS } from 'date-fns/locale';
 
 export default function DashboardPage() {
     const t = useTranslations('DashboardPage');
+    const locale = useLocale();
     const router = useRouter();
     const { toast } = useToast();
 
@@ -32,6 +33,8 @@ export default function DashboardPage() {
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
     const [isAdmin, setIsAdmin] = useState(false);
     const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+
+    const dateLocale = locale === 'fr' ? fr : enUS;
 
     useEffect(() => {
         const loggedInEmail = typeof window !== 'undefined' ? localStorage.getItem('userEmail') : null;
@@ -58,14 +61,6 @@ export default function DashboardPage() {
             localStorage.setItem('users', JSON.stringify(users));
         }
     }, [bookings, locations, users, isAdmin]);
-
-    const handleLogout = () => {
-        if (typeof window !== 'undefined') {
-            localStorage.removeItem('isLoggedIn');
-            localStorage.removeItem('userEmail');
-        }
-        router.push('/');
-    };
 
     const handleApproval = (bookingId: string, status: 'approved' | 'rejected') => {
         setBookings(currentBookings =>
@@ -113,229 +108,226 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="flex flex-col min-h-screen bg-background">
-            <Header />
+        <div className="flex flex-col flex-1 p-4 md:p-6 gap-6">
+            <div className="flex items-center justify-between">
+                <h1 className="text-2xl font-semibold">{t('adminDashboard')}</h1>
+            </div>
 
-            <main className="flex-1 p-4 md:p-6 grid gap-6">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-semibold">{t('adminDashboard')}</h1>
+            <div className="grid md:grid-cols-3 gap-6">
+                <div className="md:col-span-1">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>{t('bookingCalendar')}</CardTitle>
+                            <CardDescription>{t('calendarDescription')}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex justify-center">
+                            <Calendar
+                                mode="single"
+                                selected={selectedDate}
+                                onSelect={setSelectedDate}
+                                className="rounded-md border"
+                                modifiers={{ booked: bookedDates }}
+                                modifiersClassNames={{ booked: 'bg-primary/20' }}
+                                locale={dateLocale}
+                            />
+                        </CardContent>
+                    </Card>
                 </div>
-
-                <div className="grid md:grid-cols-3 gap-6">
-                    <div className="md:col-span-1">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>{t('bookingCalendar')}</CardTitle>
-                                <CardDescription>{t('calendarDescription')}</CardDescription>
-                            </CardHeader>
-                            <CardContent className="flex justify-center">
-                                <Calendar
-                                    mode="single"
-                                    selected={selectedDate}
-                                    onSelect={setSelectedDate}
-                                    className="rounded-md border"
-                                    modifiers={{ booked: bookedDates }}
-                                    modifiersClassNames={{ booked: 'bg-primary/20' }}
-                                />
-                            </CardContent>
-                        </Card>
-                    </div>
-                    <div className="md:col-span-2">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>{t('bookingsFor', { date: selectedDate ? format(selectedDate, 'PPP') : '...' })}</CardTitle>
-                                <CardDescription>{t('bookingsDescription')}</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="space-y-4">
-                                    {bookingsForSelectedDay.length > 0 ? (
-                                        bookingsForSelectedDay.map(booking => {
-                                            const location = locations.find(l => l.id === booking.locationId);
-                                            return (
-                                                <div key={booking.id} className="p-4 border rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 cursor-pointer hover:bg-muted/50" onClick={() => handleBookingClick(booking)}>
-                                                    <div>
-                                                        <p className="font-semibold">{location?.name || t('unknownLocation')}</p>
-                                                        <p className="text-sm text-muted-foreground">
-                                                            {format(new Date(booking.startTime), 'p')} - {format(new Date(booking.endTime), 'p')}
-                                                        </p>
-                                                        <p className="text-sm">{t('bookedBy', { email: booking.userEmail })}</p>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        {booking.status === 'pending' && <Badge variant="secondary">{t('pending')}</Badge>}
-                                                        {booking.status === 'approved' && <Badge>{t('approved')}</Badge>}
-                                                        {booking.status === 'rejected' && <Badge variant="destructive">{t('rejected')}</Badge>}
-                                                        <DropdownMenu onOpenChange={(open) => { if (open) { setSelectedBooking(booking) } }}>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
-                                                                    <MoreHorizontal className="h-4 w-4"/>
-                                                                </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                                                                {booking.status === 'pending' && (
-                                                                    <>
-                                                                        <DropdownMenuItem onClick={() => handleApproval(booking.id, 'approved')}>{t('approve')}</DropdownMenuItem>
-                                                                        <DropdownMenuItem onClick={() => handleApproval(booking.id, 'rejected')}>{t('reject')}</DropdownMenuItem>
-                                                                        <DropdownMenuSeparator />
-                                                                    </>
-                                                                )}
-                                                                <AlertDialog>
-                                                                    <AlertDialogTrigger asChild>
-                                                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">{t('delete')}</DropdownMenuItem>
-                                                                    </AlertDialogTrigger>
-                                                                    <AlertDialogContent>
-                                                                        <AlertDialogHeader>
-                                                                            <AlertDialogTitle>{t('areYouSure')}</AlertDialogTitle>
-                                                                            <AlertDialogDescription>{t('deleteBookingWarning')}</AlertDialogDescription>
-                                                                        </AlertDialogHeader>
-                                                                        <AlertDialogFooter>
-                                                                            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-                                                                            <AlertDialogAction onClick={() => deleteBooking(booking.id)}>{t('delete')}</AlertDialogAction>
-                                                                        </AlertDialogFooter>
-                                                                    </AlertDialogContent>
-                                                                </AlertDialog>
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
-                                                    </div>
+                <div className="md:col-span-2">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>{t('bookingsFor', { date: selectedDate ? format(selectedDate, 'PPP', { locale: dateLocale }) : '...' })}</CardTitle>
+                            <CardDescription>{t('bookingsDescription')}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-4">
+                                {bookingsForSelectedDay.length > 0 ? (
+                                    bookingsForSelectedDay.map(booking => {
+                                        const location = locations.find(l => l.id === booking.locationId);
+                                        return (
+                                            <div key={booking.id} className="p-4 border rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 cursor-pointer hover:bg-muted/50" onClick={() => handleBookingClick(booking)}>
+                                                <div>
+                                                    <p className="font-semibold">{location?.name || t('unknownLocation')}</p>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        {format(new Date(booking.startTime), 'p')} - {format(new Date(booking.endTime), 'p')}
+                                                    </p>
+                                                    <p className="text-sm">{t('bookedBy', { email: booking.userEmail })}</p>
                                                 </div>
-                                            );
-                                        })
-                                    ) : (
-                                        <p className="text-muted-foreground">{t('noBookings')}</p>
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
+                                                <div className="flex items-center gap-2">
+                                                    {booking.status === 'pending' && <Badge variant="secondary">{t('pending')}</Badge>}
+                                                    {booking.status === 'approved' && <Badge>{t('approved')}</Badge>}
+                                                    {booking.status === 'rejected' && <Badge variant="destructive">{t('rejected')}</Badge>}
+                                                    <DropdownMenu onOpenChange={(open) => { if (open) { setSelectedBooking(booking) } }}>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
+                                                                <MoreHorizontal className="h-4 w-4"/>
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                                                            {booking.status === 'pending' && (
+                                                                <>
+                                                                    <DropdownMenuItem onClick={() => handleApproval(booking.id, 'approved')}>{t('approve')}</DropdownMenuItem>
+                                                                    <DropdownMenuItem onClick={() => handleApproval(booking.id, 'rejected')}>{t('reject')}</DropdownMenuItem>
+                                                                    <DropdownMenuSeparator />
+                                                                </>
+                                                            )}
+                                                            <AlertDialog>
+                                                                <AlertDialogTrigger asChild>
+                                                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">{t('delete')}</DropdownMenuItem>
+                                                                </AlertDialogTrigger>
+                                                                <AlertDialogContent>
+                                                                    <AlertDialogHeader>
+                                                                        <AlertDialogTitle>{t('areYouSure')}</AlertDialogTitle>
+                                                                        <AlertDialogDescription>{t('deleteBookingWarning')}</AlertDialogDescription>
+                                                                    </AlertDialogHeader>
+                                                                    <AlertDialogFooter>
+                                                                        <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+                                                                        <AlertDialogAction onClick={() => deleteBooking(booking.id)}>{t('delete')}</AlertDialogAction>
+                                                                    </AlertDialogFooter>
+                                                                </AlertDialogContent>
+                                                            </AlertDialog>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                ) : (
+                                    <p className="text-muted-foreground">{t('noBookings')}</p>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
+            </div>
 
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <div>
-                            <CardTitle>{t('roomManagement')}</CardTitle>
-                            <CardDescription>{t('roomManagementDescription')}</CardDescription>
-                        </div>
-                        <Button asChild>
-                            <Link href="/dashboard/rooms/add">{t('addRoom')}</Link>
-                        </Button>
-                    </CardHeader>
-                    <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>{t('roomName')}</TableHead>
-                                    <TableHead>{t('address')}</TableHead>
-                                    <TableHead className="text-right">{t('actions')}</TableHead>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                        <CardTitle>{t('roomManagement')}</CardTitle>
+                        <CardDescription>{t('roomManagementDescription')}</CardDescription>
+                    </div>
+                    <Button asChild>
+                        <Link href="/dashboard/rooms/add">{t('addRoom')}</Link>
+                    </Button>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>{t('roomName')}</TableHead>
+                                <TableHead>{t('address')}</TableHead>
+                                <TableHead className="text-right">{t('actions')}</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {locations.map(location => (
+                                <TableRow key={location.id}>
+                                    <TableCell className="font-medium">{location.name}</TableCell>
+                                    <TableCell>{location.address}</TableCell>
+                                    <TableCell className="text-right">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                                    <span className="sr-only">Open menu</span>
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
+                                                <DropdownMenuItem asChild>
+                                                    <Link href={`/dashboard/rooms/${location.id}/edit`}>{t('edit')}</Link>
+                                                </DropdownMenuItem>
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>{t('delete')}</DropdownMenuItem>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                         <AlertDialogHeader>
+                                                            <AlertDialogTitle>{t('areYouSure')}</AlertDialogTitle>
+                                                            <AlertDialogDescription>{t('deleteRoomWarning')}</AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+                                                            <AlertDialogAction onClick={() => deleteLocation(location.id)}>{t('delete')}</AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </TableCell>
                                 </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {locations.map(location => (
-                                    <TableRow key={location.id}>
-                                        <TableCell className="font-medium">{location.name}</TableCell>
-                                        <TableCell>{location.address}</TableCell>
-                                        <TableCell className="text-right">
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" className="h-8 w-8 p-0">
-                                                        <span className="sr-only">Open menu</span>
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
-                                                    <DropdownMenuItem asChild>
-                                                        <Link href={`/dashboard/rooms/${location.id}/edit`}>{t('edit')}</Link>
-                                                    </DropdownMenuItem>
-                                                    <AlertDialog>
-                                                        <AlertDialogTrigger asChild>
-                                                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>{t('delete')}</DropdownMenuItem>
-                                                        </AlertDialogTrigger>
-                                                        <AlertDialogContent>
-                                                             <AlertDialogHeader>
-                                                                <AlertDialogTitle>{t('areYouSure')}</AlertDialogTitle>
-                                                                <AlertDialogDescription>{t('deleteRoomWarning')}</AlertDialogDescription>
-                                                            </AlertDialogHeader>
-                                                            <AlertDialogFooter>
-                                                                <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-                                                                <AlertDialogAction onClick={() => deleteLocation(location.id)}>{t('delete')}</AlertDialogAction>
-                                                            </AlertDialogFooter>
-                                                        </AlertDialogContent>
-                                                    </AlertDialog>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </CardContent>
-                </Card>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
 
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <div>
-                            <CardTitle>{t('userManagement')}</CardTitle>
-                            <CardDescription>{t('userManagementDescription')}</CardDescription>
-                        </div>
-                        <Button asChild>
-                            <Link href="/dashboard/users/add">{t('addUser')}</Link>
-                        </Button>
-                    </CardHeader>
-                    <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>{t('name')}</TableHead>
-                                    <TableHead>{t('email')}</TableHead>
-                                    <TableHead>{t('role')}</TableHead>
-                                    <TableHead>{t('joined')}</TableHead>
-                                    <TableHead className="text-right">{t('actions')}</TableHead>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                        <CardTitle>{t('userManagement')}</CardTitle>
+                        <CardDescription>{t('userManagementDescription')}</CardDescription>
+                    </div>
+                    <Button asChild>
+                        <Link href="/dashboard/users/add">{t('addUser')}</Link>
+                    </Button>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>{t('name')}</TableHead>
+                                <TableHead>{t('email')}</TableHead>
+                                <TableHead>{t('role')}</TableHead>
+                                <TableHead>{t('joined')}</TableHead>
+                                <TableHead className="text-right">{t('actions')}</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {users.map(user => (
+                                <TableRow key={user.id}>
+                                    <TableCell className="font-medium">{user.name}</TableCell>
+                                    <TableCell>{user.email}</TableCell>
+                                    <TableCell><Badge variant={user.role === 'Admin' ? 'default' : 'secondary'}>{user.role}</Badge></TableCell>
+                                    <TableCell>{user.joined}</TableCell>
+                                    <TableCell className="text-right">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" className="h-8 w-8 p-0" disabled={user.email === 'test@example.com'}>
+                                                    <span className="sr-only">Open menu</span>
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
+                                                <DropdownMenuItem asChild>
+                                                    <Link href={`/dashboard/users/${user.id}/edit`}>{t('edit')}</Link>
+                                                </DropdownMenuItem>
+                                                 <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                         <DropdownMenuItem onSelect={(e) => e.preventDefault()} disabled={user.email === 'test@example.com'}>{t('delete')}</DropdownMenuItem>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                         <AlertDialogHeader>
+                                                            <AlertDialogTitle>{t('areYouSure')}</AlertDialogTitle>
+                                                            <AlertDialogDescription>{t('deleteUserWarning')}</AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+                                                            <AlertDialogAction onClick={() => deleteUser(user.id)}>{t('delete')}</AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </TableCell>
                                 </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {users.map(user => (
-                                    <TableRow key={user.id}>
-                                        <TableCell className="font-medium">{user.name}</TableCell>
-                                        <TableCell>{user.email}</TableCell>
-                                        <TableCell><Badge variant={user.role === 'Admin' ? 'default' : 'secondary'}>{user.role}</Badge></TableCell>
-                                        <TableCell>{user.joined}</TableCell>
-                                        <TableCell className="text-right">
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" className="h-8 w-8 p-0" disabled={user.email === 'test@example.com'}>
-                                                        <span className="sr-only">Open menu</span>
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
-                                                    <DropdownMenuItem asChild>
-                                                        <Link href={`/dashboard/users/${user.id}/edit`}>{t('edit')}</Link>
-                                                    </DropdownMenuItem>
-                                                     <AlertDialog>
-                                                        <AlertDialogTrigger asChild>
-                                                             <DropdownMenuItem onSelect={(e) => e.preventDefault()} disabled={user.email === 'test@example.com'}>{t('delete')}</DropdownMenuItem>
-                                                        </AlertDialogTrigger>
-                                                        <AlertDialogContent>
-                                                             <AlertDialogHeader>
-                                                                <AlertDialogTitle>{t('areYouSure')}</AlertDialogTitle>
-                                                                <AlertDialogDescription>{t('deleteUserWarning')}</AlertDialogDescription>
-                                                            </AlertDialogHeader>
-                                                            <AlertDialogFooter>
-                                                                <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-                                                                <AlertDialogAction onClick={() => deleteUser(user.id)}>{t('delete')}</AlertDialogAction>
-                                                            </AlertDialogFooter>
-                                                        </AlertDialogContent>
-                                                    </AlertDialog>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </CardContent>
-                </Card>
-            </main>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
 
             <Dialog open={!!selectedBooking} onOpenChange={(isOpen) => !isOpen && setSelectedBooking(null)}>
                 <DialogContent>

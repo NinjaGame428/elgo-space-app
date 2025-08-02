@@ -13,13 +13,14 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { format, addDays, parse, getDay, eachDayOfInterval, formatISO } from 'date-fns';
+import { fr, enUS } from 'date-fns/locale';
 import { bookings as initialBookings } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
 import type { DateRange } from 'react-day-picker';
 import { useRouter } from 'next/navigation';
 import { Clock, Coffee, Printer, Phone, Wifi, Car, UtensilsCrossed } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import type { Booking } from '@/lib/types';
 
 const amenityIcons = {
@@ -45,6 +46,7 @@ const timeSlots = Array.from({ length: 18 }, (_, i) => {
 export function LocationDetails({ location }: LocationDetailsProps) {
   const t = useTranslations('LocationDetails');
   const ta = useTranslations('AmenityNames');
+  const locale = useLocale();
   const router = useRouter();
   const { toast } = useToast();
   const [date, setDate] = useState<DateRange | undefined>();
@@ -53,6 +55,8 @@ export function LocationDetails({ location }: LocationDetailsProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
+
+  const dateLocale = locale === 'fr' ? fr : enUS;
 
   useEffect(() => {
     const storedBookings = localStorage.getItem('bookings');
@@ -128,8 +132,8 @@ export function LocationDetails({ location }: LocationDetailsProps) {
         title: t('bookingConfirmedTitle'),
         description: t('bookingConfirmedDescription', {
           locationName: location.name,
-          startDate: format(date.from, "PPP"),
-          endDate: format(bookingEndDate, "PPP"),
+          startDate: format(date.from, "PPP", { locale: dateLocale }),
+          endDate: format(bookingEndDate, "PPP", { locale: dateLocale }),
           startTime: startTime,
           endTime: endTime
         }),
@@ -291,11 +295,11 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                               {date?.from ? (
                                   date.to ? (
                                       <>
-                                      {format(date.from, "LLL dd, y")} -{" "}
-                                      {format(date.to, "LLL dd, y")}
+                                      {format(date.from, "PPP", { locale: dateLocale })} -{" "}
+                                      {format(date.to, "PPP", { locale: dateLocale })}
                                       </>
                                   ) : (
-                                      format(date.from, "LLL dd, y")
+                                      format(date.from, "PPP", { locale: dateLocale })
                                   )
                                   ) : (
                                   <span>{t('pickDateRange')}</span>
@@ -310,6 +314,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                               disabled={(day) => day < new Date(new Date().setHours(0,0,0,0)) || day > addDays(new Date(), 60)}
                               initialFocus
                               numberOfMonths={2}
+                              locale={dateLocale}
                           />
                           </PopoverContent>
                       </Popover>
@@ -370,9 +375,10 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                 <Calendar
                     mode="multiple"
                     selected={approvedBookingsForLocation}
+                    locale={dateLocale}
                     className="rounded-md p-0"
                     classNames={{
-                        day_selected: "bg-chart-5/80 text-primary-foreground hover:bg-chart-5/90 focus:bg-chart-5/90",
+                        day_selected: "bg-destructive/80 text-destructive-foreground hover:bg-destructive/90 focus:bg-destructive/90",
                     }}
                 />
               </div>
@@ -402,7 +408,3 @@ export function LocationDetails({ location }: LocationDetailsProps) {
     </div>
   );
 }
-
-    
-
-    

@@ -12,6 +12,12 @@
     "english": "Anglais",
     "french": "Français"
   },
+   "Sidebar": {
+    "dashboard": "Tableau de bord",
+    "profile": "Profil",
+    "myBookings": "Mes réservations",
+    "adminDashboard": "Tableau de bord admin"
+  },
   "Home": {
     "locations": "Emplacements",
     "searchPlaceholder": "Rechercher des emplacements...",
@@ -36,7 +42,7 @@
     "bookingFailedTitle": "Échec de la réservation",
     "bookingFailedDescription": "Veuillez sélectionner une plage de dates, une heure de début et une heure de fin.",
     "availability": "Disponibilité",
-    "availabilityDesc": "Les dates en orange indiquent des jours avec des réservations approuvées existantes.",
+    "availabilityDesc": "Les dates en rouge indiquent des jours avec des réservations approuvées existantes.",
     "amenities": "Équipements"
   },
   "LoginPage": {
@@ -83,7 +89,7 @@
     "approve": "Approuver",
     "reject": "Rejeter",
     "approved": "Approuvée",
-    "rejected": "Rejetée",
+    "rejected": "Annulée",
     "pending": "En attente",
     "noBookings": "Aucune réservation pour cette date.",
     "roomManagement": "Gestion des salles",
@@ -188,7 +194,7 @@
     "unknownLocation": "Emplacement inconnu",
     "pending": "En attente",
     "approved": "Approuvée",
-    "rejected": "Rejetée",
+    "rejected": "Annulée",
     "upcoming": "À venir",
     "past": "Passées",
     "noUpcomingBookings": "Vous n'avez aucune réservation à venir.",

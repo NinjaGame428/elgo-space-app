@@ -14,12 +14,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { User, Building2 } from 'lucide-react';
+import { useSidebar } from './ui/sidebar';
 
 export function Header() {
   const t = useTranslations('Header');
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
+  const { toggleSidebar } = useSidebar();
   
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -67,9 +69,14 @@ export function Header() {
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="container flex h-16 items-center max-w-[1550px] px-4">
-                <div className="mr-auto flex">
+                <div className="mr-auto flex items-center">
+                   {isAuthenticated && (
+                       <Button variant="ghost" size="icon" className="md:hidden mr-2" onClick={toggleSidebar}>
+                           <Building2 className="h-6 w-6" />
+                       </Button>
+                   )}
                   <Link href="/" className="flex items-center space-x-2">
-                    <Building2 className="h-6 w-6" />
+                    <Building2 className="h-6 w-6 hidden md:flex" />
                     <span className="font-bold text-lg">{t('title')}</span>
                   </Link>
                 </div>
@@ -81,15 +88,20 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center max-w-[1550px] px-4">
-        <div className="mr-auto flex">
-          <Link href="/" className="flex items-center space-x-2">
-            <Building2 className="h-6 w-6" />
-            <span className="font-bold text-lg">{t('title')}</span>
-          </Link>
+        <div className="mr-auto flex items-center">
+            {isAuthenticated && (
+                <Button variant="ghost" size="icon" className="md:hidden mr-2" onClick={toggleSidebar}>
+                    <Building2 className="h-6 w-6" />
+                </Button>
+            )}
+            <Link href="/" className="flex items-center space-x-2">
+                <Building2 className="h-6 w-6 hidden md:flex" />
+                <span className="font-bold text-lg">{t('title')}</span>
+            </Link>
         </div>
         <div className="flex items-center space-x-4">
           <Button variant="ghost" onClick={toggleLocale} size="sm">
-            {locale.toUpperCase()}
+            {locale === 'en' ? 'FR' : 'EN'}
           </Button>
 
           <nav className="flex items-center">
