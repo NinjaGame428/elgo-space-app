@@ -19,6 +19,7 @@ import { bookings } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
 import type { DateRange } from 'react-day-picker';
+import { useRouter } from 'next/navigation';
 
 interface LocationDetailsProps {
   location: Location | null;
@@ -31,10 +32,19 @@ const timeSlots = Array.from({ length: 18 }, (_, i) => {
 }).filter(time => time !== '22:30'); // 7:00 to 22:00
 
 export function LocationDetails({ location }: LocationDetailsProps) {
+  const router = useRouter();
   const [date, setDate] = useState<DateRange | undefined>();
   const [startTime, setStartTime] = useState<string | null>(null);
   const [endTime, setEndTime] = useState<string | null>(null);
   const { toast } = useToast();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+        const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
+        setIsAuthenticated(loggedIn);
+    }
+  }, []);
 
   useEffect(() => {
     // Reset times when date changes
@@ -48,6 +58,11 @@ export function LocationDetails({ location }: LocationDetailsProps) {
   }, [startTime]);
 
   const handleBooking = () => {
+    if (!isAuthenticated) {
+        router.push('/login');
+        return;
+    }
+
     if (date?.from && date?.to && startTime && endTime) {
       toast({
         title: "Booking Confirmed!",
@@ -295,7 +310,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                         <p className="text-sm text-destructive mt-2">The selected time range is unavailable or already booked.</p>
                     )}
 
-                    <Button onClick={handleBooking} className="w-full mt-6" disabled={!date?.from || !date?.to || !startTime || !endTime || isRangeInvalid}>
+                    <Button onClick={handleBooking} className="w-full mt-6" disabled={!!isRangeInvalid && (!date?.from || !date?.to || !startTime || !endTime)}>
                       Book Now
                     </Button>
                 </div>
