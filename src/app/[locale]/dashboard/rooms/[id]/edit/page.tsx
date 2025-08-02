@@ -1,0 +1,133 @@
+
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import type { Location } from '@/lib/types';
+import { allAmenities, locations as initialLocations } from '@/lib/data';
+import { Checkbox } from '@/components/ui/checkbox';
+
+export default function EditRoomPage() {
+    const t = useTranslations('EditRoomPage');
+    const router = useRouter();
+    const params = useParams();
+    const { id } = params;
+    const { toast } = useToast();
+
+    const [locations, setLocations] = useState<Location[]>([]);
+    const [location, setLocation] = useState<Location | null>(null);
+
+    const [name, setName] = useState('');
+    const [address, setAddress] = useState('');
+    const [imageUrl, setImageUrl] = useState('');
+    const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+    
+    useEffect(() => {
+        const storedLocations = localStorage.getItem('locations');
+        const parsedLocations = storedLocations ? JSON.parse(storedLocations) : initialLocations;
+        setLocations(parsedLocations);
+        const foundLocation = parsedLocations.find((l: Location) => l.id === id);
+        if (foundLocation) {
+            setLocation(foundLocation);
+            setName(foundLocation.name);
+            setAddress(foundLocation.address);
+            setImageUrl(foundLocation.imageUrl);
+            setSelectedAmenities(foundLocation.amenities.map(a => a.name));
+        } else {
+            toast({ variant: 'destructive', title: t('roomNotFound') });
+            router.push('/dashboard');
+        }
+    }, [id, router, toast, t]);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        const updatedLocation: Location = {
+            ...location!,
+            name,
+            address,
+            imageUrl,
+            amenities: selectedAmenities.map(name => ({ name })),
+        };
+        
+        const updatedLocations = locations.map(l => l.id === id ? updatedLocation : l);
+        localStorage.setItem('locations', JSON.stringify(updatedLocations));
+
+        toast({
+            title: t('roomUpdatedTitle'),
+            description: t('roomUpdatedDescription'),
+        });
+        router.push('/dashboard');
+    };
+    
+    const handleAmenityChange = (amenityName: string) => {
+        setSelectedAmenities(prev => 
+            prev.includes(amenityName)
+                ? prev.filter(a => a !== amenityName)
+                : [...prev, amenityName]
+        );
+    };
+
+    if (!location) {
+        return <div className="flex items-center justify-center min-h-screen">{t('loading')}</div>;
+    }
+
+    return (
+        <div className="flex flex-col min-h-screen bg-background">
+             <header className="flex items-center p-4 border-b">
+                <Button variant="outline" asChild>
+                    <Link href="/dashboard">&larr; {t('backToDashboard')}</Link>
+                </Button>
+            </header>
+            <main className="flex-1 flex items-center justify-center p-4">
+                <Card className="w-full max-w-2xl">
+                    <CardHeader>
+                        <CardTitle>{t('editRoomTitle')}</CardTitle>
+                        <CardDescription>{t('editRoomDescription')}</CardDescription>
+                    </CardHeader>
+                    <form onSubmit={handleSubmit}>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="name">{t('roomNameLabel')}</Label>
+                                <Input id="name" value={name} onChange={e => setName(e.target.value)} required />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="address">{t('addressLabel')}</Label>
+                                <Input id="address" value={address} onChange={e => setAddress(e.target.value)} required />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="imageUrl">{t('imageUrlLabel')}</Label>
+                                <Input id="imageUrl" value={imageUrl} onChange={e => setImageUrl(e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>{t('amenitiesLabel')}</Label>
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 border rounded-md">
+                                    {allAmenities.map(amenity => (
+                                        <div key={amenity.name} className="flex items-center gap-2">
+                                            <Checkbox
+                                                id={amenity.name}
+                                                checked={selectedAmenities.includes(amenity.name)}
+                                                onCheckedChange={() => handleAmenityChange(amenity.name)}
+                                            />
+                                            <Label htmlFor={amenity.name} className="font-normal">{amenity.name}</Label>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </CardContent>
+                        <CardFooter>
+                            <Button type="submit">{t('saveChangesButton')}</Button>
+                        </CardFooter>
+                    </form>
+                </Card>
+            </main>
+        </div>
+    );
+}

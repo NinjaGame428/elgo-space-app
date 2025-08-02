@@ -3,7 +3,7 @@ import type { ElementType } from 'react';
 
 export interface Amenity {
   name: string;
-  icon: ElementType;
+  icon?: ElementType; // Icon is optional now
 }
 
 export interface BookableItem {
@@ -14,11 +14,11 @@ export interface BookableItem {
 
 export interface Location {
   id: string;
-  name: string;
+  name:string;
   address: string;
   imageUrl: string;
   bookables: BookableItem[];
-  amenities: Amenity[];
+  amenities: Omit<Amenity, 'icon'>[];
 }
 
 export interface Booking {
@@ -28,4 +28,12 @@ export interface Booking {
   startTime: string;
   endTime: string;
   status: 'pending' | 'approved' | 'rejected';
+}
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'Admin' | 'User';
+  joined: string;
 }
