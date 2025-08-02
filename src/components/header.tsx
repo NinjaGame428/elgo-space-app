@@ -2,9 +2,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter, usePathname } from 'next-intl/client';
+import { useRouter, usePathname, Link } from 'next-intl/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import Link from 'next-intl/link';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,

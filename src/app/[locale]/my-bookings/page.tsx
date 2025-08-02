@@ -8,9 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { bookings as initialBookings, locations } from "@/lib/data";
 import { format } from 'date-fns';
-import { useRouter } from 'next-intl/client';
+import { useRouter, Link } from 'next-intl/navigation';
 import type { Booking } from '@/lib/types';
-import Link from 'next-intl/link';
 import { Header } from '@/components/header';
 import { useTranslations } from 'next-intl';
 

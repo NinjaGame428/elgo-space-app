@@ -3,14 +3,13 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next-intl/client';
+import { useRouter, Link } from 'next-intl/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Header } from '@/components/header';
-import Link from 'next-intl/link';
 import { useTranslations } from 'next-intl';
 
 export default function LoginPage() {

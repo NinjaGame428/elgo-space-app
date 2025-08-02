@@ -18,7 +18,7 @@ import { bookings } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
 import type { DateRange } from 'react-day-picker';
-import { useRouter } from 'next-intl/client';
+import { useRouter } from 'next-intl/navigation';
 import { useTranslations } from 'next-intl';
 
 interface LocationDetailsProps {
