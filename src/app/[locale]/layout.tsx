@@ -1,28 +1,53 @@
 
-import {NextIntlClientProvider} from 'next-intl';
-import {getMessages} from 'next-intl/server';
-import { Toaster } from "@/components/ui/toaster";
-import {notFound} from 'next/navigation';
-import { Header } from '@/components/header';
-import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
-import { AppSidebar } from '@/components/app-sidebar';
+'use client';
 
-const locales = ['en', 'fr'];
- 
-export default async function LocaleLayout({
+import { NextIntlClientProvider, useMessages } from 'next-intl';
+import { Toaster } from "@/components/ui/toaster";
+import { Header } from '@/components/header';
+import { SidebarProvider, Sidebar } from '@/components/ui/sidebar';
+import { AppSidebar } from '@/components/app-sidebar';
+import { usePathname } from 'next/navigation';
+
+function InnerLayout({ children, locale }: { children: React.ReactNode; locale: string; }) {
+  const pathname = usePathname();
+  const homePaths = [`/${locale}`, `/${locale}/`];
+  const authPaths = [`/${locale}/login`, `/${locale}/signup`];
+  const isHomePage = homePaths.includes(pathname);
+  const isAuthPage = authPaths.includes(pathname);
+  const showSidebar = !isHomePage && !isAuthPage;
+
+  return (
+    <SidebarProvider>
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <div className="flex flex-1">
+          {showSidebar && (
+            <Sidebar>
+              <AppSidebar />
+            </Sidebar>
+          )}
+          <div className="flex-1">
+            <main className="container">
+              {children}
+            </main>
+          </div>
+        </div>
+      </div>
+      <Toaster />
+    </SidebarProvider>
+  );
+}
+
+
+export default function LocaleLayout({
   children,
   params: {locale}
 }: {
   children: React.ReactNode;
   params: {locale: string};
 }) {
-  // Validate that the incoming `locale` parameter is valid
-  if (!locales.includes(locale)) notFound();
- 
-  // Providing all messages to the client
-  // side is the easiest way to get started
-  const messages = await getMessages();
- 
+  const messages = useMessages();
+
   return (
     <html lang={locale}>
       <head>
@@ -34,23 +59,8 @@ export default async function LocaleLayout({
         />
       </head>
       <body className="antialiased">
-        <NextIntlClientProvider messages={messages}>
-          <SidebarProvider>
-            <div className="flex flex-col min-h-screen">
-              <Header />
-              <div className="flex flex-1">
-                <Sidebar>
-                  <AppSidebar />
-                </Sidebar>
-                <SidebarInset>
-                  <main className="flex-1 container">
-                    {children}
-                  </main>
-                </SidebarInset>
-              </div>
-            </div>
-          </SidebarProvider>
-          <Toaster />
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <InnerLayout locale={locale}>{children}</InnerLayout>
         </NextIntlClientProvider>
       </body>
     </html>
