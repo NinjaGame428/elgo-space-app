@@ -5,7 +5,7 @@ export const locations: Location[] = [
   {
     id: 'secretariat',
     name: 'Secretariat',
-    address: '123 Bureau St, Montreal, QC',
+    address: '717 Boul St Joseph, Gatineau, QC',
     imageUrl: 'https://placehold.co/800x600.png',
     bookables: [
       {
@@ -25,7 +25,7 @@ export const locations: Location[] = [
   {
     id: 'sanctuaire',
     name: 'Sanctuaire',
-    address: '456 Faith Ave, Montreal, QC',
+    address: '717 Boul St Joseph, Gatineau, QC',
     imageUrl: 'https://placehold.co/800x600.png',
     bookables: [
       {
@@ -44,7 +44,7 @@ export const locations: Location[] = [
   {
     id: 'integration',
     name: 'Integration',
-    address: '789 Connect Blvd, Montreal, QC',
+    address: '717 Boul St Joseph, Gatineau, QC',
     imageUrl: 'https://placehold.co/800x600.png',
     bookables: [
       {
@@ -62,7 +62,7 @@ export const locations: Location[] = [
   {
     id: 'impact-junior',
     name: 'Impact Junior',
-    address: '101 Influence Rd, Montreal, QC',
+    address: '717 Boul St Joseph, Gatineau, QC',
     imageUrl: 'https://placehold.co/800x600.png',
     bookables: [
       {
