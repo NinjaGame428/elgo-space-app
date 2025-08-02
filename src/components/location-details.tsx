@@ -19,6 +19,7 @@ import { Label } from './ui/label';
 import type { DateRange } from 'react-day-picker';
 import { useRouter } from 'next/navigation';
 import { Clock, Coffee, Printer, Phone, Wifi, Car, UtensilsCrossed } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 const amenityIcons = {
   "24/7 Access": Clock,
@@ -41,6 +42,8 @@ const timeSlots = Array.from({ length: 18 }, (_, i) => {
 }).filter(time => time !== '22:30'); // 7:00 to 22:00
 
 export function LocationDetails({ location }: LocationDetailsProps) {
+  const t = useTranslations('LocationDetails');
+  const ta = useTranslations('AmenityNames');
   const router = useRouter();
   const { toast } = useToast();
   const [date, setDate] = useState<DateRange | undefined>();
@@ -87,14 +90,20 @@ export function LocationDetails({ location }: LocationDetailsProps) {
     if (location && date?.from && startTime && endTime) {
       const bookingEndDate = date.to || date.from;
       toast({
-        title: "Booking Confirmed!",
-        description: `You have booked ${location.name} from ${format(date.from, "PPP")} to ${format(bookingEndDate, "PPP")} from ${startTime} to ${endTime}. A reminder will be sent the day before.`,
+        title: t('bookingConfirmedTitle'),
+        description: t('bookingConfirmedDescription', {
+          locationName: location.name,
+          startDate: format(date.from, "PPP"),
+          endDate: format(bookingEndDate, "PPP"),
+          startTime: startTime,
+          endTime: endTime
+        }),
       });
     } else {
         toast({
             variant: "destructive",
-            title: "Booking Failed",
-            description: "Please select a date range, start time, and end time.",
+            title: t('bookingFailedTitle'),
+            description: t('bookingFailedDescription'),
         });
     }
   };
@@ -159,10 +168,10 @@ export function LocationDetails({ location }: LocationDetailsProps) {
   const isRangeInvalid = useMemo(() => {
     if(!startTime || !endTime || selectedDates.length === 0) return false;
 
-    for (const day of selectedDates) {
-        const start = parse(startTime, 'HH:mm', day);
-        const end = parse(endTime, 'HH:mm', day);
+    const start = parse(startTime, 'HH:mm', new Date());
+    const end = parse(endTime, 'HH:mm', new Date());
 
+    for (const day of selectedDates) {
         for (let d = new Date(start); d < end; d.setMinutes(d.getMinutes() + 30)) {
             const timeStr = format(d, 'HH:mm');
             if (isTimeSlotBooked(timeStr, day) || isTimeSlotUnavailable(timeStr, day)) {
@@ -192,7 +201,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
   if (!location) {
     return (
       <div className="flex items-center justify-center h-full text-muted-foreground p-8 bg-card rounded-lg shadow-sm border">
-        <p className="text-lg">Select a location to see details</p>
+        <p className="text-lg">{t('selectLocation')}</p>
       </div>
     );
   }
@@ -217,10 +226,10 @@ export function LocationDetails({ location }: LocationDetailsProps) {
           </CardHeader>
           <CardContent className="p-0">
             <div className="bg-muted/50 p-4 rounded-lg">
-              <h3 className="text-xl font-semibold mb-4">Book Your Spot</h3>
+              <h3 className="text-xl font-semibold mb-4">{t('bookSpot')}</h3>
               <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                      <h4 className="font-medium mb-2 text-sm">1. Select Date Range</h4>
+                      <h4 className="font-medium mb-2 text-sm">{t('selectDateRange')}</h4>
                        <Popover>
                           <PopoverTrigger asChild>
                           <Button
@@ -241,7 +250,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                                       format(date.from, "LLL dd, y")
                                   )
                                   ) : (
-                                  <span>Pick a date range</span>
+                                  <span>{t('pickDateRange')}</span>
                               )}
                           </Button>
                           </PopoverTrigger>
@@ -259,13 +268,13 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                   </div>
 
                   <div>
-                      <h4 className="font-medium mb-2 text-sm">2. Select Time</h4>
+                      <h4 className="font-medium mb-2 text-sm">{t('selectTime')}</h4>
                       <div className="grid grid-cols-2 gap-4">
                           <div>
-                              <Label className="text-xs">From</Label>
+                              <Label className="text-xs">{t('from')}</Label>
                               <Select value={startTime || ''} onValueChange={setStartTime} disabled={!date?.from}>
                                   <SelectTrigger>
-                                      <SelectValue placeholder="Start time" />
+                                      <SelectValue placeholder={t('startTime')} />
                                   </SelectTrigger>
                                   <SelectContent>
                                       {timeSlots.map(time => (
@@ -277,10 +286,10 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                               </Select>
                           </div>
                            <div>
-                              <Label className="text-xs">To</Label>
+                              <Label className="text-xs">{t('to')}</Label>
                                <Select value={endTime || ''} onValueChange={setEndTime} disabled={!startTime}>
                                   <SelectTrigger>
-                                      <SelectValue placeholder="End time" />
+                                      <SelectValue placeholder={t('endTime')} />
                                   </SelectTrigger>
                                   <SelectContent>
                                       {availableEndTimes.map(time => (
@@ -293,12 +302,12 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                           </div>
                       </div>
                        {isRangeInvalid && (
-                          <p className="text-sm text-destructive mt-2">The selected time range is unavailable or already booked.</p>
+                          <p className="text-sm text-destructive mt-2">{t('rangeInvalid')}</p>
                       )}
                   </div>
                   <div className="md:col-span-2">
                     <Button onClick={handleBooking} className="w-full" disabled={isRangeInvalid || !date?.from || !startTime || !endTime}>
-                        Book Now
+                        {t('bookNow')}
                     </Button>
                   </div>
               </div>
@@ -307,8 +316,8 @@ export function LocationDetails({ location }: LocationDetailsProps) {
             <Separator className="my-6" />
 
             <div>
-              <h3 className="text-xl font-semibold mb-4">Availability</h3>
-              <p className="text-sm text-muted-foreground mb-4">Red dates indicate days with existing approved bookings.</p>
+              <h3 className="text-xl font-semibold mb-4">{t('availability')}</h3>
+              <p className="text-sm text-muted-foreground mb-4">{t('availabilityDesc')}</p>
               <div className="flex justify-center p-4 rounded-lg bg-muted/50">
                 <Calendar
                     mode="multiple"
@@ -324,7 +333,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
             <Separator className="my-6" />
             
             <div>
-              <h3 className="text-xl font-semibold mb-4">Amenities</h3>
+              <h3 className="text-xl font-semibold mb-4">{t('amenities')}</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-2">
                 {location.amenities.map((amenity) => {
                   const Icon = amenityIcons[amenity.name as keyof typeof amenityIcons] || UtensilsCrossed;
@@ -333,7 +342,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                       <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
                         <Icon className="w-5 h-5" />
                       </div>
-                      <span className="text-sm text-foreground">{amenity.name}</span>
+                      <span className="text-sm text-foreground">{ta(amenity.name as any)}</span>
                     </div>
                   );
                 })}

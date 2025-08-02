@@ -2,8 +2,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useLocale, useTranslations } from 'next-intl';
+import { Link, usePathname, useRouter } from '@/navigation';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -12,11 +12,17 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
-import { User, Building2 } from 'lucide-react';
+import { User, Building2, Languages } from 'lucide-react';
 
 export function Header() {
+  const t = useTranslations('Header');
+  const locale = useLocale();
   const router = useRouter();
+  const pathname = usePathname();
+  
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
@@ -42,6 +48,10 @@ export function Header() {
     router.refresh(); 
   };
 
+  const handleLocaleChange = (newLocale: string) => {
+    router.replace(pathname, { locale: newLocale });
+  };
+
   const isAdmin = userEmail === 'test@example.com';
 
   return (
@@ -50,43 +60,58 @@ export function Header() {
         <div className="mr-auto flex">
           <Link href="/" className="flex items-center space-x-2">
             <Building2 className="h-6 w-6" />
-            <span className="font-bold text-lg">Lauft</span>
+            <span className="font-bold text-lg">{t('title')}</span>
           </Link>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-4">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Languages className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>{t('language')}</DropdownMenuLabel>
+              <DropdownMenuRadioGroup value={locale} onValueChange={handleLocaleChange}>
+                <DropdownMenuRadioItem value="en">{t('english')}</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="fr">{t('french')}</DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <nav className="flex items-center">
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="secondary" size="icon" className="rounded-full">
                     <User className="h-5 w-5" />
-                    <span className="sr-only">My Account</span>
+                    <span className="sr-only">{t('myAccount')}</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuLabel>{t('myAccount')}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                    <DropdownMenuItem asChild>
-                    <Link href="/profile">Profile</Link>
+                    <Link href="/profile">{t('profile')}</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/my-bookings">My Bookings</Link>
+                    <Link href="/my-bookings">{t('myBookings')}</Link>
                   </DropdownMenuItem>
                   {isAdmin && (
                     <>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
-                          <Link href="/dashboard">Admin Dashboard</Link>
+                          <Link href="/dashboard">{t('adminDashboard')}</Link>
                       </DropdownMenuItem>
                     </>
                   )}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout}>{t('logout')}</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
               <Button asChild>
-                <Link href="/login">Login</Link>
+                <Link href="/login">{t('login')}</Link>
               </Button>
             )}
           </nav>
