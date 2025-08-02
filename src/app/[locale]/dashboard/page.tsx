@@ -108,7 +108,7 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="flex flex-col flex-1 p-4 md:p-6 gap-6">
+        <div className="flex flex-col flex-1 py-6 gap-6">
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-semibold">{t('adminDashboard')}</h1>
             </div>
@@ -127,7 +127,7 @@ export default function DashboardPage() {
                                 onSelect={setSelectedDate}
                                 className="rounded-md border"
                                 modifiers={{ booked: bookedDates }}
-                                modifiersClassNames={{ booked: 'bg-chart-1/20' }}
+                                modifiersClassNames={{ booked: 'bg-chart-1 text-white' }}
                                 locale={dateLocale}
                             />
                         </CardContent>

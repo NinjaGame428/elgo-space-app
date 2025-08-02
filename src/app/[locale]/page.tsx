@@ -32,7 +32,7 @@ export default function HomePage() {
   };
 
   return (
-      <main className="flex-1 grid md:grid-cols-2 gap-8 p-4 md:p-6">
+      <main className="flex-1 grid md:grid-cols-2 gap-8 py-6">
         <div className="flex flex-col">
           <div className="p-4 space-y-4 border rounded-lg bg-card shadow-sm">
             <h2 className="text-2xl font-bold">{t('locations')}</h2>

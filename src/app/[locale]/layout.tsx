@@ -43,7 +43,7 @@ export default async function LocaleLayout({
                   <AppSidebar />
                 </Sidebar>
                 <SidebarInset>
-                  <main className="flex-1">
+                  <main className="flex-1 container">
                     {children}
                   </main>
                 </SidebarInset>

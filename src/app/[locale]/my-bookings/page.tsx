@@ -85,7 +85,7 @@ export default function MyBookingsPage() {
 
         return (
             <div 
-                className={`p-4 border rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${!isUpcoming && 'cursor-pointer hover:bg-muted/50'}`}
+                className={`p-4 border rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${!isUpcoming ? 'cursor-pointer hover:bg-muted/50' : ''}`}
                 onClick={!isUpcoming ? () => handleBookingClick(booking) : undefined}
             >
                 <div>
@@ -134,7 +134,7 @@ export default function MyBookingsPage() {
     };
 
     return (
-        <div className="flex flex-col flex-1 p-4 md:p-6 items-center">
+        <div className="flex flex-col flex-1 py-6 items-center">
             <div className="w-full max-w-4xl">
                 <Card>
                     <CardHeader>
