@@ -274,8 +274,8 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                   <div>
                       <h4 className="font-medium mb-2 text-sm">{t('selectTime')}</h4>
                       <div className="grid grid-cols-2 gap-4">
-                          <div>
-                              <Label className="text-xs">{t('from')}</Label>
+                          <div className="flex items-center gap-2">
+                              <Label className="text-xs whitespace-nowrap">{t('from')}</Label>
                               <Select value={startTime || ''} onValueChange={setStartTime} disabled={!date?.from}>
                                   <SelectTrigger>
                                       <SelectValue placeholder={t('startTime')} />
@@ -289,8 +289,8 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                                   </SelectContent>
                               </Select>
                           </div>
-                           <div>
-                              <Label className="text-xs">{t('to')}</Label>
+                           <div className="flex items-center gap-2">
+                              <Label className="text-xs whitespace-nowrap">{t('to')}</Label>
                                <Select value={endTime || ''} onValueChange={setEndTime} disabled={!startTime}>
                                   <SelectTrigger>
                                       <SelectValue placeholder={t('endTime')} />
@@ -358,3 +358,5 @@ export function LocationDetails({ location }: LocationDetailsProps) {
     </div>
   );
 }
+
+    
