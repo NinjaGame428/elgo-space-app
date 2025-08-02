@@ -55,7 +55,11 @@ export function LocationDetails({ location }: LocationDetailsProps) {
     if (!location) return [];
     return bookings
       .filter(b => b.status === 'approved' && b.locationId === location.id)
-      .map(b => new Date(b.startTime));
+      .flatMap(b => {
+        const start = new Date(b.startTime);
+        const end = new Date(b.endTime);
+        return eachDayOfInterval({start, end});
+      });
   }, [location]);
 
   useEffect(() => {
@@ -324,7 +328,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                     selected={approvedBookingsForLocation}
                     className="rounded-md p-0"
                     classNames={{
-                        day_selected: "bg-destructive/80 text-destructive-foreground hover:bg-destructive/90 focus:bg-destructive/90",
+                        day_selected: "bg-muted-foreground/80 text-muted-foreground hover:bg-muted-foreground/90 focus:bg-muted-foreground/90",
                     }}
                 />
               </div>

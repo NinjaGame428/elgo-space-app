@@ -1,3 +1,4 @@
+
 {
   "Header": {
     "title": "Lauft",
@@ -35,7 +36,7 @@
     "bookingFailedTitle": "Booking Failed",
     "bookingFailedDescription": "Please select a date range, start time, and end time.",
     "availability": "Availability",
-    "availabilityDesc": "Red dates indicate days with existing approved bookings.",
+    "availabilityDesc": "Grey dates indicate days with existing approved bookings.",
     "amenities": "Amenities"
   },
   "LoginPage": {
