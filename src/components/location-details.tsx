@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import Image from 'next/image';
@@ -18,8 +17,18 @@ import { bookings } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
 import type { DateRange } from 'react-day-picker';
-import { useRouter } from 'next-intl/navigation';
-import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
+import { Clock, Coffee, Printer, Phone, Wifi, Car, UtensilsCrossed } from 'lucide-react';
+
+const amenityIcons = {
+  "24/7 Access": Clock,
+  "Coffee & Tea": Coffee,
+  "Printing": Printer,
+  "Phone Booths": Phone,
+  "Wi-Fi": Wifi,
+  "Kitchenette": UtensilsCrossed,
+  "Parking": Car,
+};
 
 interface LocationDetailsProps {
   location: Location | null;
@@ -32,16 +41,13 @@ const timeSlots = Array.from({ length: 18 }, (_, i) => {
 }).filter(time => time !== '22:30'); // 7:00 to 22:00
 
 export function LocationDetails({ location }: LocationDetailsProps) {
-  const t = useTranslations('LocationDetails');
-  const tA = useTranslations('AmenityNames');
   const router = useRouter();
   const { toast } = useToast();
   const [date, setDate] = useState<DateRange | undefined>();
   const [startTime, setStartTime] = useState<string | null>(null);
   const [endTime, setEndTime] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  // All hooks must be called unconditionally at the top level.
+  
   const approvedBookingsForLocation = useMemo(() => {
     if (!location) return [];
     return bookings
@@ -71,23 +77,17 @@ export function LocationDetails({ location }: LocationDetailsProps) {
         return;
     }
 
-    if (date?.from && startTime && endTime) {
+    if (location && date?.from && startTime && endTime) {
       const bookingEndDate = date.to || date.from;
       toast({
-        title: t('bookingConfirmedTitle'),
-        description: t('bookingConfirmedDescription', {
-            locationName: location?.name,
-            startDate: format(date.from, "PPP"),
-            endDate: format(bookingEndDate, "PPP"),
-            startTime: startTime,
-            endTime: endTime
-        }),
+        title: "Booking Confirmed!",
+        description: `You have booked ${location.name} from ${format(date.from, "PPP")} to ${format(bookingEndDate, "PPP")} from ${startTime} to ${endTime}. A reminder will be sent the day before.`,
       });
     } else {
         toast({
             variant: "destructive",
-            title: t('bookingFailedTitle'),
-            description: t('bookingFailedDescription'),
+            title: "Booking Failed",
+            description: "Please select a date range, start time, and end time.",
         });
     }
   };
@@ -185,7 +185,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
   if (!location) {
     return (
       <div className="flex items-center justify-center h-full text-muted-foreground p-8 bg-card rounded-lg shadow-sm border">
-        <p className="text-lg">{t('selectLocation')}</p>
+        <p className="text-lg">Select a location to see details</p>
       </div>
     );
   }
@@ -210,10 +210,10 @@ export function LocationDetails({ location }: LocationDetailsProps) {
           </CardHeader>
           <CardContent className="p-0">
             <div className="bg-muted/50 p-4 rounded-lg">
-              <h3 className="text-xl font-semibold mb-4">{t('bookSpot')}</h3>
+              <h3 className="text-xl font-semibold mb-4">Book Your Spot</h3>
               <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                      <h4 className="font-medium mb-2 text-sm">{t('selectDateRange')}</h4>
+                      <h4 className="font-medium mb-2 text-sm">1. Select Date Range</h4>
                        <Popover>
                           <PopoverTrigger asChild>
                           <Button
@@ -234,7 +234,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                                       format(date.from, "LLL dd, y")
                                   )
                                   ) : (
-                                  <span>{t('pickDateRange')}</span>
+                                  <span>Pick a date range</span>
                               )}
                           </Button>
                           </PopoverTrigger>
@@ -252,13 +252,13 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                   </div>
 
                   <div>
-                      <h4 className="font-medium mb-2 text-sm">{t('selectTime')}</h4>
+                      <h4 className="font-medium mb-2 text-sm">2. Select Time</h4>
                       <div className="grid grid-cols-2 gap-4">
                           <div>
-                              <Label className="text-xs">{t('from')}</Label>
+                              <Label className="text-xs">From</Label>
                               <Select value={startTime || ''} onValueChange={setStartTime} disabled={!date?.from}>
                                   <SelectTrigger>
-                                      <SelectValue placeholder={t('startTime')} />
+                                      <SelectValue placeholder="Start time" />
                                   </SelectTrigger>
                                   <SelectContent>
                                       {timeSlots.map(time => (
@@ -270,10 +270,10 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                               </Select>
                           </div>
                            <div>
-                              <Label className="text-xs">{t('to')}</Label>
+                              <Label className="text-xs">To</Label>
                                <Select value={endTime || ''} onValueChange={setEndTime} disabled={!startTime}>
                                   <SelectTrigger>
-                                      <SelectValue placeholder={t('endTime')} />
+                                      <SelectValue placeholder="End time" />
                                   </SelectTrigger>
                                   <SelectContent>
                                       {availableEndTimes.map(time => (
@@ -286,12 +286,12 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                           </div>
                       </div>
                        {isRangeInvalid && (
-                          <p className="text-sm text-destructive mt-2">{t('rangeInvalid')}</p>
+                          <p className="text-sm text-destructive mt-2">The selected time range is unavailable or already booked.</p>
                       )}
                   </div>
                   <div className="md:col-span-2">
                     <Button onClick={handleBooking} className="w-full" disabled={isRangeInvalid || !date?.from || !startTime || !endTime}>
-                        {t('bookNow')}
+                        Book Now
                     </Button>
                   </div>
               </div>
@@ -300,8 +300,8 @@ export function LocationDetails({ location }: LocationDetailsProps) {
             <Separator className="my-6" />
 
             <div>
-              <h3 className="text-xl font-semibold mb-4">{t('availability')}</h3>
-              <p className="text-sm text-muted-foreground mb-4">{t('availabilityDesc')}</p>
+              <h3 className="text-xl font-semibold mb-4">Availability</h3>
+              <p className="text-sm text-muted-foreground mb-4">Red dates indicate days with existing approved bookings.</p>
               <div className="flex justify-center p-4 rounded-lg bg-muted/50">
                 <Calendar
                     mode="multiple"
@@ -317,16 +317,19 @@ export function LocationDetails({ location }: LocationDetailsProps) {
             <Separator className="my-6" />
             
             <div>
-              <h3 className="text-xl font-semibold mb-4">{t('amenities')}</h3>
+              <h3 className="text-xl font-semibold mb-4">Amenities</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-2">
-                {location.amenities.map((amenity) => (
-                  <div key={amenity.name} className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
-                      <amenity.icon className="w-5 h-5" />
+                {location.amenities.map((amenity) => {
+                  const Icon = amenityIcons[amenity.name as keyof typeof amenityIcons] || UtensilsCrossed;
+                  return (
+                    <div key={amenity.name} className="flex items-center gap-3">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <span className="text-sm text-foreground">{amenity.name}</span>
                     </div>
-                    <span className="text-sm text-foreground">{tA(amenity.name as any)}</span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </CardContent>
