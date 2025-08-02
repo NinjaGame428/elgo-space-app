@@ -13,6 +13,7 @@ import { useTranslations } from 'next-intl';
 import type { User } from '@/lib/types';
 import { users as initialUsers } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Header } from '@/components/header';
 
 export default function EditUserPage() {
     const t = useTranslations('EditUserPage');
@@ -75,11 +76,7 @@ export default function EditUserPage() {
 
     return (
         <div className="flex flex-col min-h-screen bg-background">
-             <header className="flex items-center p-4 border-b">
-                <Button variant="outline" asChild>
-                    <Link href="/dashboard">&larr; {t('backToDashboard')}</Link>
-                </Button>
-            </header>
+             <Header />
             <main className="flex-1 flex items-center justify-center p-4">
                 <Card className="w-full max-w-lg">
                     <CardHeader>
@@ -109,8 +106,11 @@ export default function EditUserPage() {
                                 </Select>
                             </div>
                         </CardContent>
-                        <CardFooter>
+                        <CardFooter className="flex justify-between">
                             <Button type="submit">{t('saveChangesButton')}</Button>
+                            <Button variant="outline" asChild>
+                                <Link href="/dashboard">{t('backToDashboard')}</Link>
+                            </Button>
                         </CardFooter>
                     </form>
                 </Card>

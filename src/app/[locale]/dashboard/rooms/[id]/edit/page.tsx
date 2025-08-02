@@ -15,6 +15,7 @@ import { allAmenities, locations as initialLocations } from '@/lib/data';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Image from 'next/image';
+import { Header } from '@/components/header';
 
 export default function EditRoomPage() {
     const t = useTranslations('EditRoomPage');
@@ -94,11 +95,7 @@ export default function EditRoomPage() {
 
     return (
         <div className="flex flex-col min-h-screen bg-background">
-             <header className="flex items-center p-4 border-b">
-                <Button variant="outline" asChild>
-                    <Link href="/dashboard">&larr; {t('backToDashboard')}</Link>
-                </Button>
-            </header>
+             <Header />
             <main className="flex-1 flex items-center justify-center p-4">
                 <Card className="w-full max-w-2xl">
                     <CardHeader>
@@ -157,8 +154,11 @@ export default function EditRoomPage() {
                                 </div>
                             </div>
                         </CardContent>
-                        <CardFooter>
+                        <CardFooter className="flex justify-between">
                             <Button type="submit">{t('saveChangesButton')}</Button>
+                             <Button variant="outline" asChild>
+                                <Link href="/dashboard">{t('backToDashboard')}</Link>
+                            </Button>
                         </CardFooter>
                     </form>
                 </Card>

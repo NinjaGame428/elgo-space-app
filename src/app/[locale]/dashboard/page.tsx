@@ -10,7 +10,7 @@ import { bookings as initialBookings, locations as initialLocations, users as in
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import type { Booking, Location, User } from '@/lib/types';
-import Link from 'next/link';
+import { Link } from '@/navigation';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { MoreHorizontal, Trash2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
@@ -18,6 +18,7 @@ import { useTranslations } from 'next-intl';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Header } from '@/components/header';
 
 export default function DashboardPage() {
     const t = useTranslations('DashboardPage');
@@ -113,13 +114,13 @@ export default function DashboardPage() {
 
     return (
         <div className="flex flex-col min-h-screen bg-background">
-            <header className="flex items-center justify-between p-4 border-b">
-                <Link href="/" className="text-2xl font-bold">Lauft</Link>
-                <h1 className="text-xl font-semibold">{t('adminDashboard')}</h1>
-                <Button variant="outline" onClick={handleLogout}>{t('logout')}</Button>
-            </header>
+            <Header />
 
             <main className="flex-1 p-4 md:p-6 grid gap-6">
+                <div className="flex items-center justify-between">
+                    <h1 className="text-2xl font-semibold">{t('adminDashboard')}</h1>
+                </div>
+
                 <div className="grid md:grid-cols-3 gap-6">
                     <div className="md:col-span-1">
                         <Card>
