@@ -26,8 +26,10 @@ export default function MyBookingsPage() {
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [locations, setLocations] = useState<Location[]>([]);
     const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+    const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
+        setIsClient(true);
         const isLoggedIn = typeof window !== 'undefined' ? localStorage.getItem('isLoggedIn') === 'true' : false;
         if (!isLoggedIn) {
             router.push('/login');
@@ -42,12 +44,13 @@ export default function MyBookingsPage() {
     }, [router]);
 
     const userBookings = useMemo(() => {
-        const userEmail = typeof window !== 'undefined' ? localStorage.getItem('userEmail') : null;
+        if (!isClient) return [];
+        const userEmail = localStorage.getItem('userEmail');
         if (!userEmail) return [];
         return bookings
             .filter(b => b.userEmail === userEmail)
             .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
-    }, [bookings]);
+    }, [bookings, isClient]);
 
     const { upcomingBookings, pastBookings } = useMemo(() => {
         const now = new Date();
@@ -132,6 +135,10 @@ export default function MyBookingsPage() {
             </div>
         );
     };
+
+    if (!isClient) {
+        return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    }
 
     return (
         <div className="flex flex-col flex-1 py-6 items-center">

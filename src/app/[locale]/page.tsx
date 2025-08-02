@@ -33,7 +33,7 @@ export default function HomePage() {
 
   return (
       <main className="flex-1 grid md:grid-cols-2 gap-8 py-6">
-        <div className="flex flex-col">
+        <div className="flex flex-col gap-6">
           <div className="p-4 space-y-4 border rounded-lg bg-card shadow-sm">
             <h2 className="text-2xl font-bold">{t('locations')}</h2>
             <Input
@@ -52,7 +52,7 @@ export default function HomePage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-4 mt-6">
+          <div className="space-y-4">
             {filteredLocations.length > 0 ? (
               filteredLocations.map(location => (
                 <LocationCard

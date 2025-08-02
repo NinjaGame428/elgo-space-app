@@ -19,7 +19,7 @@ export function InnerLayout({ children, locale }: { children: React.ReactNode; l
         </Sidebar>
       )}
       <div className="flex-1">
-        <main className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl">
+        <main className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-2xl">
           {children}
         </main>
       </div>

@@ -18,8 +18,10 @@ export default function ProfilePage() {
   const { toast } = useToast();
   const [userEmail, setUserEmail] = useState('');
   const [userName, setUserName] = useState('');
+  const [isClient, setIsClient] = useState(false);
   
   useEffect(() => {
+    setIsClient(true);
     const isLoggedIn = typeof window !== 'undefined' ? localStorage.getItem('isLoggedIn') === 'true' : false;
     if (!isLoggedIn) {
       router.push('/login');
@@ -52,6 +54,9 @@ export default function ProfilePage() {
     router.push('/');
   };
 
+  if (!isClient) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
 
   return (
     <div className="flex-1 py-6">
