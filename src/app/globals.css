@@ -85,8 +85,8 @@ body {
   body {
     @apply bg-background text-foreground;
     background-image:
-      linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
+      linear-gradient(hsl(var(--border)) 1px, transparent 1px),
+      linear-gradient(to right, hsl(var(--border)) 1px, transparent 1px);
     background-size: 2rem 2rem;
   }
 }
