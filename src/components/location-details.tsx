@@ -4,62 +4,103 @@
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import type { Booking, Location } from '@/lib/types';
+import type { Location } from '@/lib/types';
 import { Separator } from './ui/separator';
 import { ScrollArea } from './ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { Calendar as CalendarIcon, Clock, Coffee, Printer, Phone, Wifi, Car, UtensilsCrossed } from 'lucide-react';
+import { Calendar as CalendarIcon, Coffee, Info } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { format, addDays } from 'date-fns';
+import { format, addDays, parse } from 'date-fns';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
-import { Info } from 'lucide-react';
 import { bookings } from '@/lib/data';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Label } from './ui/label';
 
 interface LocationDetailsProps {
   location: Location | null;
 }
 
-const timeSlots = [
-  '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'
-];
+const timeSlots = Array.from({ length: 9 }, (_, i) => `${String(i + 9).padStart(2, '0')}:00`); // 09:00 to 17:00
 
 export function LocationDetails({ location }: LocationDetailsProps) {
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [startTime, setStartTime] = useState<string | null>(null);
+  const [endTime, setEndTime] = useState<string | null>(null);
   const { toast } = useToast();
 
+  useEffect(() => {
+    // Reset times when date changes
+    setStartTime(null);
+    setEndTime(null);
+  }, [date]);
+
+  useEffect(() => {
+    // Reset end time if start time changes
+    setEndTime(null);
+  }, [startTime]);
+
   const handleBooking = () => {
-    if (date && selectedTime) {
+    if (date && startTime && endTime) {
       toast({
         title: "Booking Confirmed!",
-        description: `You have booked ${location?.name} on ${format(date, "PPP")} at ${selectedTime}. A reminder will be sent the day before.`,
+        description: `You have booked ${location?.name} on ${format(date, "PPP")} from ${startTime} to ${endTime}. A reminder will be sent the day before.`,
       });
+      // Here you would typically add the new booking to your state/backend
     } else {
         toast({
             variant: "destructive",
             title: "Booking Failed",
-            description: "Please select a date and time.",
+            description: "Please select a date, start time, and end time.",
         });
     }
   };
 
   const locationBookings = useMemo(() => {
-    if (!location) return [];
-    return bookings.filter(b => b.locationId === location.id);
-  }, [location]);
-
+    if (!location || !date) return [];
+    const formattedDate = format(date, "yyyy-MM-dd");
+    return bookings.filter(b => 
+        b.locationId === location.id &&
+        format(new Date(b.startTime), "yyyy-MM-dd") === formattedDate &&
+        b.status === 'approved'
+    );
+  }, [location, date]);
+  
   const isTimeSlotBooked = (time: string) => {
     if (!date) return false;
+    const checkTime = parse(time, 'HH:mm', date).getTime();
+
     return locationBookings.some(booking => {
-        const bookingDate = new Date(booking.startTime);
-        return format(bookingDate, "yyyy-MM-dd") === format(date, "yyyy-MM-dd") &&
-               bookingDate.getHours() === parseInt(time.split(':')[0]) &&
-               booking.status === 'approved';
+        const bookingStart = new Date(booking.startTime).getTime();
+        const bookingEnd = new Date(booking.endTime).getTime();
+        return checkTime >= bookingStart && checkTime < bookingEnd;
     });
-  }
+  };
+
+  const isRangeBooked = useMemo(() => {
+    if(!startTime || !endTime || !date) return false;
+
+    const start = parse(startTime, 'HH:mm', date);
+    const end = parse(endTime, 'HH:mm', date);
+
+    for (let d = start; d < end; d.setHours(d.getHours() + 1)) {
+        if (isTimeSlotBooked(format(d, 'HH:mm'))) {
+            return true;
+        }
+    }
+    return false;
+  }, [startTime, endTime, date, isTimeSlotBooked]);
+
+
+  const availableEndTimes = useMemo(() => {
+    if (!startTime) return [];
+    const startIndex = timeSlots.indexOf(startTime);
+    // Allow booking up to the end of the day. The last slot is bookable as an end time.
+    return timeSlots.slice(startIndex + 1).concat([`${parseInt(timeSlots[timeSlots.length-1].split(':')[0]) + 1}:00`]);
+  }, [startTime]);
+
 
   if (!location) {
     return (
@@ -110,7 +151,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                             mode="single"
                             selected={date}
                             onSelect={setDate}
-                            disabled={(date) => date < new Date() || date > addDays(new Date(), 60)}
+                            disabled={(date) => date < new Date(new Date().setHours(0,0,0,0)) || date > addDays(new Date(), 60)}
                             initialFocus
                         />
                         </PopoverContent>
@@ -119,7 +160,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                         <h4 className="font-medium mb-2">Public Availability</h4>
                         <Calendar
                             mode="multiple"
-                            selected={locationBookings.filter(b => b.status === 'approved').map(b => new Date(b.startTime))}
+                            selected={bookings.filter(b => b.status === 'approved' && b.locationId === location.id).map(b => new Date(b.startTime))}
                             className="rounded-md border p-0"
                             classNames={{
                                 day_selected: "bg-destructive text-destructive-foreground hover:bg-destructive/90 focus:bg-destructive/90",
@@ -130,21 +171,44 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                 </div>
 
                 <div>
-                    <h4 className="font-medium mb-2">2. Select Time (1hr slots)</h4>
-                    <div className="grid grid-cols-3 gap-2">
-                        {timeSlots.map(time => (
-                            <Button
-                                key={time}
-                                variant={isTimeSlotBooked(time) ? 'destructive' : selectedTime === time ? 'default' : 'outline'}
-                                disabled={isTimeSlotBooked(time)}
-                                onClick={() => setSelectedTime(time)}
-                            >
-                                {time}
-                            </Button>
-                        ))}
+                    <h4 className="font-medium mb-2">2. Select Time</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <Label>From</Label>
+                            <Select value={startTime || ''} onValueChange={setStartTime}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Start time" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {timeSlots.map(time => (
+                                        <SelectItem key={time} value={time} disabled={isTimeSlotBooked(time)}>
+                                            {time}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                         <div>
+                            <Label>To</Label>
+                             <Select value={endTime || ''} onValueChange={setEndTime} disabled={!startTime}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="End time" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {availableEndTimes.map(time => (
+                                       <SelectItem key={time} value={time} disabled={isTimeSlotBooked(time) && time !== availableEndTimes[availableEndTimes.length - 1]}>
+                                         {time}
+                                       </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
+                     {isRangeBooked && (
+                        <p className="text-sm text-destructive mt-2">Part of this time range is already booked.</p>
+                    )}
 
-                    <Button onClick={handleBooking} className="w-full mt-6" disabled={!date || !selectedTime}>
+                    <Button onClick={handleBooking} className="w-full mt-6" disabled={!date || !startTime || !endTime || isRangeBooked}>
                       Book Now
                     </Button>
                 </div>
