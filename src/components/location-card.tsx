@@ -22,27 +22,31 @@ export function LocationCard({ location, isSelected, onClick }: LocationCardProp
         isSelected ? 'border-primary shadow-md' : 'border-card hover:border-primary/50'
       )}
     >
-      <CardHeader className="p-0">
-        <div className="relative h-48 w-full">
+      <div className="flex flex-col sm:flex-row">
+        <div className="relative h-48 sm:h-auto sm:w-48 flex-shrink-0">
           <Image
             src={location.imageUrl}
             alt={location.name}
             fill
-            className="object-cover rounded-t-lg"
+            className="object-cover rounded-t-lg sm:rounded-l-lg sm:rounded-t-none"
             data-ai-hint="modern office"
-            sizes="(max-width: 768px) 100vw, 480px"
+            sizes="(max-width: 640px) 100vw, 192px"
           />
         </div>
-      </CardHeader>
-      <CardContent className="p-4">
-        <CardTitle className="text-xl font-bold mb-1 truncate">{location.name}</CardTitle>
-        <CardDescription className="truncate">{location.address}</CardDescription>
-        <div className="flex flex-wrap gap-2 mt-3">
-            {location.bookables.map(b => (
-                <Badge key={b.type} variant="secondary">{b.type}</Badge>
-            ))}
+        <div className="p-4 flex flex-col">
+          <CardHeader className="p-0">
+            <CardTitle className="text-xl font-bold mb-1 truncate">{location.name}</CardTitle>
+            <CardDescription className="truncate">{location.address}</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0 mt-auto pt-4">
+            <div className="flex flex-wrap gap-2">
+                {location.bookables.map(b => (
+                    <Badge key={b.type} variant="secondary">{b.type}</Badge>
+                ))}
+            </div>
+          </CardContent>
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
 }

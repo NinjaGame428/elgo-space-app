@@ -179,7 +179,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
 
   if (!location) {
     return (
-      <div className="hidden lg:flex items-center justify-center h-full text-muted-foreground p-8 bg-card rounded-lg shadow-sm border">
+      <div className="flex items-center justify-center h-full text-muted-foreground p-8 bg-card rounded-lg shadow-sm border">
         <p className="text-lg">Select a location to see details</p>
       </div>
     );
@@ -192,7 +192,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
   }, [location.id]);
 
   return (
-    <ScrollArea className="h-full w-full rounded-lg border bg-card shadow-sm">
+    <div className="rounded-lg border bg-card shadow-sm">
       <div className={cn("bg-card rounded-lg")}>
         <div className="relative w-full h-60 md:h-80">
           <Image
@@ -333,6 +333,6 @@ export function LocationDetails({ location }: LocationDetailsProps) {
           </CardContent>
         </div>
       </div>
-    </ScrollArea>
+    </div>
   );
 }
