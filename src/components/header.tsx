@@ -53,7 +53,6 @@ export function Header() {
     setIsAuthenticated(false);
     setUserEmail(null);
     router.push('/');
-    router.refresh(); 
   };
 
   const handleLocaleChange = (isFrench: boolean) => {
@@ -150,3 +149,5 @@ export function Header() {
     </header>
   );
 }
+
+    

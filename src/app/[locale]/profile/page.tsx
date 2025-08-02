@@ -20,7 +20,7 @@ export default function ProfilePage() {
   const [userName, setUserName] = useState('');
   
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    const isLoggedIn = typeof window !== 'undefined' ? localStorage.getItem('isLoggedIn') === 'true' : false;
     if (!isLoggedIn) {
       router.push('/login');
       return;
@@ -158,3 +158,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+    
