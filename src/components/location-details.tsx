@@ -63,6 +63,13 @@ export function LocationDetails({ location }: LocationDetailsProps) {
   }, []);
 
   useEffect(() => {
+    // Reset selections when location changes
+    setDate(undefined);
+    setStartTime(null);
+    setEndTime(null);
+  }, [location]);
+
+  useEffect(() => {
     setStartTime(null);
     setEndTime(null);
   }, [date]);
