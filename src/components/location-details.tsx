@@ -176,6 +176,13 @@ export function LocationDetails({ location }: LocationDetailsProps) {
     
   }, [startTime, isTimeSlotDisabled]);
 
+  const approvedBookingsForLocation = useMemo(() => {
+    if (!location) return [];
+    return bookings
+      .filter(b => b.status === 'approved' && b.locationId === location.id)
+      .map(b => new Date(b.startTime));
+  }, [location]);
+
 
   if (!location) {
     return (
@@ -184,12 +191,6 @@ export function LocationDetails({ location }: LocationDetailsProps) {
       </div>
     );
   }
-
-  const approvedBookingsForLocation = useMemo(() => {
-    return bookings
-      .filter(b => b.status === 'approved' && b.locationId === location.id)
-      .map(b => new Date(b.startTime));
-  }, [location.id]);
 
   return (
     <div className="rounded-lg border bg-card shadow-sm">
