@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Image from 'next/image';
@@ -6,20 +7,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import type { Location } from '@/lib/types';
 import { Separator } from './ui/separator';
-import { ScrollArea } from './ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { Calendar as CalendarIcon, Info } from 'lucide-react';
+import { Calendar as CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { format, addDays, parse, getDay, eachDayOfInterval } from 'date-fns';
-import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { bookings } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
 import type { DateRange } from 'react-day-picker';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next-intl/client';
+import { useTranslations } from 'next-intl';
 
 interface LocationDetailsProps {
   location: Location | null;
@@ -32,12 +32,22 @@ const timeSlots = Array.from({ length: 18 }, (_, i) => {
 }).filter(time => time !== '22:30'); // 7:00 to 22:00
 
 export function LocationDetails({ location }: LocationDetailsProps) {
+  const t = useTranslations('LocationDetails');
+  const tA = useTranslations('AmenityNames');
   const router = useRouter();
+  const { toast } = useToast();
   const [date, setDate] = useState<DateRange | undefined>();
   const [startTime, setStartTime] = useState<string | null>(null);
   const [endTime, setEndTime] = useState<string | null>(null);
-  const { toast } = useToast();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // All hooks must be called unconditionally at the top level.
+  const approvedBookingsForLocation = useMemo(() => {
+    if (!location) return [];
+    return bookings
+      .filter(b => b.status === 'approved' && b.locationId === location.id)
+      .map(b => new Date(b.startTime));
+  }, [location]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -47,13 +57,11 @@ export function LocationDetails({ location }: LocationDetailsProps) {
   }, []);
 
   useEffect(() => {
-    // Reset times when date changes
     setStartTime(null);
     setEndTime(null);
   }, [date]);
 
   useEffect(() => {
-    // Reset end time if start time changes
     setEndTime(null);
   }, [startTime]);
 
@@ -63,17 +71,23 @@ export function LocationDetails({ location }: LocationDetailsProps) {
         return;
     }
 
-    if (date?.from && date?.to && startTime && endTime) {
+    if (date?.from && startTime && endTime) {
+      const bookingEndDate = date.to || date.from;
       toast({
-        title: "Booking Confirmed!",
-        description: `You have booked ${location?.name} from ${format(date.from, "PPP")} to ${format(date.to, "PPP")} from ${startTime} to ${endTime}. A reminder will be sent the day before.`,
+        title: t('bookingConfirmedTitle'),
+        description: t('bookingConfirmedDescription', {
+            locationName: location?.name,
+            startDate: format(date.from, "PPP"),
+            endDate: format(bookingEndDate, "PPP"),
+            startTime: startTime,
+            endTime: endTime
+        }),
       });
-      // Here you would typically add the new booking to your state/backend
     } else {
         toast({
             variant: "destructive",
-            title: "Booking Failed",
-            description: "Please select a date range, start time, and end time.",
+            title: t('bookingFailedTitle'),
+            description: t('bookingFailedDescription'),
         });
     }
   };
@@ -89,22 +103,17 @@ export function LocationDetails({ location }: LocationDetailsProps) {
   const isTimeSlotUnavailable = useCallback((time: string, checkDate: Date | undefined): boolean => {
     if (!checkDate) return false;
 
-    const day = getDay(checkDate); // Sunday = 0, Monday = 1, etc.
+    const day = getDay(checkDate);
     const [hour, minute] = time.split(':').map(Number);
     const totalMinutes = hour * 60 + minute;
 
-    // Sunday: 7am to 5pm (07:00 - 17:00) -> Should be 7am to 5pm unavailable, which means 7:00 up to (but not including) 17:00 is unavailable
-    if (day === 0) {
+    if (day === 0) { // Sunday
         if (totalMinutes >= 420 && totalMinutes < 1020) return true;
     }
-    
-    // Wednesday: 7:30pm to 10pm (19:30 - 22:00) -> 19:30 up to 22:00 is unavailable
-    if (day === 3) {
+    if (day === 3) { // Wednesday
         if (totalMinutes >= 1170 && totalMinutes < 1320) return true;
     }
-
-    // Friday: 6pm to 9:30pm (18:00 - 21:30) -> 18:00 up to 21:30 is unavailable
-    if (day === 5) {
+    if (day === 5) { // Friday
         if (totalMinutes >= 1080 && totalMinutes < 1290) return true;
     }
 
@@ -123,7 +132,6 @@ export function LocationDetails({ location }: LocationDetailsProps) {
 
   const isTimeSlotBooked = useCallback((time: string, checkDate: Date) => {
     const checkTime = parse(time, 'HH:mm', checkDate).getTime();
-
     return locationBookingsForDay(checkDate).some(booking => {
         const bookingStart = new Date(booking.startTime).getTime();
         const bookingEnd = new Date(booking.endTime).getTime();
@@ -149,14 +157,14 @@ export function LocationDetails({ location }: LocationDetailsProps) {
         const end = parse(endTime, 'HH:mm', day);
 
         for (let d = new Date(start); d < end; d.setMinutes(d.getMinutes() + 30)) {
-            if (isTimeSlotBooked(format(d, 'HH:mm'), day) || isTimeSlotUnavailable(format(d, 'HH:mm'), day)) {
+            const timeStr = format(d, 'HH:mm');
+            if (isTimeSlotBooked(timeStr, day) || isTimeSlotUnavailable(timeStr, day)) {
                 return true;
             }
         }
     }
     return false;
   }, [startTime, endTime, selectedDates, isTimeSlotBooked, isTimeSlotUnavailable]);
-
 
   const availableEndTimes = useMemo(() => {
     if (!startTime) return [];
@@ -170,24 +178,14 @@ export function LocationDetails({ location }: LocationDetailsProps) {
         }
     }
     
-    // The end time is exclusive in the loop, so we can go one slot past the last available one
-    // e.g. if 10:00 is available, you can book until 10:30
     return timeSlots.slice(startIndex + 1, endIndex + 1);
     
   }, [startTime, isTimeSlotDisabled]);
 
-  const approvedBookingsForLocation = useMemo(() => {
-    if (!location) return [];
-    return bookings
-      .filter(b => b.status === 'approved' && b.locationId === location.id)
-      .map(b => new Date(b.startTime));
-  }, [location]);
-
-
   if (!location) {
     return (
       <div className="flex items-center justify-center h-full text-muted-foreground p-8 bg-card rounded-lg shadow-sm border">
-        <p className="text-lg">Select a location to see details</p>
+        <p className="text-lg">{t('selectLocation')}</p>
       </div>
     );
   }
@@ -212,10 +210,10 @@ export function LocationDetails({ location }: LocationDetailsProps) {
           </CardHeader>
           <CardContent className="p-0">
             <div className="bg-muted/50 p-4 rounded-lg">
-              <h3 className="text-xl font-semibold mb-4">Book Your Spot</h3>
+              <h3 className="text-xl font-semibold mb-4">{t('bookSpot')}</h3>
               <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                      <h4 className="font-medium mb-2 text-sm">1. Select Date Range</h4>
+                      <h4 className="font-medium mb-2 text-sm">{t('selectDateRange')}</h4>
                        <Popover>
                           <PopoverTrigger asChild>
                           <Button
@@ -236,7 +234,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                                       format(date.from, "LLL dd, y")
                                   )
                                   ) : (
-                                  <span>Pick a date range</span>
+                                  <span>{t('pickDateRange')}</span>
                               )}
                           </Button>
                           </PopoverTrigger>
@@ -254,13 +252,13 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                   </div>
 
                   <div>
-                      <h4 className="font-medium mb-2 text-sm">2. Select Time</h4>
+                      <h4 className="font-medium mb-2 text-sm">{t('selectTime')}</h4>
                       <div className="grid grid-cols-2 gap-4">
                           <div>
-                              <Label className="text-xs">From</Label>
+                              <Label className="text-xs">{t('from')}</Label>
                               <Select value={startTime || ''} onValueChange={setStartTime} disabled={!date?.from}>
                                   <SelectTrigger>
-                                      <SelectValue placeholder="Start time" />
+                                      <SelectValue placeholder={t('startTime')} />
                                   </SelectTrigger>
                                   <SelectContent>
                                       {timeSlots.map(time => (
@@ -272,10 +270,10 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                               </Select>
                           </div>
                            <div>
-                              <Label className="text-xs">To</Label>
+                              <Label className="text-xs">{t('to')}</Label>
                                <Select value={endTime || ''} onValueChange={setEndTime} disabled={!startTime}>
                                   <SelectTrigger>
-                                      <SelectValue placeholder="End time" />
+                                      <SelectValue placeholder={t('endTime')} />
                                   </SelectTrigger>
                                   <SelectContent>
                                       {availableEndTimes.map(time => (
@@ -288,12 +286,12 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                           </div>
                       </div>
                        {isRangeInvalid && (
-                          <p className="text-sm text-destructive mt-2">The selected time range is unavailable or already booked.</p>
+                          <p className="text-sm text-destructive mt-2">{t('rangeInvalid')}</p>
                       )}
                   </div>
                   <div className="md:col-span-2">
                     <Button onClick={handleBooking} className="w-full" disabled={isRangeInvalid || !date?.from || !startTime || !endTime}>
-                        Book Now
+                        {t('bookNow')}
                     </Button>
                   </div>
               </div>
@@ -302,8 +300,8 @@ export function LocationDetails({ location }: LocationDetailsProps) {
             <Separator className="my-6" />
 
             <div>
-              <h3 className="text-xl font-semibold mb-4">Availability</h3>
-              <p className="text-sm text-muted-foreground mb-4">Red dates indicate days with existing approved bookings.</p>
+              <h3 className="text-xl font-semibold mb-4">{t('availability')}</h3>
+              <p className="text-sm text-muted-foreground mb-4">{t('availabilityDesc')}</p>
               <div className="flex justify-center p-4 rounded-lg bg-muted/50">
                 <Calendar
                     mode="multiple"
@@ -319,14 +317,14 @@ export function LocationDetails({ location }: LocationDetailsProps) {
             <Separator className="my-6" />
             
             <div>
-              <h3 className="text-xl font-semibold mb-4">Amenities</h3>
+              <h3 className="text-xl font-semibold mb-4">{t('amenities')}</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-2">
                 {location.amenities.map((amenity) => (
                   <div key={amenity.name} className="flex items-center gap-3">
                     <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
                       <amenity.icon className="w-5 h-5" />
                     </div>
-                    <span className="text-sm text-foreground">{amenity.name}</span>
+                    <span className="text-sm text-foreground">{tA(amenity.name as any)}</span>
                   </div>
                 ))}
               </div>
