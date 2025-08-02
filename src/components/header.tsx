@@ -21,12 +21,18 @@ export function Header() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    // This effect runs on the client after hydration
+    const checkAuthStatus = () => {
       const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
       const email = localStorage.getItem('userEmail');
       setIsAuthenticated(loggedIn);
       setUserEmail(email);
-    }
+    };
+    checkAuthStatus();
+    
+    // Optional: Add a listener for storage changes to sync across tabs
+    window.addEventListener('storage', checkAuthStatus);
+    return () => window.removeEventListener('storage', checkAuthStatus);
   }, []);
 
   const handleLogout = () => {
@@ -35,6 +41,7 @@ export function Header() {
     setIsAuthenticated(false);
     setUserEmail(null);
     router.push('/');
+    router.refresh(); // Refresh to ensure state is updated everywhere
   };
 
   const isAdmin = userEmail === 'test@example.com';
@@ -42,13 +49,13 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
-        <div className="mr-4 flex">
+        <div className="mr-auto flex">
           <Link href="/" className="flex items-center space-x-2">
             <Building2 className="h-6 w-6" />
             <span className="font-bold text-lg">Lauft</span>
           </Link>
         </div>
-        <div className="flex flex-1 items-center justify-end space-x-4">
+        <div className="flex items-center space-x-4">
           <nav className="flex items-center space-x-2">
             {isAuthenticated ? (
               <DropdownMenu>
