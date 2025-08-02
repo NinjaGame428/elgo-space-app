@@ -41,7 +41,7 @@ export default function Home() {
       <Header />
       <main className="flex flex-1 overflow-hidden p-4 gap-4">
         <div className="flex-1 lg:grid lg:grid-cols-[480px_1fr] gap-4">
-          <aside className={cn("border bg-card rounded-lg shadow-sm flex-col h-full", isMobile && showDetails ? "hidden" : "flex")}>
+          <aside className={cn("border bg-card rounded-lg shadow-sm flex flex-col h-full", isMobile && showDetails ? "hidden" : "flex")}>
             <div className="p-4 border-b">
               <h1 className="text-2xl font-bold mb-4">Locations</h1>
               <div className="flex gap-2">
