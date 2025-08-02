@@ -8,12 +8,12 @@ import type { Location } from '@/lib/types';
 import { Separator } from './ui/separator';
 import { ScrollArea } from './ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { Calendar as CalendarIcon, Coffee, Info } from 'lucide-react';
+import { Calendar as CalendarIcon, Info } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { useState, useMemo, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { format, addDays, parse } from 'date-fns';
+import { format, addDays, parse, getDay } from 'date-fns';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { bookings } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
@@ -23,7 +23,11 @@ interface LocationDetailsProps {
   location: Location | null;
 }
 
-const timeSlots = Array.from({ length: 9 }, (_, i) => `${String(i + 9).padStart(2, '0')}:00`); // 09:00 to 17:00
+const timeSlots = Array.from({ length: 18 }, (_, i) => {
+    const hour = 7 + Math.floor(i / 2);
+    const minute = i % 2 === 0 ? '00' : '30';
+    return `${String(hour).padStart(2, '0')}:${minute}`;
+}).filter(time => time !== '22:30'); // 7:00 to 22:00
 
 export function LocationDetails({ location }: LocationDetailsProps) {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -68,6 +72,31 @@ export function LocationDetails({ location }: LocationDetailsProps) {
     );
   }, [location, date]);
   
+  const isTimeSlotUnavailable = (time: string, checkDate: Date | undefined): boolean => {
+    if (!checkDate) return false;
+
+    const day = getDay(checkDate); // Sunday = 0, Monday = 1, etc.
+    const [hour, minute] = time.split(':').map(Number);
+    const totalMinutes = hour * 60 + minute;
+
+    // Sunday: 7am to 5pm (07:00 - 17:00)
+    if (day === 0) {
+        if (totalMinutes >= 420 && totalMinutes < 1020) return true;
+    }
+    
+    // Wednesday: 7:30pm to 10pm (19:30 - 22:00)
+    if (day === 3) {
+        if (totalMinutes >= 1170 && totalMinutes < 1320) return true;
+    }
+
+    // Friday: 6pm to 9:30pm (18:00 - 21:30)
+    if (day === 5) {
+        if (totalMinutes >= 1080 && totalMinutes < 1290) return true;
+    }
+
+    return false;
+  };
+
   const isTimeSlotBooked = (time: string) => {
     if (!date) return false;
     const checkTime = parse(time, 'HH:mm', date).getTime();
@@ -79,27 +108,42 @@ export function LocationDetails({ location }: LocationDetailsProps) {
     });
   };
 
-  const isRangeBooked = useMemo(() => {
+  const isTimeSlotDisabled = (time: string) => {
+    return isTimeSlotBooked(time) || isTimeSlotUnavailable(time, date);
+  }
+
+  const isRangeInvalid = useMemo(() => {
     if(!startTime || !endTime || !date) return false;
 
     const start = parse(startTime, 'HH:mm', date);
     const end = parse(endTime, 'HH:mm', date);
 
-    for (let d = start; d < end; d.setHours(d.getHours() + 1)) {
-        if (isTimeSlotBooked(format(d, 'HH:mm'))) {
+    for (let d = new Date(start); d < end; d.setMinutes(d.getMinutes() + 30)) {
+        if (isTimeSlotDisabled(format(d, 'HH:mm'))) {
             return true;
         }
     }
     return false;
-  }, [startTime, endTime, date, isTimeSlotBooked]);
+  }, [startTime, endTime, date, isTimeSlotBooked, isTimeSlotUnavailable]);
 
 
   const availableEndTimes = useMemo(() => {
     if (!startTime) return [];
     const startIndex = timeSlots.indexOf(startTime);
-    // Allow booking up to the end of the day. The last slot is bookable as an end time.
-    return timeSlots.slice(startIndex + 1).concat([`${parseInt(timeSlots[timeSlots.length-1].split(':')[0]) + 1}:00`]);
-  }, [startTime]);
+    let endIndex = timeSlots.length;
+
+    for (let i = startIndex + 1; i < timeSlots.length; i++) {
+        if(isTimeSlotDisabled(timeSlots[i])) {
+            endIndex = i;
+            break;
+        }
+    }
+    
+    // The end time is exclusive in the loop, so we can go one slot past the last available one
+    // e.g. if 10:00 is available, you can book until 10:30
+    return timeSlots.slice(startIndex + 1, endIndex + 1);
+    
+  }, [startTime, date, isTimeSlotDisabled]);
 
 
   if (!location) {
@@ -181,7 +225,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                                 </SelectTrigger>
                                 <SelectContent>
                                     {timeSlots.map(time => (
-                                        <SelectItem key={time} value={time} disabled={isTimeSlotBooked(time)}>
+                                        <SelectItem key={time} value={time} disabled={isTimeSlotDisabled(time)}>
                                             {time}
                                         </SelectItem>
                                     ))}
@@ -196,7 +240,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                                 </SelectTrigger>
                                 <SelectContent>
                                     {availableEndTimes.map(time => (
-                                       <SelectItem key={time} value={time} disabled={isTimeSlotBooked(time) && time !== availableEndTimes[availableEndTimes.length - 1]}>
+                                       <SelectItem key={time} value={time}>
                                          {time}
                                        </SelectItem>
                                     ))}
@@ -204,11 +248,11 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                             </Select>
                         </div>
                     </div>
-                     {isRangeBooked && (
-                        <p className="text-sm text-destructive mt-2">Part of this time range is already booked.</p>
+                     {isRangeInvalid && (
+                        <p className="text-sm text-destructive mt-2">Part of this time range is unavailable or already booked.</p>
                     )}
 
-                    <Button onClick={handleBooking} className="w-full mt-6" disabled={!date || !startTime || !endTime || isRangeBooked}>
+                    <Button onClick={handleBooking} className="w-full mt-6" disabled={!date || !startTime || !endTime || isRangeInvalid}>
                       Book Now
                     </Button>
                 </div>
