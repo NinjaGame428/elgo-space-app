@@ -84,23 +84,8 @@ export function LocationDetails({ location }: LocationDetailsProps) {
         start: date.from,
         end: date.to || date.from,
     });
-  }, [date])
+  }, [date]);
 
-  const locationBookings = useMemo(() => {
-    if (!location || selectedDates.length === 0) return [];
-    
-    const allBookings = [];
-    for(const day of selectedDates) {
-        const formattedDate = format(day, "yyyy-MM-dd");
-        allBookings.push(...bookings.filter(b => 
-            b.locationId === location.id &&
-            format(new Date(b.startTime), "yyyy-MM-dd") === formattedDate &&
-            b.status === 'approved'
-        ));
-    }
-    return allBookings;
-  }, [location, selectedDates]);
-  
   const isTimeSlotUnavailable = useCallback((time: string, checkDate: Date | undefined): boolean => {
     if (!checkDate) return false;
 
@@ -199,6 +184,12 @@ export function LocationDetails({ location }: LocationDetailsProps) {
       </div>
     );
   }
+
+  const approvedBookingsForLocation = useMemo(() => {
+    return bookings
+      .filter(b => b.status === 'approved' && b.locationId === location.id)
+      .map(b => new Date(b.startTime));
+  }, [location.id]);
 
   return (
     <ScrollArea className="h-full w-full rounded-lg border bg-card shadow-sm">
@@ -315,7 +306,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
               <div className="flex justify-center p-4 rounded-lg bg-muted/50">
                 <Calendar
                     mode="multiple"
-                    selected={bookings.filter(b => b.status === 'approved' && b.locationId === location.id).map(b => new Date(b.startTime))}
+                    selected={approvedBookingsForLocation}
                     className="rounded-md p-0"
                     classNames={{
                         day_selected: "bg-destructive/80 text-destructive-foreground hover:bg-destructive/90 focus:bg-destructive/90",

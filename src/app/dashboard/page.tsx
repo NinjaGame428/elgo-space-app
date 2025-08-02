@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
@@ -52,11 +52,13 @@ export default function DashboardPage() {
         );
     };
 
-    const bookingsForSelectedDay = bookings.filter(booking => 
-        selectedDate && format(new Date(booking.startTime), 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')
-    );
+    const bookingsForSelectedDay = useMemo(() => {
+        return bookings.filter(booking => 
+            selectedDate && format(new Date(booking.startTime), 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')
+        );
+    }, [bookings, selectedDate]);
 
-    const bookedDates = bookings.map(b => new Date(b.startTime));
+    const bookedDates = useMemo(() => bookings.map(b => new Date(b.startTime)), [bookings]);
 
   if (!isAdmin) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
