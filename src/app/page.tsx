@@ -67,24 +67,26 @@ export default function Home() {
               </div>
             </div>
 
-            <ScrollArea className="flex-1">
-              {filteredLocations.length > 0 ? (
-                  <div className="grid grid-cols-1 gap-4 p-4">
-                    {filteredLocations.map((location) => (
-                      <LocationCard
-                        key={location.id}
-                        location={location}
-                        isSelected={!isMobile && selectedLocation?.id === location.id}
-                        onClick={() => handleSelectLocation(location)}
-                      />
-                    ))}
-                  </div>
-              ) : (
-                  <div className="flex items-center justify-center h-full p-8 text-muted-foreground">
-                      <p>No locations found.</p>
-                  </div>
-              )}
-            </ScrollArea>
+            <div className="relative flex-1">
+              <ScrollArea className="absolute h-full w-full">
+                {filteredLocations.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-4 p-4">
+                      {filteredLocations.map((location) => (
+                        <LocationCard
+                          key={location.id}
+                          location={location}
+                          isSelected={!isMobile && selectedLocation?.id === location.id}
+                          onClick={() => handleSelectLocation(location)}
+                        />
+                      ))}
+                    </div>
+                ) : (
+                    <div className="flex items-center justify-center h-full p-8 text-muted-foreground">
+                        <p>No locations found.</p>
+                    </div>
+                )}
+              </ScrollArea>
+            </div>
           </aside>
 
           <section className={cn("flex-1 flex flex-col h-full", isMobile && !showDetails ? "hidden" : "flex")}>
