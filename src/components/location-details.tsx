@@ -12,14 +12,15 @@ import { Calendar } from '@/components/ui/calendar';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { format, addDays, parse, getDay, eachDayOfInterval } from 'date-fns';
-import { bookings } from '@/lib/data';
+import { format, addDays, parse, getDay, eachDayOfInterval, formatISO } from 'date-fns';
+import { bookings as initialBookings } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
 import type { DateRange } from 'react-day-picker';
 import { useRouter } from 'next/navigation';
 import { Clock, Coffee, Printer, Phone, Wifi, Car, UtensilsCrossed } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import type { Booking } from '@/lib/types';
 
 const amenityIcons = {
   "24/7 Access": Clock,
@@ -50,7 +51,30 @@ export function LocationDetails({ location }: LocationDetailsProps) {
   const [startTime, setStartTime] = useState<string | null>(null);
   const [endTime, setEndTime] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+
+  useEffect(() => {
+    const storedBookings = localStorage.getItem('bookings');
+    setBookings(storedBookings ? JSON.parse(storedBookings) : initialBookings);
+    
+    if (typeof window !== 'undefined') {
+        const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
+        setIsAuthenticated(loggedIn);
+        setUserEmail(localStorage.getItem('userEmail'));
+    }
+
+    const handleStorageChange = () => {
+        const storedBookings = localStorage.getItem('bookings');
+        setBookings(storedBookings ? JSON.parse(storedBookings) : initialBookings);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+        window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
   const approvedBookingsForLocation = useMemo(() => {
     if (!location) return [];
     return bookings
@@ -60,14 +84,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
         const end = new Date(b.endTime);
         return eachDayOfInterval({start, end});
       });
-  }, [location]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-        const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
-        setIsAuthenticated(loggedIn);
-    }
-  }, []);
+  }, [location, bookings]);
 
   useEffect(() => {
     // Reset selections when location changes
@@ -86,13 +103,27 @@ export function LocationDetails({ location }: LocationDetailsProps) {
   }, [startTime]);
 
   const handleBooking = () => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !userEmail) {
         router.push('/login');
         return;
     }
 
     if (location && date?.from && startTime && endTime) {
       const bookingEndDate = date.to || date.from;
+      
+      const newBooking: Booking = {
+        id: `booking-${Date.now()}`,
+        locationId: location.id,
+        userEmail: userEmail,
+        startTime: formatISO(parse(startTime, 'HH:mm', date.from)),
+        endTime: formatISO(parse(endTime, 'HH:mm', bookingEndDate)),
+        status: 'pending',
+      };
+      
+      const updatedBookings = [...bookings, newBooking];
+      localStorage.setItem('bookings', JSON.stringify(updatedBookings));
+      setBookings(updatedBookings); // Update local state to trigger re-render
+
       toast({
         title: t('bookingConfirmedTitle'),
         description: t('bookingConfirmedDescription', {
@@ -103,6 +134,11 @@ export function LocationDetails({ location }: LocationDetailsProps) {
           endTime: endTime
         }),
       });
+      // Reset form
+      setDate(undefined);
+      setStartTime(null);
+      setEndTime(null);
+
     } else {
         toast({
             variant: "destructive",
@@ -148,7 +184,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
         format(new Date(b.startTime), "yyyy-MM-dd") === formattedDate &&
         b.status === 'approved'
     );
-  }, [location]);
+  }, [location, bookings]);
 
   const isTimeSlotBooked = useCallback((time: string, checkDate: Date) => {
     const checkTime = parse(time, 'HH:mm', checkDate).getTime();
@@ -192,7 +228,15 @@ export function LocationDetails({ location }: LocationDetailsProps) {
     let endIndex = timeSlots.length;
 
     for (let i = startIndex + 1; i < timeSlots.length; i++) {
-        if(isTimeSlotDisabled(timeSlots[i])) {
+        const currentTimeSlot = timeSlots[i];
+        let isDisabled = false;
+        for (const day of selectedDates) {
+            if (isTimeSlotBooked(currentTimeSlot, day) || isTimeSlotUnavailable(currentTimeSlot, day)) {
+                isDisabled = true;
+                break;
+            }
+        }
+        if (isDisabled) {
             endIndex = i;
             break;
         }
@@ -200,7 +244,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
     
     return timeSlots.slice(startIndex + 1, endIndex + 1);
     
-  }, [startTime, isTimeSlotDisabled]);
+  }, [startTime, isTimeSlotBooked, isTimeSlotUnavailable, selectedDates]);
 
   if (!location) {
     return (
@@ -231,7 +275,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
           <CardContent className="p-0">
             <div className="bg-muted/50 p-4 rounded-lg">
               <h3 className="text-xl font-semibold mb-4">{t('bookSpot')}</h3>
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid md:grid-cols-1 gap-6">
                   <div>
                       <h4 className="font-medium mb-2 text-sm">{t('selectDateRange')}</h4>
                        <Popover>
@@ -358,5 +402,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
     </div>
   );
 }
+
+    
 
     
