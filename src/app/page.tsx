@@ -56,8 +56,6 @@ export default function Home() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="desk">Desk</SelectItem>
-                  <SelectItem value="office">Office</SelectItem>
                   <SelectItem value="meetingroom">Meeting Room</SelectItem>
                 </SelectContent>
               </Select>
