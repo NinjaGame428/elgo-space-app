@@ -22,10 +22,12 @@ export default function LoginPage() {
 
     // This is a mock authentication.
     await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    localStorage.setItem('isLoggedIn', 'true');
+    localStorage.setItem('userEmail', email);
 
     // Admin user
     if (email === 'test@example.com' && password === 'password') {
-      localStorage.setItem('isLoggedIn', 'true');
       toast({
         title: "Login Successful",
         description: "Welcome back, Admin!",
@@ -33,8 +35,7 @@ export default function LoginPage() {
       router.push('/dashboard');
     } 
     // Regular user
-    else if (email === 'user@example.com' && password === 'password') {
-        localStorage.setItem('isLoggedIn', 'true');
+    else if (password === 'password') { // Simplified for demo
         toast({
             title: "Login Successful",
             description: "Welcome back!",
@@ -42,6 +43,8 @@ export default function LoginPage() {
         router.push('/');
     }
     else {
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('userEmail');
       toast({
         variant: "destructive",
         title: "Login Failed",
@@ -93,7 +96,7 @@ export default function LoginPage() {
           </form>
           <div className="mt-4 text-center text-sm space-y-2">
              <p>Use <span className="font-mono">test@example.com</span> / <span className="font-mono">password</span> for admin access.</p>
-             <p>Use <span className="font-mono">user@example.com</span> / <span className="font-mono">password</span> for user access.</p>
+             <p>Use any other email with password <span className="font-mono">password</span> for user access.</p>
           </div>
         </CardContent>
       </Card>

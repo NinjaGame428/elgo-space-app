@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
@@ -10,13 +10,26 @@ import { bookings as initialBookings, locations } from "@/lib/data";
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import type { Booking } from '@/lib/types';
+import Link from 'next/link';
 
 export default function DashboardPage() {
     const router = useRouter();
     const [bookings, setBookings] = useState<Booking[]>(initialBookings);
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+    const [isAdmin, setIsAdmin] = useState(false);
+
+    useEffect(() => {
+        const loggedInEmail = localStorage.getItem('userEmail');
+        if (loggedInEmail !== 'test@example.com') {
+            router.push('/login');
+        } else {
+            setIsAdmin(true);
+        }
+    }, [router]);
 
     const handleLogout = () => {
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('userEmail');
         router.push('/');
     };
 
@@ -34,9 +47,18 @@ export default function DashboardPage() {
 
     const bookedDates = bookings.map(b => new Date(b.startTime));
 
+  if (!isAdmin) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
         <header className="flex items-center justify-between p-4 border-b">
+             <Button variant="ghost" asChild>
+                <Link href="/">
+                   Lauft
+                </Link>
+            </Button>
             <h1 className="text-2xl font-bold">Admin Dashboard</h1>
             <Button variant="outline" onClick={handleLogout}>Logout</Button>
         </header>

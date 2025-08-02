@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -17,23 +18,24 @@ export function LocationCard({ location, isSelected, onClick }: LocationCardProp
     <Card
       onClick={onClick}
       className={cn(
-        'cursor-pointer transition-all duration-200 hover:shadow-md border-2',
-        isSelected ? 'border-primary' : 'border-transparent'
+        'cursor-pointer transition-all duration-200 hover:shadow-lg border-2',
+        isSelected ? 'border-primary shadow-lg' : 'border-transparent'
       )}
     >
       <CardHeader className="p-0">
-        <div className="relative h-40 w-full">
+        <div className="relative h-48 w-full">
           <Image
             src={location.imageUrl}
             alt={location.name}
             fill
             className="object-cover rounded-t-lg"
             data-ai-hint="modern office"
+            sizes="(max-width: 768px) 100vw, 480px"
           />
         </div>
       </CardHeader>
       <CardContent className="p-4">
-        <CardTitle className="text-lg font-semibold mb-1 truncate">{location.name}</CardTitle>
+        <CardTitle className="text-xl font-bold mb-1 truncate">{location.name}</CardTitle>
         <CardDescription className="truncate">{location.address}</CardDescription>
         <div className="flex flex-wrap gap-2 mt-3">
             {location.bookables.map(b => (

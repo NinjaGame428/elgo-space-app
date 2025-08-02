@@ -10,39 +10,28 @@ import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import type { Booking } from '@/lib/types';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { Header } from '@/components/header';
 
 export default function MyBookingsPage() {
     const router = useRouter();
     const [userBookings, setUserBookings] = useState<Booking[]>([]);
 
     useEffect(() => {
-        // In a real app, you'd fetch this based on the logged-in user's ID.
-        // We'll filter for a specific user for this mock.
-        setUserBookings(initialBookings.filter(b => b.userEmail.startsWith('user')));
-    }, []);
-    
-    // In a real app, you would protect this route
-    useEffect(() => {
         const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
         if (!isLoggedIn) {
             router.push('/login');
+            return;
+        }
+
+        const userEmail = localStorage.getItem('userEmail');
+        if (userEmail) {
+            setUserBookings(initialBookings.filter(b => b.userEmail === userEmail));
         }
     }, [router]);
 
     return (
         <div className="flex flex-col min-h-screen bg-background">
-            <header className="flex items-center justify-between p-4 border-b">
-                <Button variant="ghost" asChild>
-                    <Link href="/">
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back to Locations
-                    </Link>
-                </Button>
-                <h1 className="text-2xl font-bold">My Bookings</h1>
-                <div></div>
-            </header>
-
+            <Header />
             <main className="flex-1 p-4 md:p-6">
                 <Card>
                     <CardHeader>
@@ -80,4 +69,3 @@ export default function MyBookingsPage() {
         </div>
     );
 }
-
