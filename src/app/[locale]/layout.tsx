@@ -10,10 +10,9 @@ import { usePathname } from 'next/navigation';
 
 function InnerLayout({ children, locale }: { children: React.ReactNode; locale: string; }) {
   const pathname = usePathname();
-  const homePaths = [`/${locale}`, `/${locale}/`];
-  const authPaths = [`/${locale}/login`, `/${locale}/signup`];
-  const isHomePage = homePaths.includes(pathname);
-  const isAuthPage = authPaths.includes(pathname);
+  // Using startsWith to correctly handle nested routes under /login or /signup
+  const isAuthPage = pathname.startsWith(`/${locale}/login`) || pathname.startsWith(`/${locale}/signup`);
+  const isHomePage = pathname === `/${locale}` || pathname === `/${locale}/`;
   const showSidebar = !isHomePage && !isAuthPage;
 
   return (
@@ -27,7 +26,7 @@ function InnerLayout({ children, locale }: { children: React.ReactNode; locale: 
             </Sidebar>
           )}
           <div className="flex-1">
-            <main className="container">
+            <main className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl">
               {children}
             </main>
           </div>
@@ -38,7 +37,7 @@ function InnerLayout({ children, locale }: { children: React.ReactNode; locale: 
   );
 }
 
-
+// Server component Root Layout
 export default function LocaleLayout({
   children,
   params: {locale}

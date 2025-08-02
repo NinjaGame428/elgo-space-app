@@ -200,5 +200,4 @@ export default function MyBookingsPage() {
             </Dialog>
         </div>
     );
-
-    
+}
