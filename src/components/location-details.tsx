@@ -378,7 +378,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                     locale={dateLocale}
                     className="rounded-md p-0"
                     classNames={{
-                        day_selected: "bg-destructive/80 text-destructive-foreground hover:bg-destructive/90 focus:bg-destructive/90",
+                        day_selected: "bg-chart-1 text-white hover:bg-chart-1/90 focus:bg-chart-1/90",
                     }}
                 />
               </div>

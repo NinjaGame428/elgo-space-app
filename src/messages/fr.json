@@ -42,7 +42,7 @@
     "bookingFailedTitle": "Échec de la réservation",
     "bookingFailedDescription": "Veuillez sélectionner une plage de dates, une heure de début et une heure de fin.",
     "availability": "Disponibilité",
-    "availabilityDesc": "Les dates en rouge indiquent des jours avec des réservations approuvées existantes.",
+    "availabilityDesc": "Les dates en orange indiquent des jours avec des réservations approuvées existantes.",
     "amenities": "Équipements"
   },
   "LoginPage": {
