@@ -20,16 +20,28 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
 
-    // This is a mock authentication. In a real app, you'd call your auth provider.
+    // This is a mock authentication.
     await new Promise(resolve => setTimeout(resolve, 1000));
 
+    // Admin user
     if (email === 'test@example.com' && password === 'password') {
+      localStorage.setItem('isLoggedIn', 'true');
       toast({
         title: "Login Successful",
-        description: "Welcome back!",
+        description: "Welcome back, Admin!",
       });
       router.push('/dashboard');
-    } else {
+    } 
+    // Regular user
+    else if (email === 'user@example.com' && password === 'password') {
+        localStorage.setItem('isLoggedIn', 'true');
+        toast({
+            title: "Login Successful",
+            description: "Welcome back!",
+        });
+        router.push('/');
+    }
+    else {
       toast({
         variant: "destructive",
         title: "Login Failed",
@@ -79,8 +91,9 @@ export default function LoginPage() {
               {isLoading ? 'Logging in...' : 'Login'}
             </Button>
           </form>
-          <div className="mt-4 text-center text-sm">
-            Use email <span className="font-mono">test@example.com</span> and password <span className="font-mono">password</span> to log in.
+          <div className="mt-4 text-center text-sm space-y-2">
+             <p>Use <span className="font-mono">test@example.com</span> / <span className="font-mono">password</span> for admin access.</p>
+             <p>Use <span className="font-mono">user@example.com</span> / <span className="font-mono">password</span> for user access.</p>
           </div>
         </CardContent>
       </Card>

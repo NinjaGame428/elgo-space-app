@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { locations as allLocations } from '@/lib/data';
 import type { Location } from '@/lib/types';
 import { LocationCard } from '@/components/location-card';
@@ -9,17 +9,45 @@ import { LocationDetails } from '@/components/location-details';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, ArrowLeft } from 'lucide-react';
+import { Search, ArrowLeft, User, Settings } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [bookableFilter, setBookableFilter] = useState('all');
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(allLocations[0]);
   const isMobile = useIsMobile();
+  const router = useRouter();
+  
+  // A simple mock for user authentication state. In a real app, this would come from a context or auth store.
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  // This would be replaced by a real check
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+        const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
+        setIsAuthenticated(loggedIn);
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('isLoggedIn');
+    setIsAuthenticated(false);
+    router.push('/');
+  };
+
 
   const filteredLocations = useMemo(() => {
     return allLocations.filter((location) => {
@@ -42,9 +70,32 @@ export default function Home() {
           <header className="p-4 border-b bg-card">
             <div className="flex justify-between items-center mb-4">
               <h1 className="text-2xl font-bold">Locations</h1>
-              <Button asChild variant="outline">
-                <Link href="/login">Login</Link>
-              </Button>
+               {isAuthenticated ? (
+                 <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="icon" className="rounded-full">
+                        <User className="h-5 w-5" />
+                        <span className="sr-only">Open user menu</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                            <Link href="/">All Spaces</Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                            <Link href="/my-bookings">My Bookings</Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+                    </DropdownMenuContent>
+                 </DropdownMenu>
+               ) : (
+                <Button asChild variant="outline">
+                  <Link href="/login">Login</Link>
+                </Button>
+               )}
             </div>
             <div className="flex gap-2">
               <div className="relative w-full">
