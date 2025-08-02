@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -12,6 +13,7 @@ import { Search, ArrowLeft } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -38,7 +40,12 @@ export default function Home() {
       <div className="flex-1 lg:grid lg:grid-cols-[480px_1fr]">
         <aside className={cn("lg:border-r border-border flex-col h-screen", isMobile && showDetails ? "hidden" : "flex")}>
           <header className="p-4 border-b bg-card">
-            <h1 className="text-2xl font-bold mb-4">Locations</h1>
+            <div className="flex justify-between items-center mb-4">
+              <h1 className="text-2xl font-bold">Locations</h1>
+              <Button asChild variant="outline">
+                <Link href="/login">Login</Link>
+              </Button>
+            </div>
             <div className="flex gap-2">
               <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
