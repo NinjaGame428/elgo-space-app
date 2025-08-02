@@ -13,11 +13,12 @@ import { Calendar } from '@/components/ui/calendar';
 import { useState, useMemo, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { format, addDays, parse, getDay } from 'date-fns';
+import { format, addDays, parse, getDay, eachDayOfInterval } from 'date-fns';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { bookings } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
+import type { DateRange } from 'react-day-picker';
 
 interface LocationDetailsProps {
   location: Location | null;
@@ -30,7 +31,7 @@ const timeSlots = Array.from({ length: 18 }, (_, i) => {
 }).filter(time => time !== '22:30'); // 7:00 to 22:00
 
 export function LocationDetails({ location }: LocationDetailsProps) {
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [date, setDate] = useState<DateRange | undefined>();
   const [startTime, setStartTime] = useState<string | null>(null);
   const [endTime, setEndTime] = useState<string | null>(null);
   const { toast } = useToast();
@@ -47,30 +48,43 @@ export function LocationDetails({ location }: LocationDetailsProps) {
   }, [startTime]);
 
   const handleBooking = () => {
-    if (date && startTime && endTime) {
+    if (date?.from && date?.to && startTime && endTime) {
       toast({
         title: "Booking Confirmed!",
-        description: `You have booked ${location?.name} on ${format(date, "PPP")} from ${startTime} to ${endTime}. A reminder will be sent the day before.`,
+        description: `You have booked ${location?.name} from ${format(date.from, "PPP")} to ${format(date.to, "PPP")} from ${startTime} to ${endTime}. A reminder will be sent the day before.`,
       });
       // Here you would typically add the new booking to your state/backend
     } else {
         toast({
             variant: "destructive",
             title: "Booking Failed",
-            description: "Please select a date, start time, and end time.",
+            description: "Please select a date range, start time, and end time.",
         });
     }
   };
 
+  const selectedDates = useMemo(() => {
+    if (!date?.from) return [];
+    return eachDayOfInterval({
+        start: date.from,
+        end: date.to || date.from,
+    });
+  }, [date])
+
   const locationBookings = useMemo(() => {
-    if (!location || !date) return [];
-    const formattedDate = format(date, "yyyy-MM-dd");
-    return bookings.filter(b => 
-        b.locationId === location.id &&
-        format(new Date(b.startTime), "yyyy-MM-dd") === formattedDate &&
-        b.status === 'approved'
-    );
-  }, [location, date]);
+    if (!location || selectedDates.length === 0) return [];
+    
+    const allBookings = [];
+    for(const day of selectedDates) {
+        const formattedDate = format(day, "yyyy-MM-dd");
+        allBookings.push(...bookings.filter(b => 
+            b.locationId === location.id &&
+            format(new Date(b.startTime), "yyyy-MM-dd") === formattedDate &&
+            b.status === 'approved'
+        ));
+    }
+    return allBookings;
+  }, [location, selectedDates]);
   
   const isTimeSlotUnavailable = (time: string, checkDate: Date | undefined): boolean => {
     if (!checkDate) return false;
@@ -79,17 +93,17 @@ export function LocationDetails({ location }: LocationDetailsProps) {
     const [hour, minute] = time.split(':').map(Number);
     const totalMinutes = hour * 60 + minute;
 
-    // Sunday: 7am to 5pm (07:00 - 17:00)
+    // Sunday: 7am to 5pm (07:00 - 17:00) -> Should be 7am to 5pm unavailable, which means 7:00 up to (but not including) 17:00 is unavailable
     if (day === 0) {
         if (totalMinutes >= 420 && totalMinutes < 1020) return true;
     }
     
-    // Wednesday: 7:30pm to 10pm (19:30 - 22:00)
+    // Wednesday: 7:30pm to 10pm (19:30 - 22:00) -> 19:30 up to 22:00 is unavailable
     if (day === 3) {
         if (totalMinutes >= 1170 && totalMinutes < 1320) return true;
     }
 
-    // Friday: 6pm to 9:30pm (18:00 - 21:30)
+    // Friday: 6pm to 9:30pm (18:00 - 21:30) -> 18:00 up to 21:30 is unavailable
     if (day === 5) {
         if (totalMinutes >= 1080 && totalMinutes < 1290) return true;
     }
@@ -97,34 +111,51 @@ export function LocationDetails({ location }: LocationDetailsProps) {
     return false;
   };
 
-  const isTimeSlotBooked = (time: string) => {
-    if (!date) return false;
-    const checkTime = parse(time, 'HH:mm', date).getTime();
+  const isTimeSlotBooked = (time: string, checkDate: Date) => {
+    const checkTime = parse(time, 'HH:mm', checkDate).getTime();
 
-    return locationBookings.some(booking => {
+    return locationBookingsForDay(checkDate).some(booking => {
         const bookingStart = new Date(booking.startTime).getTime();
         const bookingEnd = new Date(booking.endTime).getTime();
         return checkTime >= bookingStart && checkTime < bookingEnd;
     });
   };
-
-  const isTimeSlotDisabled = (time: string) => {
-    return isTimeSlotBooked(time) || isTimeSlotUnavailable(time, date);
+  
+  const locationBookingsForDay = (day: Date) => {
+    if (!location) return [];
+    const formattedDate = format(day, "yyyy-MM-dd");
+    return bookings.filter(b => 
+        b.locationId === location.id &&
+        format(new Date(b.startTime), "yyyy-MM-dd") === formattedDate &&
+        b.status === 'approved'
+    );
   }
 
-  const isRangeInvalid = useMemo(() => {
-    if(!startTime || !endTime || !date) return false;
-
-    const start = parse(startTime, 'HH:mm', date);
-    const end = parse(endTime, 'HH:mm', date);
-
-    for (let d = new Date(start); d < end; d.setMinutes(d.getMinutes() + 30)) {
-        if (isTimeSlotDisabled(format(d, 'HH:mm'))) {
+  const isTimeSlotDisabled = (time: string) => {
+    if (selectedDates.length === 0) return true;
+    for(const day of selectedDates) {
+        if (isTimeSlotBooked(time, day) || isTimeSlotUnavailable(time, day)) {
             return true;
         }
     }
     return false;
-  }, [startTime, endTime, date, isTimeSlotBooked, isTimeSlotUnavailable]);
+  }
+
+  const isRangeInvalid = useMemo(() => {
+    if(!startTime || !endTime || selectedDates.length === 0) return false;
+
+    for (const day of selectedDates) {
+        const start = parse(startTime, 'HH:mm', day);
+        const end = parse(endTime, 'HH:mm', day);
+
+        for (let d = new Date(start); d < end; d.setMinutes(d.getMinutes() + 30)) {
+            if (isTimeSlotBooked(format(d, 'HH:mm'), day) || isTimeSlotUnavailable(format(d, 'HH:mm'), day)) {
+                return true;
+            }
+        }
+    }
+    return false;
+  }, [startTime, endTime, selectedDates]);
 
 
   const availableEndTimes = useMemo(() => {
@@ -176,7 +207,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
             <h3 className="text-xl font-semibold mb-4">Book Your Spot</h3>
             <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                    <h4 className="font-medium mb-2">1. Select Date</h4>
+                    <h4 className="font-medium mb-2">1. Select Date Range</h4>
                      <Popover>
                         <PopoverTrigger asChild>
                         <Button
@@ -187,16 +218,28 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                             )}
                         >
                             <CalendarIcon className="mr-2 h-4 w-4" />
-                            {date ? format(date, "PPP") : <span>Pick a date</span>}
+                            {date?.from ? (
+                                date.to ? (
+                                    <>
+                                    {format(date.from, "LLL dd, y")} -{" "}
+                                    {format(date.to, "LLL dd, y")}
+                                    </>
+                                ) : (
+                                    format(date.from, "LLL dd, y")
+                                )
+                                ) : (
+                                <span>Pick a date range</span>
+                            )}
                         </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
+                        <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
-                            mode="single"
+                            mode="range"
                             selected={date}
                             onSelect={setDate}
-                            disabled={(date) => date < new Date(new Date().setHours(0,0,0,0)) || date > addDays(new Date(), 60)}
+                            disabled={(day) => day < new Date(new Date().setHours(0,0,0,0)) || day > addDays(new Date(), 60)}
                             initialFocus
+                            numberOfMonths={2}
                         />
                         </PopoverContent>
                     </Popover>
@@ -219,7 +262,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <Label>From</Label>
-                            <Select value={startTime || ''} onValueChange={setStartTime}>
+                            <Select value={startTime || ''} onValueChange={setStartTime} disabled={!date?.from}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Start time" />
                                 </SelectTrigger>
@@ -249,10 +292,10 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                         </div>
                     </div>
                      {isRangeInvalid && (
-                        <p className="text-sm text-destructive mt-2">Part of this time range is unavailable or already booked.</p>
+                        <p className="text-sm text-destructive mt-2">The selected time range is unavailable or already booked.</p>
                     )}
 
-                    <Button onClick={handleBooking} className="w-full mt-6" disabled={!date || !startTime || !endTime || isRangeInvalid}>
+                    <Button onClick={handleBooking} className="w-full mt-6" disabled={!date?.from || !date?.to || !startTime || !endTime || isRangeInvalid}>
                       Book Now
                     </Button>
                 </div>
