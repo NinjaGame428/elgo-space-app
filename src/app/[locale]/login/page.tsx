@@ -111,12 +111,12 @@ export default function LoginPage() {
       </div>
       <div className="hidden bg-muted lg:block">
         <Image
-          src="https://placehold.co/1920x1080.png"
+          src="https://firebasestudio.googleapis.com/v0/b/firebase-studio-app.appspot.com/o/user%2Fgen-1719602434686-oFkLmn.png?alt=media&token=c1a3e66f-c7c4-42b7-8730-e3742468d6f5"
           alt="Image"
           width="1920"
           height="1080"
           className="h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-          data-ai-hint="office building"
+          data-ai-hint="conference event"
         />
       </div>
     </div>
