@@ -60,7 +60,7 @@ export default function ProfilePage() {
 
   return (
     <div className="flex-1 py-6">
-      <div className="mx-auto max-w-3xl space-y-6">
+      <div className="mx-auto space-y-6">
           <header>
               <h1 className="text-3xl font-bold">{t('profile')}</h1>
               <p className="text-muted-foreground">{t('profileDescription')}</p>

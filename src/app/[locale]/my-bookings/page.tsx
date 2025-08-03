@@ -141,8 +141,8 @@ export default function MyBookingsPage() {
     }
 
     return (
-        <div className="flex flex-col flex-1 py-6 items-center">
-            <div className="w-full max-w-4xl">
+        <div className="flex flex-col flex-1 py-6">
+            <div className="w-full">
                 <Card>
                     <CardHeader>
                         <CardTitle>{t('yourReservations')}</CardTitle>
