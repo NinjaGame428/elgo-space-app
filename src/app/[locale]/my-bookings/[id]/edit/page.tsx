@@ -18,7 +18,6 @@ import { Calendar as CalendarIcon, Clock, Coffee, Printer, Phone, Wifi, Car, Ute
 import type { DateRange } from 'react-day-picker';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Header } from '@/components/header';
 
 const timeSlots = Array.from({ length: 18 }, (_, i) => {
     const hour = 7 + Math.floor(i / 2);
@@ -182,7 +181,6 @@ export default function EditBookingPage() {
 
     return (
         <div className="flex flex-col min-h-screen bg-background">
-             <Header />
             <main className="flex-1 flex items-center justify-center p-4">
                 <Card className="w-full max-w-2xl">
                     <CardHeader>

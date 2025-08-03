@@ -108,7 +108,7 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="flex flex-col flex-1 py-6 gap-6">
+        <div className="flex flex-col flex-1 py-6 gap-6 px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-semibold">{t('adminDashboard')}</h1>
             </div>

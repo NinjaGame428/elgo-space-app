@@ -59,8 +59,8 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex-1 py-6">
-      <div className="mx-auto space-y-6">
+    <div className="flex-1 py-6 px-4 sm:px-6 lg:px-8">
+      <div className="space-y-6">
           <header>
               <h1 className="text-3xl font-bold">{t('profile')}</h1>
               <p className="text-muted-foreground">{t('profileDescription')}</p>
