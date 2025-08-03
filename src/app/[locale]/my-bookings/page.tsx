@@ -141,41 +141,39 @@ export default function MyBookingsPage() {
     }
 
     return (
-        <div className="flex flex-col flex-1 py-6">
-            <div className="w-full">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>{t('yourReservations')}</CardTitle>
-                        <CardDescription>{t('reservationsDescription')}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Tabs defaultValue="upcoming">
-                            <TabsList className="grid w-full grid-cols-2">
-                                <TabsTrigger value="upcoming">{t('upcoming')}</TabsTrigger>
-                                <TabsTrigger value="past">{t('past')}</TabsTrigger>
-                            </TabsList>
-                            <TabsContent value="upcoming" className="pt-4">
-                                <div className="space-y-4">
-                                    {upcomingBookings.length > 0 ? (
-                                        upcomingBookings.map(booking => <BookingCard key={booking.id} booking={booking} />)
-                                    ) : (
-                                        <p className="text-muted-foreground text-center py-8">{t('noUpcomingBookings')}</p>
-                                    )}
-                                </div>
-                            </TabsContent>
-                            <TabsContent value="past" className="pt-4">
-                                <div className="space-y-4">
-                                    {pastBookings.length > 0 ? (
-                                        pastBookings.map(booking => <BookingCard key={booking.id} booking={booking} />)
-                                    ) : (
-                                        <p className="text-muted-foreground text-center py-8">{t('noPastBookings')}</p>
-                                    )}
-                                </div>
-                            </TabsContent>
-                        </Tabs>
-                    </CardContent>
-                </Card>
-            </div>
+        <div className="flex flex-col flex-1 py-6 h-full">
+            <Card className="flex flex-col h-full">
+                <CardHeader>
+                    <CardTitle>{t('yourReservations')}</CardTitle>
+                    <CardDescription>{t('reservationsDescription')}</CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col flex-1">
+                    <Tabs defaultValue="upcoming" className="flex flex-col flex-1">
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="upcoming">{t('upcoming')}</TabsTrigger>
+                            <TabsTrigger value="past">{t('past')}</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="upcoming" className="pt-4 flex-1">
+                            <div className="space-y-4">
+                                {upcomingBookings.length > 0 ? (
+                                    upcomingBookings.map(booking => <BookingCard key={booking.id} booking={booking} />)
+                                ) : (
+                                    <p className="text-muted-foreground text-center py-8">{t('noUpcomingBookings')}</p>
+                                )}
+                            </div>
+                        </TabsContent>
+                        <TabsContent value="past" className="pt-4 flex-1">
+                            <div className="space-y-4">
+                                {pastBookings.length > 0 ? (
+                                    pastBookings.map(booking => <BookingCard key={booking.id} booking={booking} />)
+                                ) : (
+                                    <p className="text-muted-foreground text-center py-8">{t('noPastBookings')}</p>
+                                )}
+                            </div>
+                        </TabsContent>
+                    </Tabs>
+                </CardContent>
+            </Card>
 
             <Dialog open={!!selectedBooking} onOpenChange={(isOpen) => !isOpen && setSelectedBooking(null)}>
                 <DialogContent>

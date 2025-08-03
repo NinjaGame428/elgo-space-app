@@ -18,8 +18,8 @@ export function InnerLayout({ children, locale }: { children: React.ReactNode; l
           <AppSidebar />
         </Sidebar>
       )}
-      <div className="flex-1">
-        <main className="px-4 sm:px-6 lg:px-8">
+      <div className="flex-1 flex flex-col">
+        <main className="px-4 sm:px-6 lg:px-8 flex-1 flex flex-col">
           {children}
         </main>
       </div>
