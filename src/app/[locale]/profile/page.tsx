@@ -59,8 +59,8 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex-1 py-6 px-4 sm:px-6 lg:px-8">
-      <div className="space-y-6">
+    <div className="flex-1 grid md:grid-cols-3 gap-6 p-4 sm:p-6 lg:p-8">
+      <div className="md:col-span-2 space-y-6">
           <header>
               <h1 className="text-3xl font-bold">{t('profile')}</h1>
               <p className="text-muted-foreground">{t('profileDescription')}</p>
@@ -113,7 +113,8 @@ export default function ProfilePage() {
                   </CardFooter>
               </form>
           </Card>
-
+      </div>
+      <div className="md:col-span-1 space-y-6">
           <Card>
               <CardHeader>
                   <CardTitle>{t('myBookings')}</CardTitle>
@@ -159,7 +160,9 @@ export default function ProfilePage() {
                   </AlertDialog>
               </CardFooter>
           </Card>
-      </div>
+        </div>
     </div>
   );
 }
+
+    
