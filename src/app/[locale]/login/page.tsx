@@ -104,6 +104,9 @@ export default function LoginPage() {
                <p>{t('adminUser', {email: 'test@example.com', password: 'password'})}</p>
                <p>{t('regularUser', {password: 'password'})}</p>
             </div>
+            <div className="mt-4 text-center text-sm text-muted-foreground">
+              made by Heavenkeys
+            </div>
         </div>
       </div>
       <div className="hidden bg-muted lg:block">
