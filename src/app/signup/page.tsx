@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Header } from '@/components/header';
 import Link from 'next/link';
 
 export default function SignupPage() {
@@ -37,7 +36,6 @@ export default function SignupPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <Header />
       <main className="flex-1 flex items-center justify-center">
         <Card className="mx-auto max-w-sm w-full">
           <CardHeader>
