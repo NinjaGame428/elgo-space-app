@@ -8,8 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import Link from 'next/link';
+import { Link } from '@/navigation';
 import { useTranslations } from 'next-intl';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const t = useTranslations('LoginPage');
@@ -53,17 +54,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      <main className="flex-1 flex items-center justify-center p-4">
-        <Card className="mx-auto max-w-sm w-full">
-          <CardHeader>
-            <CardTitle className="text-2xl">{t('login')}</CardTitle>
-            <CardDescription>
+    <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2 xl:min-h-screen">
+      <div className="flex items-center justify-center py-12">
+        <div className="mx-auto grid w-[350px] gap-6">
+          <div className="grid gap-2 text-center">
+             <h1 className="text-3xl font-bold">{t('login')}</h1>
+            <p className="text-balance text-muted-foreground">
               {t('loginDescription')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="grid gap-4">
+            </p>
+          </div>
+           <form onSubmit={handleLogin} className="grid gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="email">{t('emailLabel')}</Label>
                 <Input
@@ -93,20 +93,29 @@ export default function LoginPage() {
                 {isLoading ? t('loggingInButton') : t('loginButton')}
               </Button>
             </form>
-            <div className="mt-4 text-center text-sm">
+           <div className="mt-4 text-center text-sm">
               {t('noAccount')}{' '}
               <Link href="/signup" className="underline">
                 {t('signUpLink')}
               </Link>
             </div>
-            <div className="mt-4 text-center text-sm space-y-2 border-t pt-4">
+             <div className="mt-4 text-center text-sm space-y-2 border-t pt-4">
                <p className="text-muted-foreground">{t('demoCredentials')}</p>
                <p>{t('adminUser', {email: 'test@example.com', password: 'password'})}</p>
                <p>{t('regularUser', {password: 'password'})}</p>
             </div>
-          </CardContent>
-        </Card>
-      </main>
+        </div>
+      </div>
+      <div className="hidden bg-muted lg:block">
+        <Image
+          src="https://placehold.co/1920x1080.png"
+          alt="Image"
+          width="1920"
+          height="1080"
+          className="h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+          data-ai-hint="office building"
+        />
+      </div>
     </div>
   );
 }
