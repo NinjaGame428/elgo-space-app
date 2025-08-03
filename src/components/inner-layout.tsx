@@ -19,7 +19,7 @@ export function InnerLayout({ children, locale }: { children: React.ReactNode; l
         </Sidebar>
       )}
       <div className="flex-1 flex flex-col">
-        <main className="px-4 sm:px-6 lg:px-8 flex-1 flex flex-col">
+        <main className="flex-1 flex flex-col">
           {children}
         </main>
       </div>
