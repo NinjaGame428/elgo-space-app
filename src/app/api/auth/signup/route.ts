@@ -1,12 +1,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { users as initialUsers } from '@/lib/data'; // Using mock data for now
-import { format } from 'date-fns';
-// In a real app, you would import your database connection.
-// e.g., import { db } from '@/lib/db';
-// import { users } from '@/lib/db/schema';
-// import { eq } from 'drizzle-orm';
-import bcrypt from 'bcryptjs';
+import { createClient } from '@/lib/supabase';
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,43 +10,44 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'Name, email, and password are required' }, { status: 400 });
     }
 
-    // --- DATABASE LOGIC STARTS HERE ---
-    // This is where you would interact with your database.
-    // I'm using mock data manipulation as a placeholder.
+    const supabase = createClient();
+    
+    // Sign up the user
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: name,
+        },
+      },
+    });
 
-    // 1. Check if a user with that email already exists
-    // Example with Drizzle ORM:
-    // const existingUser = await db.select().from(users).where(eq(users.email, email)).get();
-    const currentUsers = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('users') || '[]') : initialUsers;
-    const existingUser = currentUsers.find((u: any) => u.email === email);
-
-    if (existingUser) {
-        return NextResponse.json({ message: 'A user with this email already exists' }, { status: 409 });
+    if (authError) {
+      return NextResponse.json({ message: authError.message || 'Could not sign up user.' }, { status: authError.status || 400 });
+    }
+    
+    if (!authData.user) {
+         return NextResponse.json({ message: 'Signup successful, but user data not returned.' }, { status: 500 });
     }
 
-    // 2. Hash the password for security
-    // const hashedPassword = await bcrypt.hash(password, 10);
+    // In a real application, you might also want to insert a corresponding row into a `profiles` table
+    // with the user's role and other details.
+    // For example:
+    // const { error: profileError } = await supabase.from('profiles').insert({
+    //   id: authData.user.id,
+    //   email: email,
+    //   name: name,
+    //   role: 'User' // Default role
+    // });
+    // if (profileError) {
+    //    console.error('Error creating user profile:', profileError);
+    //    // You might want to handle this case, e.g., by deleting the auth user if the profile creation fails.
+    // }
 
-    // 3. Insert the new user into your database
-    const newUser = {
-        id: `user-${Date.now()}`,
-        name,
-        email,
-        // password: hashedPassword, // Store the hashed password
-        role: 'User',
-        joined: format(new Date(), 'yyyy-MM-dd')
-    };
+    // Supabase handles sending a confirmation email automatically if you enable it in your project settings.
     
-    // Example with Drizzle ORM:
-    // await db.insert(users).values(newUser);
-    
-    // For now, we just log it. In a real scenario, you'd save it.
-    console.log("New user to be added to DB:", newUser);
-
-
-    // --- DATABASE LOGIC ENDS HERE ---
-
-    return NextResponse.json({ message: 'User created successfully', user: newUser }, { status: 201 });
+    return NextResponse.json({ message: 'Signup successful! Please check your email to confirm your account.' }, { status: 201 });
 
   } catch (error) {
     console.error('Signup error:', error);

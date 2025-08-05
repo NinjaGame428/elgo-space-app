@@ -69,9 +69,9 @@
     "hasAccount": "Already have an account?",
     "loginLink": "Login",
     "accountCreatedTitle": "Account Created",
-    "accountCreatedDescription": "You can now log in with your credentials.",
-    "userExistsTitle": "User Exists",
-    "userExistsDescription": "A user with this email already exists."
+    "accountCreatedDescription": "Please check your email to confirm your account.",
+    "userExistsTitle": "Signup Failed",
+    "userExistsDescription": "A user with this email may already exist, or another error occurred."
   },
   "DashboardPage": {
     "loading": "Loading...",

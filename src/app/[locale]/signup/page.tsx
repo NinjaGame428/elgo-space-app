@@ -37,9 +37,10 @@ export default function SignupPage() {
       if (response.ok) {
         toast({
           title: t('accountCreatedTitle'),
-          description: t('accountCreatedDescription'),
+          description: data.message || t('accountCreatedDescription'),
         });
-        router.push('/login');
+        // Redirect to a page that tells the user to check their email
+        router.push('/login'); 
       } else {
         toast({
           variant: 'destructive',
