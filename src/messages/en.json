@@ -1,7 +1,7 @@
 
 {
   "Header": {
-    "title": "Heavenkeys Booking",
+    "title": "Elgo Space",
     "login": "Login",
     "myAccount": "My Account",
     "profile": "Profile",
@@ -14,7 +14,7 @@
     "signUpLink": "Sign up"
   },
   "Footer": {
-    "builtBy": "Built by Aki"
+    "builtBy": "Built by Heavenkeys Ltd"
   },
   "Home": {
     "locations": "Locations",
