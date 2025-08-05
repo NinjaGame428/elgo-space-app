@@ -1,6 +1,4 @@
 
-'use server';
-
 import { createClient } from "@/lib/supabase/server-client";
 import { NextRequest, NextResponse } from "next/server";
 
