@@ -1,10 +1,10 @@
 
 'use client';
 
-export function InnerLayout({ children, locale }: { children: React.ReactNode; locale: string; }) {
+export function InnerLayout({ children }: { children: React.ReactNode; }) {
   return (
     <div className="flex-1">
-        <main className="animate-fade-in-up">
+        <main>
             {children}
         </main>
     </div>
