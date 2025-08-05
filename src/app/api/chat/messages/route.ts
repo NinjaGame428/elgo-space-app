@@ -2,8 +2,6 @@
 import { createClient } from "@/lib/supabase/server-client";
 import { NextRequest, NextResponse } from "next/server";
 
-export const dynamic = 'force-dynamic';
-
 // GET messages for a conversation
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
