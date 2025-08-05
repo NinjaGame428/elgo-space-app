@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +11,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from '@/navigation';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
+import type { User } from '@/lib/types';
+import { users as initialUsers } from '@/lib/data';
+import { format } from 'date-fns';
 
 export default function SignupPage() {
   const t = useTranslations('SignupPage');
@@ -20,13 +23,37 @@ export default function SignupPage() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+
+  useEffect(() => {
+    const storedUsers = localStorage.getItem('users');
+    setUsers(storedUsers ? JSON.parse(storedUsers) : initialUsers);
+  }, []);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Mock signup process
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    if (users.some(user => user.email === email)) {
+        toast({
+            variant: 'destructive',
+            title: t('userExistsTitle'),
+            description: t('userExistsDescription'),
+        });
+        setIsLoading(false);
+        return;
+    }
+
+    const newUser: User = {
+        id: `user-${Date.now()}`,
+        name,
+        email,
+        role: 'User',
+        joined: format(new Date(), 'yyyy-MM-dd'),
+    };
+
+    const updatedUsers = [...users, newUser];
+    localStorage.setItem('users', JSON.stringify(updatedUsers));
 
     toast({
       title: t('accountCreatedTitle'),

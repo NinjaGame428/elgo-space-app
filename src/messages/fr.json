@@ -12,12 +12,6 @@
     "english": "Anglais",
     "french": "Français"
   },
-   "Sidebar": {
-    "dashboard": "Tableau de bord",
-    "profile": "Profil",
-    "myBookings": "Mes réservations",
-    "adminDashboard": "Tableau de bord admin"
-  },
   "Home": {
     "locations": "Emplacements",
     "searchPlaceholder": "Rechercher des emplacements...",
@@ -61,7 +55,14 @@
     "welcomeBackAdmin": "Bon retour, Admin !",
     "welcomeBackUser": "Bon retour !",
     "loginFailedTitle": "Échec de la connexion",
-    "loginFailedDescription": "Email ou mot de passe invalide. Veuillez réessayer."
+    "loginFailedDescription": "Email ou mot de passe invalide. Veuillez réessayer.",
+    "twoFaTitle": "Authentification à deux facteurs",
+    "twoFaDescription": "Entrez le code à 6 chiffres de votre application d'authentification.",
+    "twoFaCodeLabel": "Code d'authentification",
+    "verifyButton": "Vérifier",
+    "verifyingButton": "Vérification en cours...",
+    "twoFaFailedTitle": "Échec de la vérification",
+    "twoFaFailedDescription": "Le code que vous avez entré est incorrect. Veuillez réessayer."
   },
   "SignupPage": {
     "signUp": "S'inscrire",
@@ -74,7 +75,9 @@
     "hasAccount": "Vous avez déjà un compte ?",
     "loginLink": "Se connecter",
     "accountCreatedTitle": "Compte créé",
-    "accountCreatedDescription": "Vous pouvez maintenant vous connecter avec vos identifiants."
+    "accountCreatedDescription": "Vous pouvez maintenant vous connecter avec vos identifiants.",
+    "userExistsTitle": "L'utilisateur existe déjà",
+    "userExistsDescription": "Un utilisateur avec cet email existe déjà."
   },
   "DashboardPage": {
     "loading": "Chargement...",

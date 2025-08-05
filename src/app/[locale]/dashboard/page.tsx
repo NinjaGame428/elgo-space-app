@@ -122,7 +122,7 @@ export default function DashboardPage() {
                             onSelect={setSelectedDate}
                             className="rounded-md border"
                             modifiers={{ booked: bookedDates }}
-                            modifiersClassNames={{ booked: 'bg-chart-1 text-white' }}
+                            modifiersClassNames={{ booked: 'bg-orange-500 text-white' }}
                             locale={dateLocale}
                         />
                     </CardContent>
