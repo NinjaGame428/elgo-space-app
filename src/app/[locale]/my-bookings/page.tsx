@@ -1,11 +1,11 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, Suspense } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { format, isAfter, isValid, isBefore } from 'date-fns';
+import { format, isValid, isBefore } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import type { Booking, Location } from '@/lib/types';
 import { Link } from '@/navigation';
@@ -13,7 +13,7 @@ import { useTranslations } from 'next-intl';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal, CalendarDays, MapPin } from 'lucide-react';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -58,7 +58,7 @@ function MyBookingsClientContent({ bookings: initialBookings, locations: initial
                 partitions.pastBookings.push(booking); // Treat invalid dates as past
                 return;
             }
-
+            
             if (isBefore(now, startTime)) {
                 partitions.upcomingBookings.push(booking);
             } else if (isBefore(now, endTime)) {
@@ -351,3 +351,5 @@ export default function MyBookingsPage() {
 
     return <MyBookingsClientContent bookings={bookings} locations={locations} />;
 }
+
+    
