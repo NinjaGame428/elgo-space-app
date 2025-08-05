@@ -35,11 +35,15 @@
     "endTime": "Heure de fin",
     "noSlots": "Aucun créneau disponible pour cette journée.",
     "rangeInvalid": "Cette plage horaire chevauche une réservation existante.",
+    "departmentLabel": "3. Quel département réserve ?",
+    "departmentPlaceholder": "ex. Marketing",
+    "occasionLabel": "4. Quelle est l'occasion ?",
+    "occasionPlaceholder": "ex. Synchro hebdomadaire",
     "confirmBooking": "Confirmer la réservation",
     "bookingConfirmedTitle": "Réservation en attente !",
     "bookingConfirmedDescription": "Votre demande pour {locationName} le {date} de {startTime} à {endTime} a été envoyée pour approbation.",
     "bookingFailedTitle": "Échec de la réservation",
-    "bookingFailedDescription": "Veuillez sélectionner une plage de date et d'heure valide."
+    "bookingFailedDescription": "Veuillez sélectionner une plage de date et d'heure valide et remplir tous les champs."
   },
   "LoginPage": {
     "login": "Connectez-vous à votre compte",
@@ -122,7 +126,9 @@
     "location": "Emplacement",
     "user": "Utilisateur",
     "dateTime": "Date et heure",
-    "status": "Statut"
+    "status": "Statut",
+    "department": "Département",
+    "occasion": "Occasion"
   },
   "AddRoomPage": {
     "backToDashboard": "Retour au tableau de bord",
@@ -225,6 +231,8 @@
     "location": "Emplacement",
     "dateTime": "Date et heure",
     "status": "Statut",
+    "department": "Département",
+    "occasion": "Occasion",
     "invalidDate": "Date invalide"
   },
   "EditBookingPage": {

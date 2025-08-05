@@ -26,8 +26,20 @@ export async function GET(req: NextRequest) {
         const { data, error } = await query;
 
         if (error) throw error;
+        
+        // Map snake_case to camelCase
+        const responseData = data.map(b => ({
+            id: b.id,
+            locationId: b.location_id,
+            userEmail: b.user_email,
+            startTime: b.start_time,
+            endTime: b.end_time,
+            status: b.status,
+            department: b.department,
+            occasion: b.occasion,
+        }));
 
-        return NextResponse.json(data);
+        return NextResponse.json(responseData);
     } catch (error) {
         console.error("API Error fetching bookings:", error);
         return NextResponse.json({ message: "Failed to fetch bookings" }, { status: 500 });
@@ -38,7 +50,7 @@ export async function GET(req: NextRequest) {
 // POST a new booking
 export async function POST(req: NextRequest) {
     try {
-        const { locationId, userEmail, startTime, endTime } = await req.json();
+        const { locationId, userEmail, startTime, endTime, department, occasion } = await req.json();
 
         if (!locationId || !userEmail || !startTime || !endTime) {
             return NextResponse.json({ message: 'Missing required booking fields' }, { status: 400 });
@@ -52,7 +64,9 @@ export async function POST(req: NextRequest) {
             user_email: userEmail,
             start_time: startTime,
             end_time: endTime,
-            status: 'pending' // Default status
+            status: 'pending', // Default status
+            department: department,
+            occasion: occasion
         };
 
         const { data, error } = await supabase
@@ -70,7 +84,9 @@ export async function POST(req: NextRequest) {
             userEmail: data.user_email,
             startTime: data.start_time,
             endTime: data.end_time,
-            status: data.status
+            status: data.status,
+            department: data.department,
+            occasion: data.occasion
         };
 
         return NextResponse.json(responseData, { status: 201 });

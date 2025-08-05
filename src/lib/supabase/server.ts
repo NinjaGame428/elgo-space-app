@@ -57,7 +57,9 @@ export async function getAllBookings(): Promise<Booking[]> {
         userEmail: b.user_email,
         startTime: b.start_time,
         endTime: b.end_time,
-        status: b.status
+        status: b.status,
+        department: b.department,
+        occasion: b.occasion,
     }));
 }
 

@@ -29,6 +29,8 @@ export interface Booking {
   startTime: string;
   endTime: string;
   status: 'pending' | 'approved' | 'rejected';
+  department?: string;
+  occasion?: string;
 }
 
 export interface User {

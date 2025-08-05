@@ -331,6 +331,14 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                                 <p>{selectedBooking.userEmail}</p>
                             </div>
                             <div>
+                                <h4 className="font-semibold text-sm text-muted-foreground">{t('department')}</h4>
+                                <p>{selectedBooking.department || 'N/A'}</p>
+                            </div>
+                            <div>
+                                <h4 className="font-semibold text-sm text-muted-foreground">{t('occasion')}</h4>
+                                <p>{selectedBooking.occasion || 'N/A'}</p>
+                            </div>
+                            <div>
                                 <h4 className="font-semibold text-sm text-muted-foreground">{t('dateTime')}</h4>
                                 <p>{format(new Date(selectedBooking.startTime), 'PPP, p')} - {format(new Date(selectedBooking.endTime), 'p')}</p>
                             </div>

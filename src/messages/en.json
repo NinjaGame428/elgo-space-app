@@ -35,11 +35,15 @@
     "endTime": "End Time",
     "noSlots": "No available slots for this day.",
     "rangeInvalid": "This time range overlaps with an existing booking.",
+    "departmentLabel": "3. Which department is booking?",
+    "departmentPlaceholder": "e.g. Marketing",
+    "occasionLabel": "4. What is the occasion?",
+    "occasionPlaceholder": "e.g. Weekly Sync",
     "confirmBooking": "Confirm Booking",
     "bookingConfirmedTitle": "Booking Pending!",
     "bookingConfirmedDescription": "Your request for {locationName} on {date} from {startTime} to {endTime} has been sent for approval.",
     "bookingFailedTitle": "Booking Failed",
-    "bookingFailedDescription": "Please select a valid date and time range."
+    "bookingFailedDescription": "Please select a valid date, time, and fill in all fields."
   },
   "LoginPage": {
     "login": "Sign in to your account",
@@ -122,7 +126,9 @@
     "location": "Location",
     "user": "User",
     "dateTime": "Date & Time",
-    "status": "Status"
+    "status": "Status",
+    "department": "Department",
+    "occasion": "Occasion"
   },
   "AddRoomPage": {
       "backToDashboard": "Back to Dashboard",
@@ -225,6 +231,8 @@
     "location": "Location",
     "dateTime": "Date & Time",
     "status": "Status",
+    "department": "Department",
+    "occasion": "Occasion",
     "invalidDate": "Invalid Date"
   },
   "EditBookingPage": {

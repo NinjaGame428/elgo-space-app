@@ -21,6 +21,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import type { Booking } from '@/lib/types';
 import { Skeleton } from './ui/skeleton';
 import { Separator } from './ui/separator';
+import { Input } from './ui/input';
 
 const amenityIcons = {
   "24/7 Access": Clock,
@@ -54,6 +55,8 @@ export function LocationDetails({ location }: LocationDetailsProps) {
   
   const [startTime, setStartTime] = useState<string | null>(null);
   const [endTime, setEndTime] = useState<string | null>(null);
+  const [department, setDepartment] = useState('');
+  const [occasion, setOccasion] = useState('');
   
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -74,6 +77,8 @@ export function LocationDetails({ location }: LocationDetailsProps) {
     setSelectedDate(undefined);
     setStartTime(null);
     setEndTime(null);
+    setDepartment('');
+    setOccasion('');
 
     async function fetchBookings() {
         if (!location) {
@@ -103,7 +108,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
         return;
     }
 
-    if (location && selectedDate && startTime && endTime) {
+    if (location && selectedDate && startTime && endTime && department && occasion) {
       const startDateTime = parse(startTime, 'HH:mm', selectedDate);
       const endDateTime = parse(endTime, 'HH:mm', selectedDate);
       
@@ -112,6 +117,8 @@ export function LocationDetails({ location }: LocationDetailsProps) {
         userEmail: userEmail,
         startTime: formatISO(startDateTime),
         endTime: formatISO(endDateTime),
+        department,
+        occasion,
       };
 
       try {
@@ -309,36 +316,63 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                         </div>
                         
                         {selectedDate && (
-                            <div className="animate-fade-in-up">
-                                <Label className="font-medium mb-2 block text-center">{t('selectTime')}</Label>
-                                <div className="grid grid-cols-2 gap-4">
-                                     <Select value={startTime || ''} onValueChange={setStartTime} disabled={isLoading || !selectedDate}>
-                                        <SelectTrigger className="h-11 bg-background">
-                                            <SelectValue placeholder={t('startTime')} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {timeSlots.map(time => (
-                                                <SelectItem key={time} value={time} disabled={isTimeSlotDisabled(time)}>
-                                                    {time}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    <Select value={endTime || ''} onValueChange={setEndTime} disabled={isLoading || !startTime}>
-                                        <SelectTrigger className="h-11 bg-background">
-                                            <SelectValue placeholder={t('endTime')} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {availableEndTimes.map(time => (
-                                                <SelectItem key={time} value={time}>
-                                                    {time}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                            <div className="animate-fade-in-up space-y-4">
+                                <div>
+                                    <Label className="font-medium mb-2 block text-center">{t('selectTime')}</Label>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <Select value={startTime || ''} onValueChange={setStartTime} disabled={isLoading || !selectedDate}>
+                                            <SelectTrigger className="h-11 bg-background">
+                                                <SelectValue placeholder={t('startTime')} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {timeSlots.map(time => (
+                                                    <SelectItem key={time} value={time} disabled={isTimeSlotDisabled(time)}>
+                                                        {time}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <Select value={endTime || ''} onValueChange={setEndTime} disabled={isLoading || !startTime}>
+                                            <SelectTrigger className="h-11 bg-background">
+                                                <SelectValue placeholder={t('endTime')} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {availableEndTimes.map(time => (
+                                                    <SelectItem key={time} value={time}>
+                                                        {time}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    {isRangeInvalid && (
+                                        <p className="text-sm text-destructive mt-2 text-center">{t('rangeInvalid')}</p>
+                                    )}
                                 </div>
-                                {isRangeInvalid && (
-                                    <p className="text-sm text-destructive mt-2 text-center">{t('rangeInvalid')}</p>
+
+                                {startTime && endTime && !isRangeInvalid && (
+                                    <div className="animate-fade-in-up space-y-4">
+                                        <div>
+                                            <Label htmlFor="department" className="font-medium mb-2 block text-center">{t('departmentLabel')}</Label>
+                                            <Input 
+                                                id="department"
+                                                value={department}
+                                                onChange={(e) => setDepartment(e.target.value)}
+                                                placeholder={t('departmentPlaceholder')}
+                                                className="bg-background"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="occasion" className="font-medium mb-2 block text-center">{t('occasionLabel')}</Label>
+                                            <Input
+                                                id="occasion"
+                                                value={occasion}
+                                                onChange={(e) => setOccasion(e.target.value)}
+                                                placeholder={t('occasionPlaceholder')}
+                                                className="bg-background"
+                                            />
+                                        </div>
+                                    </div>
                                 )}
                             </div>
                         )}
@@ -347,7 +381,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                      <Button 
                         onClick={handleBooking} 
                         className="w-full h-12 text-base font-semibold mt-auto"
-                        disabled={isLoading || !selectedDate || !startTime || !endTime || isRangeInvalid}
+                        disabled={isLoading || !selectedDate || !startTime || !endTime || !department || !occasion || isRangeInvalid}
                     >
                         {t('confirmBooking')}
                     </Button>
