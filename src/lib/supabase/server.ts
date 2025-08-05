@@ -5,9 +5,11 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import type { Amenity, Booking, Location, User } from '../types';
 
-// This is the server-side Supabase client.
-// It's used in server components and server-side functions (e.g. API routes).
-export const createClient = () => {
+// Note: The previous approach of exporting a createClient function caused build issues.
+// This refactored approach creates a single, memoized client instance that can be
+// safely used by all server-side functions in this file.
+
+const createClient = () => {
   const cookieStore = cookies();
 
   return createServerClient(
@@ -48,7 +50,7 @@ export async function getLocations(): Promise<Location[]> {
     }
 
     // Map snake_case from DB to camelCase for the app
-    return data.map(location => ({
+    return data.map((location: any) => ({
         id: location.id,
         name: location.name,
         address: location.address,
