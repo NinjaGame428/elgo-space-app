@@ -197,17 +197,21 @@
   },
   "MyBookingsPage": {
     "yourReservations": "Your Reservations",
-    "reservationsDescription": "Manage your past and upcoming bookings.",
+    "reservationsDescription": "Manage your current, upcoming, and past bookings.",
     "unknownLocation": "Unknown Location",
     "pending": "Pending",
     "approved": "Approved",
     "rejected": "Cancelled",
     "upcoming": "Upcoming",
+    "current": "Current",
     "past": "Past",
     "noUpcomingBookings": "You have no upcoming bookings.",
     "noUpcomingBookingsHint": "Ready to find your next workspace?",
-    "browseLocations": "Browse Locations",
+    "noCurrentBookings": "You have no ongoing bookings right now.",
+    "noCurrentBookingsHint": "Your active bookings will appear here.",
     "noPastBookings": "You have no past bookings.",
+    "noPastBookingsHint": "Completed bookings will be shown here.",
+    "browseLocations": "Browse Locations",
     "reschedule": "Reschedule",
     "cancelBooking": "Cancel Booking",
     "areYouSure": "Are you sure?",
@@ -217,7 +221,7 @@
     "bookingCancelledTitle": "Booking Cancelled",
     "bookingCancelledDescription": "Your booking has been successfully cancelled.",
     "bookingDetails": "Booking Details",
-    "bookingDetailsDescription": "Summary of your past reservation.",
+    "bookingDetailsDescription": "Summary of your reservation.",
     "location": "Location",
     "dateTime": "Date & Time",
     "status": "Status",
@@ -292,5 +296,3 @@
     "impactJunior": "The Impact Junior"
   }
 }
-
-    

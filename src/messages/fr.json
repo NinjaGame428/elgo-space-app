@@ -197,17 +197,21 @@
   },
   "MyBookingsPage": {
     "yourReservations": "Vos réservations",
-    "reservationsDescription": "Gérez vos réservations passées et à venir.",
+    "reservationsDescription": "Gérez vos réservations actuelles, à venir et passées.",
     "unknownLocation": "Emplacement inconnu",
     "pending": "En attente",
     "approved": "Approuvée",
     "rejected": "Annulée",
     "upcoming": "À venir",
+    "current": "En cours",
     "past": "Passées",
     "noUpcomingBookings": "Vous n'avez aucune réservation à venir.",
     "noUpcomingBookingsHint": "Prêt à trouver votre prochain espace de travail ?",
-    "browseLocations": "Parcourir les emplacements",
+    "noCurrentBookings": "Vous n'avez aucune réservation en cours pour le moment.",
+    "noCurrentBookingsHint": "Vos réservations actives apparaîtront ici.",
     "noPastBookings": "Vous n'avez aucune réservation passée.",
+    "noPastBookingsHint": "Les réservations terminées seront affichées ici.",
+    "browseLocations": "Parcourir les emplacements",
     "reschedule": "Reporter",
     "cancelBooking": "Annuler la réservation",
     "areYouSure": "Êtes-vous sûr ?",
@@ -217,13 +221,13 @@
     "bookingCancelledTitle": "Réservation annulée",
     "bookingCancelledDescription": "Votre réservation a été annulée avec succès.",
     "bookingDetails": "Détails de la réservation",
-    "bookingDetailsDescription": "Résumé de votre réservation passée.",
+    "bookingDetailsDescription": "Résumé de votre réservation.",
     "location": "Emplacement",
     "dateTime": "Date et heure",
     "status": "Statut",
     "invalidDate": "Date invalide"
   },
-    "EditBookingPage": {
+  "EditBookingPage": {
     "loading": "Chargement...",
     "backToBookings": "Retour à Mes Réservations",
     "rescheduleTitle": "Reporter : {locationName}",
@@ -292,5 +296,3 @@
     "impactJunior": "L'Impact Junior"
   }
 }
-
-    

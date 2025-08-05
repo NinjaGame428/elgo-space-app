@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, Suspense } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { format, isAfter, isValid } from 'date-fns';
+import { format, isAfter, isValid, isBefore } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import type { Booking, Location } from '@/lib/types';
 import { Link } from '@/navigation';
@@ -32,24 +32,48 @@ function MyBookingsClientContent({ bookings: initialBookings, locations: initial
     const [bookings, setBookings] = useState<Booking[]>(initialBookings);
     const [locations, setLocations] = useState<Location[]>(initialLocations);
     const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+    const [currentTime, setCurrentTime] = useState(new Date());
+
+    useEffect(() => {
+        const timer = setInterval(() => setCurrentTime(new Date()), 60000); // Update every minute
+        return () => clearInterval(timer);
+    }, []);
 
     const sortedBookings = useMemo(() => {
-        return [...bookings].sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
+        return [...bookings].sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
     }, [bookings]);
 
-    const { upcomingBookings, pastBookings } = useMemo(() => {
-        const now = new Date();
-        return sortedBookings.reduce((acc, booking) => {
-            const endDate = new Date(booking.endTime);
-            // A booking is upcoming if its end time is in the future and it hasn't been rejected.
-            if (isValid(endDate) && isAfter(endDate, now) && booking.status !== 'rejected') {
-                acc.upcomingBookings.push(booking);
-            } else {
-                acc.pastBookings.push(booking);
+    const { upcomingBookings, currentBookings, pastBookings } = useMemo(() => {
+        const now = currentTime;
+        const partitions: { upcomingBookings: Booking[], currentBookings: Booking[], pastBookings: Booking[] } = {
+            upcomingBookings: [],
+            currentBookings: [],
+            pastBookings: [],
+        };
+
+        sortedBookings.forEach(booking => {
+            const startTime = new Date(booking.startTime);
+            const endTime = new Date(booking.endTime);
+
+            if (!isValid(startTime) || !isValid(endTime)) {
+                partitions.pastBookings.push(booking); // Treat invalid dates as past
+                return;
             }
-            return acc;
-        }, { upcomingBookings: [] as Booking[], pastBookings: [] as Booking[] });
-    }, [sortedBookings]);
+
+            if (isBefore(now, startTime)) {
+                partitions.upcomingBookings.push(booking);
+            } else if (isBefore(now, endTime)) {
+                partitions.currentBookings.push(booking);
+            } else {
+                partitions.pastBookings.push(booking);
+            }
+        });
+        
+        // Past bookings should be sorted descending
+        partitions.pastBookings.reverse();
+
+        return partitions;
+    }, [sortedBookings, currentTime]);
 
     const cancelBooking = async (bookingId: string) => {
         try {
@@ -74,17 +98,22 @@ function MyBookingsClientContent({ bookings: initialBookings, locations: initial
 
     const BookingCard = ({ booking }: { booking: Booking }) => {
         const location = locations.find(l => l.id === booking.locationId);
-        const endDate = new Date(booking.endTime);
-        const isUpcoming = isValid(endDate) && isAfter(endDate, new Date()) && booking.status !== 'rejected';
         
-        const isCancelled = booking.status === 'rejected';
+        const startTime = new Date(booking.startTime);
+        const endTime = new Date(booking.endTime);
+        const areDatesValid = isValid(startTime) && isValid(endTime);
+        
+        const now = currentTime;
+        const isUpcoming = areDatesValid && isBefore(now, startTime);
+        const isCancellable = isUpcoming && booking.status !== 'rejected';
 
-        const startDate = new Date(booking.startTime);
-        const areDatesValid = isValid(startDate) && isValid(endDate);
+        const statusBadgeVariant = 
+            booking.status === 'rejected' ? 'destructive' :
+            booking.status === 'approved' ? 'default' : 'secondary';
 
         return (
              <Card 
-                className={`transition-all hover:shadow-md ${!isUpcoming ? 'cursor-pointer' : ''}`}
+                className="transition-all hover:shadow-md cursor-pointer"
                 onClick={() => handleBookingClick(booking)}
             >
                 <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -97,17 +126,14 @@ function MyBookingsClientContent({ bookings: initialBookings, locations: initial
                         <p className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
                            <CalendarDays className="h-4 w-4" />
                             {areDatesValid 
-                                ? `${format(startDate, 'PPP, p')} - ${format(endDate, 'p')}`
+                                ? `${format(startTime, 'PPP, p')} - ${format(endTime, 'p')}`
                                 : t('invalidDate')
                             }
                         </p>
                     </div>
                     <div className="flex items-center gap-2 self-start sm:self-center">
-                        <Badge variant={
-                            isCancelled ? 'destructive' :
-                            booking.status === 'approved' ? 'default' : 'secondary'
-                        }>{t(booking.status as any)}</Badge>
-                        {isUpcoming && (
+                        <Badge variant={statusBadgeVariant}>{t(booking.status as any)}</Badge>
+                        {isCancellable && (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -141,6 +167,18 @@ function MyBookingsClientContent({ bookings: initialBookings, locations: initial
              </Card>
         );
     };
+    
+    const EmptyState = ({ title, description, showButton }: { title: string, description: string, showButton?: boolean }) => (
+        <div className="text-center py-16 px-4 border-2 border-dashed rounded-lg">
+            <h3 className="text-lg font-medium">{title}</h3>
+            <p className="text-muted-foreground text-sm mt-1">{description}</p>
+            {showButton && (
+                <Button asChild className="mt-4">
+                    <Link href="/">{t('browseLocations')}</Link>
+                </Button>
+            )}
+        </div>
+    );
 
     return (
         <div className="flex-1 space-y-8 p-4 sm:p-6 lg:p-8 animate-fade-in-up">
@@ -150,31 +188,48 @@ function MyBookingsClientContent({ bookings: initialBookings, locations: initial
             </header>
 
             <Tabs defaultValue="upcoming">
-                <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
+                <TabsList className="grid w-full grid-cols-3 max-w-lg mx-auto">
                     <TabsTrigger value="upcoming">{t('upcoming')}</TabsTrigger>
+                    <TabsTrigger value="current">{t('current')}</TabsTrigger>
                     <TabsTrigger value="past">{t('past')}</TabsTrigger>
                 </TabsList>
+
                 <TabsContent value="upcoming" className="pt-6">
                     <div className="space-y-4">
                         {upcomingBookings.length > 0 ? (
                             upcomingBookings.map(booking => <BookingCard key={booking.id} booking={booking} />)
                         ) : (
-                            <div className="text-center py-16 px-4 border-2 border-dashed rounded-lg">
-                                <h3 className="text-lg font-medium">{t('noUpcomingBookings')}</h3>
-                                <p className="text-muted-foreground text-sm mt-1">{t('noUpcomingBookingsHint')}</p>
-                                <Button asChild className="mt-4">
-                                    <Link href="/">{t('browseLocations')}</Link>
-                                </Button>
-                            </div>
+                            <EmptyState 
+                                title={t('noUpcomingBookings')} 
+                                description={t('noUpcomingBookingsHint')}
+                                showButton
+                            />
                         )}
                     </div>
                 </TabsContent>
+                
+                <TabsContent value="current" className="pt-6">
+                    <div className="space-y-4">
+                        {currentBookings.length > 0 ? (
+                             currentBookings.map(booking => <BookingCard key={booking.id} booking={booking} />)
+                        ) : (
+                             <EmptyState 
+                                title={t('noCurrentBookings')} 
+                                description={t('noCurrentBookingsHint')}
+                            />
+                        )}
+                    </div>
+                </TabsContent>
+
                 <TabsContent value="past" className="pt-6">
                     <div className="space-y-4">
                         {pastBookings.length > 0 ? (
                             pastBookings.map(booking => <BookingCard key={booking.id} booking={booking} />)
                         ) : (
-                            <p className="text-muted-foreground text-center py-16">{t('noPastBookings')}</p>
+                            <EmptyState 
+                                title={t('noPastBookings')}
+                                description={t('noPastBookingsHint')}
+                            />
                         )}
                     </div>
                 </TabsContent>
@@ -225,13 +280,10 @@ function MyBookingsClientContent({ bookings: initialBookings, locations: initial
 
 async function MyBookingsDataFetcher() {
     // This is a server component that fetches ALL data needed for the page
-    const [locations] = await Promise.all([
-        getLocations(),
-    ]);
+    const locations = await getLocations();
 
     // We pass an empty array for bookings, as they will be fetched on the client
-    // based on the logged-in user. This is a temporary measure until we have
-    // a server-side way to get the current user.
+    // based on the logged-in user.
     return <MyBookingsClientContent bookings={[]} locations={locations} />;
 }
 
