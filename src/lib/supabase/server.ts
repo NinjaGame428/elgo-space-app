@@ -18,10 +18,10 @@ export const createClient = () => {
         get(name: string) {
           return cookieStore.get(name)?.value;
         },
-        set(name: string, value: string, options) {
+        set(name: string, value: string, options: any) {
           cookieStore.set({ name, value, ...options });
         },
-        remove(name: string, options) {
+        remove(name: string, options: any) {
           cookieStore.set({ name, value: '', ...options });
         },
       },
@@ -49,9 +49,16 @@ export async function getLocations(): Promise<Location[]> {
 
     // Map snake_case from DB to camelCase for the app
     return data.map(location => ({
-        ...location,
+        id: location.id,
+        name: location.name,
+        address: location.address,
         imageUrl: location.image_url,
-        amenities: location.amenities.map(amenity => ({
+        bookables: [{
+            type: 'Meeting Room',
+            description: 'A newly added meeting room.',
+            price: '$50/hour'
+        }],
+        amenities: location.amenities.map((amenity: any) => ({
             id: amenity.id,
             name: amenity.name
         }))
