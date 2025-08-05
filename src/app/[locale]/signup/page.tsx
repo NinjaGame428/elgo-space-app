@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,9 +11,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from '@/navigation';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
-import type { User } from '@/lib/types';
-import { users as initialUsers } from '@/lib/data';
-import { format } from 'date-fns';
 
 export default function SignupPage() {
   const t = useTranslations('SignupPage');
@@ -23,44 +20,41 @@ export default function SignupPage() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [users, setUsers] = useState<User[]>([]);
-
-  useEffect(() => {
-    const storedUsers = localStorage.getItem('users');
-    setUsers(storedUsers ? JSON.parse(storedUsers) : initialUsers);
-  }, []);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    if (users.some(user => user.email === email)) {
+    try {
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
         toast({
-            variant: 'destructive',
-            title: t('userExistsTitle'),
-            description: t('userExistsDescription'),
+          title: t('accountCreatedTitle'),
+          description: t('accountCreatedDescription'),
         });
-        setIsLoading(false);
-        return;
+        router.push('/login');
+      } else {
+        toast({
+          variant: 'destructive',
+          title: t('userExistsTitle'),
+          description: data.message || t('userExistsDescription'),
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: "Error",
+        description: "An unexpected error occurred during signup.",
+      });
     }
 
-    const newUser: User = {
-        id: `user-${Date.now()}`,
-        name,
-        email,
-        role: 'User',
-        joined: format(new Date(), 'yyyy-MM-dd'),
-    };
-
-    const updatedUsers = [...users, newUser];
-    localStorage.setItem('users', JSON.stringify(updatedUsers));
-
-    toast({
-      title: t('accountCreatedTitle'),
-      description: t('accountCreatedDescription'),
-    });
-
-    router.push('/login');
     setIsLoading(false);
   };
 

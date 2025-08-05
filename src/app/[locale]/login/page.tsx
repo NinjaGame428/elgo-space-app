@@ -11,7 +11,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from '@/navigation';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
-import { users as initialUsers } from '@/lib/data';
 
 export default function LoginPage() {
   const t = useTranslations('LoginPage');
@@ -25,17 +24,20 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
 
-    const storedUsers = localStorage.getItem('users');
-    const users = storedUsers ? JSON.parse(storedUsers) : initialUsers;
-    const userExists = users.some((user: any) => user.email === email);
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
 
-    // In a real app, you'd check the password against a hashed version.
-    // Here we just check for 'password' for demo purposes if the user exists.
-    if (userExists && password === 'password') {
+      const data = await response.json();
+
+      if (response.ok) {
         localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('userEmail', email);
         
-        const isAdmin = email === 'test@example.com';
+        const isAdmin = data.user.role === 'Admin';
         
         toast({
             title: t('loginSuccessTitle'),
@@ -47,13 +49,21 @@ export default function LoginPage() {
         } else {
             router.push('/');
         }
-    } else {
-      toast({
+      } else {
+        toast({
+          variant: "destructive",
+          title: t('loginFailedTitle'),
+          description: data.message || t('loginFailedDescription'),
+        });
+      }
+    } catch (error) {
+       toast({
         variant: "destructive",
-        title: t('loginFailedTitle'),
-        description: t('loginFailedDescription'),
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
       });
     }
+
     setIsLoading(false);
   };
 
