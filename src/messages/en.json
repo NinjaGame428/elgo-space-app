@@ -25,11 +25,11 @@
   "LocationDetails": {
     "selectLocation": "Select a location to see details",
     "bookYourSpace": "Book Your Space",
-    "pickDate": "Pick a date",
+    "pickDate": "Pick a date or range",
     "amenities": "Amenities",
     "availability": "Availability",
     "availabilityHint": "Dates in orange have existing bookings.",
-    "selectDate": "1. Select a Date",
+    "selectDate": "1. Select a Date Range",
     "selectTime": "2. Select a Time",
     "startTime": "Start Time",
     "endTime": "End Time",
@@ -128,7 +128,18 @@
     "dateTime": "Date & Time",
     "status": "Status",
     "department": "Department",
-    "occasion": "Occasion"
+    "occasion": "Occasion",
+    "emailNotifications": "Email & Notifications",
+    "emailNotificationsDescription": "Customize automated email messages sent to users.",
+    "templateBookingPending": "Booking Pending",
+    "templateBookingApproved": "Booking Approved",
+    "templateBookingRescheduled": "Booking Rescheduled",
+    "templateBookingCancellation": "Booking Cancellation",
+    "emailSubject": "Email Subject",
+    "emailBody": "Email Body",
+    "templateVariables": "Available variables",
+    "saveTemplate": "Save Template",
+    "saving": "Saving..."
   },
   "AddRoomPage": {
       "backToDashboard": "Back to Dashboard",

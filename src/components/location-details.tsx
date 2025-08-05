@@ -11,7 +11,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { format, addDays, parse, eachDayOfInterval, formatISO, isValid, setHours, setMinutes, getDay } from 'date-fns';
+import { format, addDays, parse, eachDayOfInterval, formatISO, isValid, setHours, setMinutes, getDay, isBefore, startOfDay, endOfDay } from 'date-fns';
 import { fr, enUS } from 'date-fns/locale';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
@@ -22,6 +22,7 @@ import type { Booking } from '@/lib/types';
 import { Skeleton } from './ui/skeleton';
 import { Separator } from './ui/separator';
 import { Input } from './ui/input';
+import type { DateRange } from 'react-day-picker';
 
 const amenityIcons = {
   "24/7 Access": Clock,
@@ -51,8 +52,8 @@ export function LocationDetails({ location }: LocationDetailsProps) {
   const locale = useLocale();
   const router = useRouter();
   const { toast } = useToast();
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   
+  const [date, setDate] = useState<DateRange | undefined>();
   const [startTime, setStartTime] = useState<string | null>(null);
   const [endTime, setEndTime] = useState<string | null>(null);
   const [department, setDepartment] = useState('');
@@ -74,7 +75,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
   }, []);
 
   useEffect(() => {
-    setSelectedDate(undefined);
+    setDate(undefined);
     setStartTime(null);
     setEndTime(null);
     setDepartment('');
@@ -108,9 +109,10 @@ export function LocationDetails({ location }: LocationDetailsProps) {
         return;
     }
 
-    if (location && selectedDate && startTime && endTime && department && occasion) {
-      const startDateTime = parse(startTime, 'HH:mm', selectedDate);
-      const endDateTime = parse(endTime, 'HH:mm', selectedDate);
+    if (location && date?.from && startTime && endTime && department && occasion) {
+      const bookingEndDate = date.to || date.from;
+      const startDateTime = parse(startTime, 'HH:mm', date.from);
+      const endDateTime = parse(endTime, 'HH:mm', bookingEndDate);
       
       const newBookingData = {
         locationId: location.id,
@@ -140,7 +142,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
             title: t('bookingConfirmedTitle'),
             description: t('bookingConfirmedDescription', {
               locationName: tloc(location.name as any),
-              date: format(selectedDate, "PPP", { locale: dateLocale }),
+              date: format(date.from, "PPP", { locale: dateLocale }),
               startTime: format(startDateTime, 'p', { locale: dateLocale }),
               endTime: format(endDateTime, 'p', { locale: dateLocale }),
             }),
@@ -164,6 +166,11 @@ export function LocationDetails({ location }: LocationDetailsProps) {
     }
   };
   
+  const selectedDates = useMemo(() => {
+    if (!date?.from) return [];
+    return eachDayOfInterval({ start: date.from, end: date.to || date.from });
+  }, [date]);
+
   const approvedBookedDates = useMemo(() => {
     return bookings
       .filter(b => b.status === 'approved')
@@ -175,8 +182,8 @@ export function LocationDetails({ location }: LocationDetailsProps) {
       });
   }, [bookings]);
 
-  const isTimeBooked = useCallback((time: string, date: Date) => {
-    const checkTime = parse(time, 'HH:mm', date).getTime();
+  const isTimeBooked = useCallback((time: string, checkDate: Date) => {
+    const checkTime = parse(time, 'HH:mm', checkDate).getTime();
     
     return bookings.some(booking => {
         if(booking.status !== 'approved') return false;
@@ -187,44 +194,58 @@ export function LocationDetails({ location }: LocationDetailsProps) {
   }, [bookings]);
   
   const isTimeSlotDisabled = useCallback((time: string) => {
-      if (!selectedDate) return true;
-      return isTimeBooked(time, selectedDate);
-  }, [selectedDate, isTimeBooked]);
+      if (selectedDates.length === 0) return true;
+      for (const day of selectedDates) {
+          if (isTimeBooked(time, day)) {
+              return true;
+          }
+      }
+      return false;
+  }, [selectedDates, isTimeBooked]);
 
   const isRangeInvalid = useMemo(() => {
-    if (!startTime || !endTime || !selectedDate) return false;
+    if (!startTime || !endTime || selectedDates.length === 0) return false;
     const start = parse(startTime, 'HH:mm', new Date());
     const end = parse(endTime, 'HH:mm', new Date());
 
-    for (let d = new Date(start); d < end; d.setMinutes(d.getMinutes() + 30)) {
-        const timeStr = format(d, 'HH:mm');
-        if (isTimeBooked(timeStr, selectedDate)) {
-            return true;
+    for (const day of selectedDates) {
+        for (let d = new Date(start); d < end; d.setMinutes(d.getMinutes() + 30)) {
+            const timeStr = format(d, 'HH:mm');
+            if (isTimeBooked(timeStr, day)) {
+                return true;
+            }
         }
     }
     return false;
-  }, [startTime, endTime, selectedDate, isTimeBooked]);
+  }, [startTime, endTime, selectedDates, isTimeBooked]);
     
   const availableEndTimes = useMemo(() => {
-      if (!startTime || !selectedDate) return [];
+      if (!startTime || selectedDates.length === 0) return [];
       const startIndex = timeSlots.indexOf(startTime);
       let endIndex = timeSlots.length;
 
       for (let i = startIndex + 1; i < timeSlots.length; i++) {
           const currentTimeSlot = timeSlots[i];
-          if (isTimeBooked(currentTimeSlot, selectedDate)) {
+          let isDisabled = false;
+          for (const day of selectedDates) {
+              if (isTimeBooked(currentTimeSlot, day)) {
+                  isDisabled = true;
+                  break;
+              }
+          }
+          if (isDisabled) {
               endIndex = i;
               break;
           }
       }
       return timeSlots.slice(startIndex + 1, endIndex + 1);
-  }, [startTime, selectedDate, isTimeBooked]);
+  }, [startTime, selectedDates, isTimeBooked]);
 
 
   useEffect(() => {
     setStartTime(null);
     setEndTime(null);
-  }, [selectedDate]);
+  }, [date]);
 
   useEffect(() => {
     setEndTime(null);
@@ -271,11 +292,11 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                             <p className="text-sm text-muted-foreground mb-4">{t('availabilityHint')}</p>
                             <div className="flex justify-center">
                                 <Calendar
-                                    mode="single"
+                                    mode="range"
                                     modifiers={{ booked: approvedBookedDates }}
                                     modifiersClassNames={{ booked: 'bg-orange-500/80 text-primary-foreground' }}
                                     locale={dateLocale}
-                                    disabled={(day) => day < new Date(new Date().setHours(0,0,0,0))}
+                                    disabled={(day) => day < startOfDay(new Date())}
                                 />
                             </div>
                        </div>
@@ -293,34 +314,46 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                                     variant={"outline"}
                                     className={cn(
                                     "w-full justify-start text-left font-normal h-11 bg-background",
-                                    !selectedDate && "text-muted-foreground"
+                                    !date && "text-muted-foreground"
                                     )}
                                 >
                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {selectedDate ? format(selectedDate, "PPP", {locale: dateLocale}) : <span>{t('pickDate')}</span>}
+                                    {date?.from ? (
+                                        date.to ? (
+                                            <>
+                                            {format(date.from, "LLL dd, y")} -{" "}
+                                            {format(date.to, "LLL dd, y")}
+                                            </>
+                                        ) : (
+                                            format(date.from, "LLL dd, y")
+                                        )
+                                        ) : (
+                                        <span>{t('pickDate')}</span>
+                                    )}
                                 </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0" align="start">
                                 <Calendar
-                                    mode="single"
-                                    selected={selectedDate}
-                                    onSelect={setSelectedDate}
-                                    disabled={(day) => day < new Date(new Date().setHours(0,0,0,0)) || day > addDays(new Date(), 60)}
+                                    mode="range"
+                                    selected={date}
+                                    onSelect={setDate}
+                                    disabled={(day) => day < startOfDay(new Date()) || day > addDays(new Date(), 60)}
                                     initialFocus
                                     locale={dateLocale}
                                     modifiers={{ booked: approvedBookedDates }}
                                     modifiersClassNames={{ booked: 'bg-orange-500/80 text-primary-foreground' }}
+                                    numberOfMonths={2}
                                 />
                                 </PopoverContent>
                             </Popover>
                         </div>
                         
-                        {selectedDate && (
+                        {date?.from && (
                             <div className="animate-fade-in-up space-y-4">
                                 <div>
                                     <Label className="font-medium mb-2 block text-center">{t('selectTime')}</Label>
                                     <div className="grid grid-cols-2 gap-4">
-                                        <Select value={startTime || ''} onValueChange={setStartTime} disabled={isLoading || !selectedDate}>
+                                        <Select value={startTime || ''} onValueChange={setStartTime} disabled={isLoading || !date?.from}>
                                             <SelectTrigger className="h-11 bg-background">
                                                 <SelectValue placeholder={t('startTime')} />
                                             </SelectTrigger>
@@ -381,7 +414,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                      <Button 
                         onClick={handleBooking} 
                         className="w-full h-12 text-base font-semibold mt-auto"
-                        disabled={isLoading || !selectedDate || !startTime || !endTime || !department || !occasion || isRangeInvalid}
+                        disabled={isLoading || !date || !startTime || !endTime || !department || !occasion || isRangeInvalid}
                     >
                         {t('confirmBooking')}
                     </Button>

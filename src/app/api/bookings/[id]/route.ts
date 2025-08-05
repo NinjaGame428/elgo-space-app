@@ -1,5 +1,6 @@
 
 import { createClient } from "@/lib/supabase/server-client";
+import { getEmailTemplate } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = 'force-dynamic';
@@ -25,6 +26,26 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
             .single();
 
         if (error) throw error;
+        
+        // If status was changed to 'approved' or 'rejected', send email
+        if (body.status === 'approved') {
+             try {
+                const template = await getEmailTemplate('booking_approved');
+                console.log("--- Sending Email ---");
+                console.log("To:", data.user_email);
+                console.log("Subject:", template.subject);
+                 const body = template.body
+                    .replace('{{name}}', data.user_email)
+                    .replace('{{locationName}}', `Location ID: ${data.location_id}`)
+                    .replace('{{date}}', new Date(data.start_time).toLocaleDateString())
+                    .replace('{{startTime}}', new Date(data.start_time).toLocaleTimeString())
+                    .replace('{{endTime}}', new Date(data.end_time).toLocaleTimeString());
+                console.log("Body:", body);
+                console.log("--- Email Sent ---");
+            } catch(emailError) {
+                console.error("Failed to 'send' booking approved email:", emailError);
+            }
+        }
         
         return NextResponse.json(data);
 

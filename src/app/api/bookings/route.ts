@@ -2,6 +2,7 @@
 import { createClient } from "@/lib/supabase/server-client";
 import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from 'uuid';
+import { getEmailTemplate } from "@/lib/supabase/server";
 
 export const dynamic = 'force-dynamic';
 
@@ -82,6 +83,28 @@ export async function POST(req: NextRequest) {
 
         if (error) throw error;
         
+        // "Send" pending email notification
+        try {
+            const template = await getEmailTemplate('booking_pending');
+            // In a real app, you would use a service like SendGrid, Resend, etc.
+            // and a real template engine like Handlebars.
+            console.log("--- Sending Email ---");
+            console.log("To:", userEmail);
+            console.log("Subject:", template.subject);
+            // Basic placeholder replacement
+            const body = template.body
+                .replace('{{name}}', userEmail) // No user name available here easily
+                .replace('{{locationName}}', `Location ID: ${locationId}`)
+                .replace('{{date}}', new Date(startTime).toLocaleDateString())
+                .replace('{{startTime}}', new Date(startTime).toLocaleTimeString())
+                .replace('{{endTime}}', new Date(endTime).toLocaleTimeString());
+            console.log("Body:", body);
+            console.log("--- Email Sent ---");
+        } catch(emailError) {
+            console.error("Failed to 'send' booking pending email:", emailError);
+            // Do not fail the request if email fails
+        }
+
         // Map back to camelCase for the client
         const responseData = {
             id: data.id,
@@ -101,5 +124,3 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ message: 'An internal server error occurred' }, { status: 500 });
     }
 }
-
-    

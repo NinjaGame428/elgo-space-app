@@ -25,11 +25,11 @@
   "LocationDetails": {
     "selectLocation": "Sélectionnez un emplacement pour voir les détails",
     "bookYourSpace": "Réservez votre espace",
-    "pickDate": "Choisissez une date",
+    "pickDate": "Choisissez une date ou une période",
     "amenities": "Équipements",
     "availability": "Disponibilité",
     "availabilityHint": "Les dates en orange ont des réservations existantes.",
-    "selectDate": "1. Sélectionnez une date",
+    "selectDate": "1. Sélectionnez une plage de dates",
     "selectTime": "2. Sélectionnez une heure",
     "startTime": "Heure de début",
     "endTime": "Heure de fin",
@@ -128,7 +128,18 @@
     "dateTime": "Date et heure",
     "status": "Statut",
     "department": "Département",
-    "occasion": "Occasion"
+    "occasion": "Occasion",
+    "emailNotifications": "E-mails et notifications",
+    "emailNotificationsDescription": "Personnalisez les messages électroniques automatisés envoyés aux utilisateurs.",
+    "templateBookingPending": "Réservation en attente",
+    "templateBookingApproved": "Réservation approuvée",
+    "templateBookingRescheduled": "Réservation reportée",
+    "templateBookingCancellation": "Annulation de réservation",
+    "emailSubject": "Sujet de l'e-mail",
+    "emailBody": "Corps de l'e-mail",
+    "templateVariables": "Variables disponibles",
+    "saveTemplate": "Sauvegarder le modèle",
+    "saving": "Sauvegarde..."
   },
   "AddRoomPage": {
     "backToDashboard": "Retour au tableau de bord",

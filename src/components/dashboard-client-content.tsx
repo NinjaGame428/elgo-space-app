@@ -8,10 +8,10 @@ import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
-import type { Booking, Location, User } from '@/lib/types';
+import type { Booking, Location, User, EmailTemplate } from '@/lib/types';
 import { Link } from '@/navigation';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PlusCircle, Pencil, Trash2, CheckCircle, XCircle, User as UserIcon } from 'lucide-react';
+import { PlusCircle, Pencil, Trash2, CheckCircle, XCircle, User as UserIcon, Mail } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -19,6 +19,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { fr, enUS } from 'date-fns/locale';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
+import { Label } from './ui/label';
+import { Input } from './ui/input';
+import { Textarea } from './ui/textarea';
 
 interface DashboardData {
     bookings: Booking[];
@@ -28,6 +32,117 @@ interface DashboardData {
 interface DashboardClientContentProps {
     initialData: DashboardData;
 }
+
+function EmailTemplatesManager() {
+    const t = useTranslations('DashboardPage');
+    const { toast } = useToast();
+    const [templates, setTemplates] = useState<EmailTemplate[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
+
+    useEffect(() => {
+        async function fetchTemplates() {
+            try {
+                const res = await fetch('/api/email-templates');
+                if (!res.ok) throw new Error('Failed to fetch templates');
+                const data = await res.json();
+                setTemplates(data);
+            } catch (error) {
+                toast({ variant: 'destructive', title: 'Error', description: 'Could not load email templates.' });
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        fetchTemplates();
+    }, [toast]);
+    
+    const handleTemplateChange = (index: number, field: 'subject' | 'body', value: string) => {
+        const newTemplates = [...templates];
+        newTemplates[index] = { ...newTemplates[index], [field]: value };
+        setTemplates(newTemplates);
+    };
+
+    const handleSaveTemplate = async (templateName: string) => {
+        setIsSaving(true);
+        const template = templates.find(t => t.name === templateName);
+        if (!template) return;
+
+        try {
+            const res = await fetch(`/api/email-templates/${templateName}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ subject: template.subject, body: template.body }),
+            });
+            if (!res.ok) throw new Error('Failed to save template');
+            toast({ title: 'Template Saved', description: `The "${templateName}" template has been updated.` });
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not save the email template.' });
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const getTemplateTitle = (name: string) => {
+        switch (name) {
+            case 'booking_pending': return t('templateBookingPending');
+            case 'booking_approved': return t('templateBookingApproved');
+            case 'booking_rescheduled': return t('templateBookingRescheduled');
+            case 'booking_cancellation': return t('templateBookingCancellation');
+            default: return name;
+        }
+    }
+
+
+    if (isLoading) {
+        return <p>{t('loading')}</p>;
+    }
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Mail /> {t('emailNotifications')}</CardTitle>
+                <CardDescription>{t('emailNotificationsDescription')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Accordion type="single" collapsible className="w-full">
+                    {templates.map((template, index) => (
+                        <AccordionItem value={template.name} key={template.id}>
+                            <AccordionTrigger>{getTemplateTitle(template.name)}</AccordionTrigger>
+                            <AccordionContent className="space-y-4">
+                                <div>
+                                    <Label htmlFor={`subject-${template.name}`}>{t('emailSubject')}</Label>
+                                    <Input 
+                                        id={`subject-${template.name}`} 
+                                        value={template.subject}
+                                        onChange={(e) => handleTemplateChange(index, 'subject', e.target.value)}
+                                        disabled={isSaving}
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor={`body-${template.name}`}>{t('emailBody')}</Label>
+                                    <Textarea
+                                         id={`body-${template.name}`}
+                                         value={template.body}
+                                         onChange={(e) => handleTemplateChange(index, 'body', e.target.value)}
+                                         rows={8}
+                                         disabled={isSaving}
+                                    />
+                                     <p className="text-xs text-muted-foreground mt-2">
+                                        {t('templateVariables')}: {'{{name}}'}, {'{{locationName}}'}, {'{{date}}'}, {'{{startTime}}'}, {'{{endTime}}'}
+                                    </p>
+                                </div>
+                                <Button onClick={() => handleSaveTemplate(template.name)} disabled={isSaving}>
+                                    {isSaving ? t('saving') : t('saveTemplate')}
+                                </Button>
+                            </AccordionContent>
+                        </AccordionItem>
+                    ))}
+                </Accordion>
+            </CardContent>
+        </Card>
+    );
+}
+
 
 export function DashboardClientContent({ initialData }: DashboardClientContentProps) {
     const t = useTranslations('DashboardPage');
@@ -197,6 +312,8 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                 </div>
 
                 <div className="lg:col-span-2 space-y-8">
+                    <EmailTemplatesManager />
+
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between">
                             <div>

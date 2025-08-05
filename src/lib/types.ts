@@ -41,3 +41,12 @@ export interface User {
   role: 'Admin' | 'User';
   joined_at: string;
 }
+
+export interface EmailTemplate {
+    id: number;
+    name: string;
+    subject: string;
+    body: string;
+    created_at: string;
+    updated_at: string;
+}

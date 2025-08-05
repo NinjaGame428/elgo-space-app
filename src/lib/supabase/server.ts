@@ -2,7 +2,7 @@
 'use server';
 
 import { createClient } from './server-client';
-import type { Booking, Location, User } from '../types';
+import type { Booking, Location, User, EmailTemplate } from '../types';
 
 export async function getLocations(): Promise<Location[]> {
     const supabase = createClient();
@@ -83,4 +83,35 @@ export async function getUsers(): Promise<User[]> {
         role: u.role,
         joined_at: u.joined_at,
     }));
+}
+
+export async function getEmailTemplates(): Promise<EmailTemplate[]> {
+    const supabase = createClient();
+    const { data, error } = await supabase
+        .from('email_templates')
+        .select('*')
+        .order('id');
+    
+    if (error) {
+        console.error('Error fetching email templates:', error);
+        return [];
+    }
+
+    return data;
+}
+
+export async function getEmailTemplate(name: string): Promise<EmailTemplate> {
+    const supabase = createClient();
+    const { data, error } = await supabase
+        .from('email_templates')
+        .select('*')
+        .eq('name', name)
+        .single();
+    
+    if (error) {
+        console.error(`Error fetching email template "${name}":`, error);
+        throw new Error(`Could not find email template: ${name}`);
+    }
+
+    return data;
 }
