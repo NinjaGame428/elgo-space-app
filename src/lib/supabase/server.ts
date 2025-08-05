@@ -25,7 +25,7 @@ export async function getLocations(): Promise<Location[]> {
     return data.map((location: any) => ({
         id: location.id,
         name: location.name,
-        address: "717 Bd Saint-Joseph, Gatineau, QC J8Y 4B6",
+        address: location.address,
         imageUrl: location.image_url,
         bookables: [{
             type: 'Meeting Room',
