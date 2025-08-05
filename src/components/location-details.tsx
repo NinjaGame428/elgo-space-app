@@ -12,13 +12,13 @@ import { Calendar } from '@/components/ui/calendar';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { format, addDays, parse, getDay, eachDayOfInterval, formatISO } from 'date-fns';
+import { format, addDays, parse, getDay, eachDayOfInterval, formatISO, isValid, isAfter } from 'date-fns';
 import { fr, enUS } from 'date-fns/locale';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
 import type { DateRange } from 'react-day-picker';
 import { useRouter } from 'next/navigation';
-import { Clock, Coffee, Printer, Phone, Wifi, Car, UtensilsCrossed } from 'lucide-react';
+import { Clock, Coffee, Printer, Phone, Wifi, Car, UtensilsCrossed, Building } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import type { Booking } from '@/lib/types';
 import { Skeleton } from './ui/skeleton';
@@ -165,36 +165,39 @@ export function LocationDetails({ location }: LocationDetailsProps) {
     }
   };
 
-   const approvedBookingsForLocation = useMemo(() => {
+   const approvedBookedDates = useMemo(() => {
     return bookings
       .filter(b => b.status === 'approved')
       .flatMap(b => {
         const start = new Date(b.startTime);
         const end = new Date(b.endTime);
-        if (format(start, 'yyyy-MM-dd') === format(end, 'yyyy-MM-dd')) {
-            return [start];
-        }
+        if (!isValid(start) || !isValid(end)) return [];
         return eachDayOfInterval({start, end});
       });
   }, [bookings]);
 
   const selectedDates = useMemo(() => {
     if (!date?.from) return [];
+    const end = date.to || date.from;
+    if (!isValid(date.from) || !isValid(end)) return [];
     return eachDayOfInterval({
         start: date.from,
-        end: date.to || date.from,
+        end: end,
     });
   }, [date]);
 
   const locationBookingsForDay = useCallback((day: Date) => {
+    if (!isValid(day)) return [];
     const formattedDate = format(day, "yyyy-MM-dd");
     return bookings.filter(b => 
+        isValid(new Date(b.startTime)) &&
         format(new Date(b.startTime), "yyyy-MM-dd") === formattedDate &&
         b.status === 'approved'
     );
   }, [bookings]);
 
   const isTimeSlotBooked = useCallback((time: string, checkDate: Date) => {
+    if (!isValid(checkDate)) return false;
     const checkTime = parse(time, 'HH:mm', checkDate).getTime();
     return locationBookingsForDay(checkDate).some(booking => {
         const bookingStart = new Date(booking.startTime).getTime();
@@ -256,137 +259,120 @@ export function LocationDetails({ location }: LocationDetailsProps) {
 
   if (!location) {
     return (
-      <div className="flex items-center justify-center h-full text-muted-foreground p-8 bg-card rounded-lg shadow-sm border">
-        <p className="text-lg">{t('selectLocation')}</p>
+      <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-8">
+        <Building className="w-16 h-16 mb-4 text-muted-foreground" />
+        <p className="text-lg font-medium">{t('selectLocation')}</p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
-      <div className={cn("bg-card rounded-lg")}>
-        <div className="relative w-full h-60 md:h-80">
+    <div className="h-full">
+        <div className="relative w-full h-64">
           <Image
             src={location.imageUrl ?? 'https://placehold.co/800x600.png'}
             alt={tloc(location.name as any)}
             fill
-            className="object-cover rounded-t-lg"
+            className="object-cover"
             data-ai-hint="office workspace"
             sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
         </div>
-        <div className="p-4 md:p-6">
-          <CardHeader className="p-0 mb-6">
-            <CardTitle className="text-3xl font-bold">{tloc(location.name as any)}</CardTitle>
-            <CardDescription className="text-base pt-1">{location.address}</CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="bg-muted/50 p-4 rounded-lg">
-              <h3 className="text-xl font-semibold mb-4">{t('bookSpot')}</h3>
-              <div className="grid md:grid-cols-1 gap-6">
-                  <div>
-                      <h4 className="font-medium mb-2 text-sm">{t('selectDateRange')}</h4>
-                       <Popover>
-                          <PopoverTrigger asChild>
-                          <Button
-                              variant={"outline"}
-                              className={cn(
-                              "w-full justify-start text-left font-normal bg-background h-11",
-                              !date && "text-muted-foreground"
-                              )}
-                          >
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {date?.from ? (
-                                  date.to ? (
-                                      <>
-                                      {format(date.from, "PPP", { locale: dateLocale })} -{" "}
-                                      {format(date.to, "PPP", { locale: dateLocale })}
-                                      </>
-                                  ) : (
-                                      format(date.from, "PPP", { locale: dateLocale })
-                                  )
-                                  ) : (
-                                  <span>{t('pickDateRange')}</span>
-                              )}
-                          </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                              mode="range"
-                              selected={date}
-                              onSelect={setDate}
-                              disabled={(day) => day < new Date(new Date().setHours(0,0,0,0)) || day > addDays(new Date(), 60)}
-                              initialFocus
-                              numberOfMonths={2}
-                              locale={dateLocale}
-                          />
-                          </PopoverContent>
-                      </Popover>
-                  </div>
-
-                  <div>
-                      <h4 className="font-medium mb-2 text-sm">{t('selectTime')}</h4>
-                      <div className="grid grid-cols-2 gap-4">
-                            <Select value={startTime || ''} onValueChange={setStartTime} disabled={!date?.from || isLoading}>
-                                <SelectTrigger className="h-11">
-                                    <SelectValue placeholder={t('startTime')} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {timeSlots.map(time => (
-                                        <SelectItem key={time} value={time} disabled={isTimeSlotDisabled(time)}>
-                                            {time}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <Select value={endTime || ''} onValueChange={setEndTime} disabled={!startTime || isLoading}>
-                                <SelectTrigger className="h-11">
-                                    <SelectValue placeholder={t('endTime')} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {availableEndTimes.map(time => (
-                                        <SelectItem key={time} value={time}>
-                                        {time}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+        <div className="p-6 space-y-8">
+          <div>
+            <h2 className="text-2xl font-bold">{tloc(location.name as any)}</h2>
+            <p className="text-base text-muted-foreground pt-1">{location.address}</p>
+          </div>
+          
+          <Card>
+              <CardHeader>
+                <CardTitle>{t('bookSpot')}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid md:grid-cols-1 gap-4">
+                      <div>
+                          <Label className="font-medium mb-2 block">{t('selectDateRange')}</Label>
+                           <Popover>
+                              <PopoverTrigger asChild>
+                              <Button
+                                  variant={"outline"}
+                                  className={cn(
+                                  "w-full justify-start text-left font-normal bg-background h-11",
+                                  !date && "text-muted-foreground"
+                                  )}
+                              >
+                                  <CalendarIcon className="mr-2 h-4 w-4" />
+                                  {date?.from ? (
+                                      date.to ? (
+                                          <>
+                                          {format(date.from, "PPP", { locale: dateLocale })} -{" "}
+                                          {format(date.to, "PPP", { locale: dateLocale })}
+                                          </>
+                                      ) : (
+                                          format(date.from, "PPP", { locale: dateLocale })
+                                      )
+                                      ) : (
+                                      <span>{t('pickDateRange')}</span>
+                                  )}
+                              </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                  mode="range"
+                                  selected={date}
+                                  onSelect={setDate}
+                                  disabled={(day) => day < new Date(new Date().setHours(0,0,0,0)) || day > addDays(new Date(), 60)}
+                                  initialFocus
+                                  numberOfMonths={2}
+                                  locale={dateLocale}
+                              />
+                              </PopoverContent>
+                          </Popover>
                       </div>
-                       {isRangeInvalid && (
-                          <p className="text-sm text-destructive mt-2">{t('rangeInvalid')}</p>
-                      )}
-                  </div>
-                  <div>
-                    <Button onClick={handleBooking} className="w-full h-11 text-base font-semibold" disabled={isLoading || isRangeInvalid || !date?.from || !startTime || !endTime}>
-                        {t('bookNow')}
-                    </Button>
-                  </div>
-              </div>
-            </div>
 
-            <Separator className="my-6" />
+                      <div>
+                          <Label className="font-medium mb-2 block">{t('selectTime')}</Label>
+                          <div className="grid grid-cols-2 gap-4">
+                                <Select value={startTime || ''} onValueChange={setStartTime} disabled={!date?.from || isLoading}>
+                                    <SelectTrigger className="h-11">
+                                        <SelectValue placeholder={t('startTime')} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {timeSlots.map(time => (
+                                            <SelectItem key={time} value={time} disabled={isTimeSlotDisabled(time)}>
+                                                {time}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <Select value={endTime || ''} onValueChange={setEndTime} disabled={!startTime || isLoading}>
+                                    <SelectTrigger className="h-11">
+                                        <SelectValue placeholder={t('endTime')} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {availableEndTimes.map(time => (
+                                            <SelectItem key={time} value={time}>
+                                            {time}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                          </div>
+                           {isRangeInvalid && (
+                              <p className="text-sm text-destructive mt-2">{t('rangeInvalid')}</p>
+                          )}
+                      </div>
+                  </div>
+                   <div>
+                        <Button onClick={handleBooking} className="w-full h-11 text-base font-semibold" disabled={isLoading || isRangeInvalid || !date?.from || !startTime || !endTime}>
+                            {t('bookNow')}
+                        </Button>
+                    </div>
+              </CardContent>
+          </Card>
 
-            <div>
-              <h3 className="text-xl font-semibold mb-4">{t('availability')}</h3>
-              <p className="text-sm text-muted-foreground mb-4">{t('availabilityDesc')}</p>
-              <div className="flex justify-center p-4 rounded-lg bg-muted/50">
-                {isLoading ? <Skeleton className="w-full h-[300px]" /> :
-                    <Calendar
-                        mode="multiple"
-                        selected={approvedBookingsForLocation}
-                        locale={dateLocale}
-                        className="rounded-md p-0"
-                        modifiers={{ booked: approvedBookingsForLocation }}
-                        modifiersClassNames={{
-                            booked: 'bg-orange-500 text-white hover:bg-orange-500/90 focus:bg-orange-500/90',
-                        }}
-                    />
-                }
-              </div>
-            </div>
-            
-            <Separator className="my-6" />
-            
+          <Separator />
+
             <div>
               <h3 className="text-xl font-semibold mb-4">{t('amenities')}</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-2">
@@ -403,9 +389,29 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                 })}
               </div>
             </div>
-          </CardContent>
+
+            <Separator/>
+
+            <div>
+              <h3 className="text-xl font-semibold mb-4">{t('availability')}</h3>
+              <p className="text-sm text-muted-foreground mb-4">{t('availabilityDesc')}</p>
+              <div className="p-4 rounded-lg border">
+                {isLoading ? <Skeleton className="w-full h-[300px]" /> :
+                    <Calendar
+                        mode="multiple"
+                        selected={approvedBookedDates}
+                        locale={dateLocale}
+                        className="rounded-md p-0"
+                        modifiers={{ booked: approvedBookedDates }}
+                        modifiersClassNames={{
+                            booked: 'bg-orange-500 text-white hover:bg-orange-500/90 focus:bg-orange-500/90',
+                        }}
+                    />
+                }
+              </div>
+            </div>
+            
         </div>
       </div>
-    </div>
   );
 }

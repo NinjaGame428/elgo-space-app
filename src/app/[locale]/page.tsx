@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTranslations } from 'next-intl';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getLocations } from '@/lib/supabase/server';
+import { Search } from 'lucide-react';
 
 
 export default function HomePage() {
@@ -38,8 +38,12 @@ export default function HomePage() {
         setFilteredLocations(locationsData);
 
         const initialLocationId = searchParams.get('location');
-        const initialLocation = locationsData.find(l => l.id === initialLocationId) || locationsData[0];
-        setSelectedLocation(initialLocation);
+        if (initialLocationId) {
+            const initialLocation = locationsData.find(l => l.id === initialLocationId);
+            setSelectedLocation(initialLocation || locationsData[0] || null);
+        } else if (locationsData.length > 0) {
+            setSelectedLocation(locationsData[0]);
+        }
 
       } catch (error) {
         console.error(error);
@@ -67,70 +71,71 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <main className="flex-1 grid md:grid-cols-3 xl:grid-cols-4 gap-8 py-6 px-4 sm:px-6 lg:px-8">
-        <div className="md:col-span-1 xl:col-span-1 space-y-6">
+      <main className="grid md:grid-cols-[380px_1fr] h-[calc(100vh-4rem)]">
+        <div className="flex flex-col border-r h-full p-4 gap-4">
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-full" />
-          <div className="space-y-4 pt-4">
-            <Skeleton className="h-40 w-full rounded-lg" />
-            <Skeleton className="h-40 w-full rounded-lg" />
-            <Skeleton className="h-40 w-full rounded-lg" />
-          </div>
+            <div className="space-y-4 pt-4 overflow-y-auto">
+                <Skeleton className="h-28 w-full rounded-lg" />
+                <Skeleton className="h-28 w-full rounded-lg" />
+                <Skeleton className="h-28 w-full rounded-lg" />
+                <Skeleton className="h-28 w-full rounded-lg" />
+            </div>
         </div>
-        <div className="md:col-span-2 xl:col-span-3 sticky top-24 self-start">
-          <Skeleton className="h-[calc(100vh-8rem)] w-full rounded-lg" />
+        <div className="p-4 overflow-y-auto">
+          <Skeleton className="h-full w-full rounded-lg" />
         </div>
       </main>
     );
   }
 
   return (
-      <main className="flex-1 grid md:grid-cols-3 xl:grid-cols-4 gap-8 py-6 px-4 sm:px-6 lg:px-8">
-        <div className="md:col-span-1 xl:col-span-1 flex flex-col gap-6">
-          <div className="p-4 space-y-4 border rounded-lg bg-card shadow-sm">
-            <h2 className="text-2xl font-bold">{t('locations')}</h2>
-            <div className="space-y-2">
-              <Input
-                type="text"
-                placeholder={t('searchPlaceholder')}
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-              />
-              <Select value={selectedType} onValueChange={setSelectedType}>
-                <SelectTrigger>
-                  <SelectValue placeholder={t('allTypes')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="All Types">{t('allTypes')}</SelectItem>
-                  <SelectItem value="Meeting Room">{t('meetingRoom')}</SelectItem>
-                </SelectContent>
-              </Select>
+    <main className="grid md:grid-cols-[380px_1fr] h-[calc(100vh-4rem)]">
+        <div className="flex flex-col border-r h-full">
+            <div className="p-4 space-y-4 border-b">
+                <h2 className="text-xl font-bold">{t('locations')}</h2>
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input
+                        type="text"
+                        placeholder={t('searchPlaceholder')}
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                    />
+                </div>
+                <Select value={selectedType} onValueChange={setSelectedType}>
+                    <SelectTrigger>
+                    <SelectValue placeholder={t('allTypes')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                    <SelectItem value="All Types">{t('allTypes')}</SelectItem>
+                    <SelectItem value="Meeting Room">{t('meetingRoom')}</SelectItem>
+                    </SelectContent>
+                </Select>
             </div>
-          </div>
-          <div className="space-y-4 overflow-y-auto">
-            {filteredLocations.length > 0 ? (
-              filteredLocations.map(location => (
-                <LocationCard
-                  key={location.id}
-                  location={location}
-                  isSelected={selectedLocation?.id === location.id}
-                  onClick={() => handleLocationSelect(location)}
-                />
-              ))
-            ) : (
-              <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg h-60">
-                <p className="text-lg font-medium">{t('noLocationsFound')}</p>
-                <p className="text-sm text-muted-foreground">{t('noLocationsFoundHint')}</p>
-              </div>
-            )}
-          </div>
+            <div className="space-y-2 p-4 overflow-y-auto flex-1">
+                {filteredLocations.length > 0 ? (
+                filteredLocations.map(location => (
+                    <LocationCard
+                    key={location.id}
+                    location={location}
+                    isSelected={selectedLocation?.id === location.id}
+                    onClick={() => handleLocationSelect(location)}
+                    />
+                ))
+                ) : (
+                <div className="flex flex-col items-center justify-center text-center p-8 h-full">
+                    <p className="text-lg font-medium">{t('noLocationsFound')}</p>
+                    <p className="text-sm text-muted-foreground">{t('noLocationsFoundHint')}</p>
+                </div>
+                )}
+            </div>
         </div>
         
-        <div className="md:col-span-2 xl:col-span-3 sticky top-24 self-start h-[calc(100vh-8rem)] overflow-y-auto">
+        <div className="overflow-y-auto">
             <LocationDetails location={selectedLocation} />
         </div>
-      </main>
+    </main>
   );
 }
-
-

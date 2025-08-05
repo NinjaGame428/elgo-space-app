@@ -120,7 +120,7 @@ export default function LoginPage() {
                     {t('signUpLink')}
                 </Link>
             </p>
-            <Card className="mt-8 bg-muted/50">
+            <Card className="mt-8 bg-muted/50 border-dashed">
               <CardHeader>
                 <CardTitle className="text-base text-center">{t('demoCredentials')}</CardTitle>
               </CardHeader>
