@@ -18,7 +18,7 @@ export const allAmenities: Omit<Amenity, 'icon'>[] = [
 export const locations: Location[] = [
   {
     id: 'secretariat',
-    name: 'Secretariat',
+    name: 'The Secretariat',
     address: '717 Boul St Joseph, Gatineau, QC',
     imageUrl: 'https://placehold.co/800x600.png',
     bookables: [
@@ -38,7 +38,7 @@ export const locations: Location[] = [
   },
   {
     id: 'sanctuaire',
-    name: 'Sanctuaire',
+    name: 'The Sanctuary',
     address: '717 Boul St Joseph, Gatineau, QC',
     imageUrl: 'https://placehold.co/800x600.png',
     bookables: [
@@ -57,7 +57,7 @@ export const locations: Location[] = [
   },
   {
     id: 'integration',
-    name: 'Integration',
+    name: 'The Integration',
     address: '717 Boul St Joseph, Gatineau, QC',
     imageUrl: 'https://placehold.co/800x600.png',
     bookables: [
@@ -75,7 +75,7 @@ export const locations: Location[] = [
   },
   {
     id: 'impact-junior',
-    name: 'Impact Junior',
+    name: 'The Impact Junior',
     address: '717 Boul St Joseph, Gatineau, QC',
     imageUrl: 'https://placehold.co/800x600.png',
     bookables: [
