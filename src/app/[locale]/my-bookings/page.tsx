@@ -237,26 +237,36 @@ export default function MyBookingsPage() {
                         <DialogTitle>{t('bookingDetails')}</DialogTitle>
                         <DialogDescription>{t('bookingDetailsDescription')}</DialogDescription>
                     </DialogHeader>
-                    {selectedBooking && (
-                        <div className="space-y-4">
-                             <div>
-                                <h4 className="font-semibold">{t('location')}</h4>
-                                <p>{selectedBookingLocation ? tloc(selectedBookingLocation.name as any) : ''}</p>
-                                <p className="text-sm text-muted-foreground">{selectedBookingLocation?.address}</p>
+                    {selectedBooking && (() => {
+                        const startDate = new Date(selectedBooking.startTime);
+                        const endDate = new Date(selectedBooking.endTime);
+                        const areDatesValid = isValid(startDate) && isValid(endDate);
+                        return (
+                            <div className="space-y-4">
+                                <div>
+                                    <h4 className="font-semibold">{t('location')}</h4>
+                                    <p>{selectedBookingLocation ? tloc(selectedBookingLocation.name as any) : ''}</p>
+                                    <p className="text-sm text-muted-foreground">{selectedBookingLocation?.address}</p>
+                                </div>
+                                <div>
+                                    <h4 className="font-semibold">{t('dateTime')}</h4>
+                                    <p>
+                                        {areDatesValid 
+                                            ? `${format(startDate, 'PPP, p')} - ${format(endDate, 'p')}`
+                                            : 'Invalid date'
+                                        }
+                                    </p>
+                                </div>
+                                <div>
+                                    <h4 className="font-semibold">{t('status')}</h4>
+                                    <Badge variant={
+                                        selectedBooking.status === 'approved' ? 'default' :
+                                        selectedBooking.status === 'rejected' ? 'destructive' : 'secondary'
+                                    }>{t(selectedBooking.status as any)}</Badge>
+                                </div>
                             </div>
-                            <div>
-                                <h4 className="font-semibold">{t('dateTime')}</h4>
-                                <p>{format(new Date(selectedBooking.startTime), 'PPP, p')} - {format(new Date(selectedBooking.endTime), 'p')}</p>
-                            </div>
-                            <div>
-                                <h4 className="font-semibold">{t('status')}</h4>
-                                 <Badge variant={
-                                    selectedBooking.status === 'approved' ? 'default' :
-                                    selectedBooking.status === 'rejected' ? 'destructive' : 'secondary'
-                                }>{t(selectedBooking.status as any)}</Badge>
-                            </div>
-                        </div>
-                    )}
+                        );
+                    })()}
                 </DialogContent>
             </Dialog>
         </div>
