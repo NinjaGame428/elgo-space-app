@@ -4,10 +4,10 @@ import { createClient } from '@/lib/supabase/server-client';
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password } = await req.json();
+    const { name, email, password, phone } = await req.json();
 
-    if (!name || !email || !password) {
-      return NextResponse.json({ message: 'Name, email, and password are required' }, { status: 400 });
+    if (!name || !email || !password || !phone) {
+      return NextResponse.json({ message: 'Name, email, password, and phone are required' }, { status: 400 });
     }
 
     const supabase = createClient();
@@ -19,6 +19,7 @@ export async function POST(req: NextRequest) {
       options: {
         data: {
           full_name: name,
+          phone: phone, // Pass phone to metadata
         },
       },
     });
@@ -32,6 +33,16 @@ export async function POST(req: NextRequest) {
     }
 
     // The trigger `on_auth_user_created` in the database will automatically create a profile in the `users` table.
+    // We now need to update that profile with the phone number.
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({ phone: phone })
+      .eq('id', authData.user.id);
+
+    if (updateError) {
+        // Log the error, but don't fail the request as the user is already created
+        console.error('Error updating user phone number:', updateError);
+    }
 
     return NextResponse.json({ message: 'Signup successful! Please check your email to confirm your account.' }, { status: 201 });
 

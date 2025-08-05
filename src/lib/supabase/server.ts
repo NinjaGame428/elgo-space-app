@@ -77,6 +77,7 @@ export async function getUsers(): Promise<User[]> {
         id: u.id,
         name: u.name,
         email: u.email,
+        phone: u.phone,
         role: u.role,
         joined_at: u.joined_at,
     }));

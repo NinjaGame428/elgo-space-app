@@ -19,6 +19,7 @@ export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -29,7 +30,7 @@ export default function SignupPage() {
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, phone }),
       });
 
       const data = await response.json();
@@ -91,6 +92,18 @@ export default function SignupPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
+             <div className="grid gap-2">
+              <Label htmlFor="phone">{t('phoneLabel')}</Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="+1 555-555-5555"
+                required
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
                 disabled={isLoading}
               />
             </div>

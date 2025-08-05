@@ -63,6 +63,7 @@
     "signUpDescription": "Enter your information to create an account",
     "nameLabel": "Name",
     "emailLabel": "Email",
+    "phoneLabel": "Phone Number",
     "passwordLabel": "Password",
     "createAccountButton": "Create Account",
     "creatingAccountButton": "Creating Account...",
