@@ -56,14 +56,7 @@
     "welcomeBackAdmin": "Welcome back, Admin!",
     "welcomeBackUser": "Welcome back!",
     "loginFailedTitle": "Login Failed",
-    "loginFailedDescription": "Invalid email or password. Please try again.",
-    "twoFaTitle": "Two-Factor Authentication",
-    "twoFaDescription": "Enter the 6-digit code from your authenticator app.",
-    "twoFaCodeLabel": "Authentication Code",
-    "verifyButton": "Verify",
-    "verifyingButton": "Verifying...",
-    "twoFaFailedTitle": "Verification Failed",
-    "twoFaFailedDescription": "The code you entered is incorrect. Please try again."
+    "loginFailedDescription": "Invalid email or password. Please try again."
   },
   "SignupPage": {
     "signUp": "Sign Up",

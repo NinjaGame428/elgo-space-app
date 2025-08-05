@@ -56,14 +56,7 @@
     "welcomeBackAdmin": "Bon retour, Admin !",
     "welcomeBackUser": "Bon retour !",
     "loginFailedTitle": "Échec de la connexion",
-    "loginFailedDescription": "Email ou mot de passe invalide. Veuillez réessayer.",
-    "twoFaTitle": "Authentification à deux facteurs",
-    "twoFaDescription": "Entrez le code à 6 chiffres de votre application d'authentification.",
-    "twoFaCodeLabel": "Code d'authentification",
-    "verifyButton": "Vérifier",
-    "verifyingButton": "Vérification en cours...",
-    "twoFaFailedTitle": "Échec de la vérification",
-    "twoFaFailedDescription": "Le code que vous avez entré est incorrect. Veuillez réessayer."
+    "loginFailedDescription": "Email ou mot de passe invalide. Veuillez réessayer."
   },
   "SignupPage": {
     "signUp": "S'inscrire",
