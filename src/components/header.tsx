@@ -13,8 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, Building2, Sun, Moon } from 'lucide-react';
-import { useSidebar } from './ui/sidebar';
+import { User, Building2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 
@@ -23,7 +22,6 @@ export function Header() {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
-  const { toggleSidebar } = useSidebar();
   
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -67,13 +65,8 @@ export function Header() {
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="flex h-16 items-center px-4 md:px-6">
                 <div className="mr-auto flex items-center">
-                   {isAuthenticated && (
-                       <Button variant="ghost" size="icon" className="md:hidden mr-2" onClick={toggleSidebar}>
-                           <Building2 className="h-6 w-6" />
-                       </Button>
-                   )}
                   <Link href="/" className="flex items-center space-x-2">
-                    <Building2 className="h-6 w-6 hidden md:flex" />
+                    <Building2 className="h-6 w-6" />
                     <span className="font-bold text-lg">{t('title')}</span>
                   </Link>
                 </div>
@@ -86,13 +79,8 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-16 items-center px-4 md:px-6">
         <div className="mr-auto flex items-center">
-            {isAuthenticated && (
-                <Button variant="ghost" size="icon" className="md:hidden mr-2" onClick={toggleSidebar}>
-                    <Building2 className="h-6 w-6" />
-                </Button>
-            )}
             <Link href="/" className="flex items-center space-x-2">
-                <Building2 className="h-6 w-6 hidden md:flex" />
+                <Building2 className="h-6 w-6" />
                 <span className="font-bold text-lg">{t('title')}</span>
             </Link>
         </div>
@@ -139,9 +127,14 @@ export function Header() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button asChild>
-                <Link href="/login">{t('login')}</Link>
-              </Button>
+                <div className="space-x-2">
+                    <Button asChild variant="ghost">
+                        <Link href="/signup">{t('signUpLink')}</Link>
+                    </Button>
+                    <Button asChild>
+                        <Link href="/login">{t('login')}</Link>
+                    </Button>
+                </div>
             )}
           </nav>
         </div>

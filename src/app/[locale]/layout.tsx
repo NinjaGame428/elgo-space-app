@@ -3,7 +3,6 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { Toaster } from "@/components/ui/toaster";
 import { Header } from '@/components/header';
-import { SidebarProvider } from '@/components/ui/sidebar';
 import { InnerLayout } from '@/components/inner-layout';
 
 // Server component Root Layout
@@ -30,7 +29,6 @@ export default async function LocaleLayout({
       </head>
       <body className="antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <SidebarProvider>
             <div className="flex flex-col min-h-screen">
               <Header />
               <InnerLayout locale={locale}>
@@ -38,7 +36,6 @@ export default async function LocaleLayout({
               </InnerLayout>
             </div>
             <Toaster />
-          </SidebarProvider>
         </NextIntlClientProvider>
       </body>
     </html>
