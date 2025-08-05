@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation';
 import type { Booking, Location, User } from '@/lib/types';
 import { Link } from '@/navigation';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Pencil, Trash2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useLocale, useTranslations } from 'next-intl';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -69,6 +69,7 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                 )
             );
             toast({ title: "Booking status updated." });
+            setSelectedBooking(null);
         } catch (error) {
             toast({ variant: 'destructive', title: "Error", description: "Could not update booking status." });
         }
@@ -86,8 +87,6 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
         }
     };
     
-    // Note: Deleting locations and users would require more complex API endpoints
-    // and is omitted for brevity. The UI buttons remain for demonstration.
     const deleteLocation = (locationId: string) => {
         setLocations(locations.filter(l => l.id !== locationId));
         toast({ title: t('roomDeleted') });
@@ -101,7 +100,7 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
     const bookingsForSelectedDay = useMemo(() => {
         return bookings.filter(booking =>
             selectedDate && format(new Date(booking.startTime), 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')
-        );
+        ).sort((a,b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
     }, [bookings, selectedDate]);
 
     const bookedDates = useMemo(() => bookings.map(b => new Date(b.startTime)), [bookings]);
@@ -121,8 +120,8 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
     }
 
     return (
-        <>
-            <header>
+        <div className="animate-fade-in-up">
+            <header className="mb-8">
                 <h1 className="text-3xl font-bold tracking-tight">{t('adminDashboard')}</h1>
                 <p className="text-lg text-muted-foreground">{t('dashboardDescription')}</p>
             </header>
@@ -131,7 +130,6 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                     <Card>
                         <CardHeader>
                             <CardTitle>{t('bookingCalendar')}</CardTitle>
-                            <CardDescription>{t('calendarDescription')}</CardDescription>
                         </CardHeader>
                         <CardContent className="flex justify-center">
                             <Calendar
@@ -205,35 +203,26 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                                             <TableCell className="font-medium">{tloc(location.name as any)}</TableCell>
                                             <TableCell>{location.address}</TableCell>
                                             <TableCell className="text-right">
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" className="h-8 w-8 p-0">
-                                                            <span className="sr-only">Open menu</span>
-                                                            <MoreHorizontal className="h-4 w-4" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end">
-                                                        <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
-                                                        <DropdownMenuItem asChild>
-                                                            <Link href={`/dashboard/rooms/${location.id}/edit`}>{t('edit')}</Link>
-                                                        </DropdownMenuItem>
-                                                        <AlertDialog>
-                                                            <AlertDialogTrigger asChild>
-                                                                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:text-destructive focus:bg-destructive/10">{t('delete')}</DropdownMenuItem>
-                                                            </AlertDialogTrigger>
-                                                            <AlertDialogContent>
-                                                                <AlertDialogHeader>
-                                                                    <AlertDialogTitle>{t('areYouSure')}</AlertDialogTitle>
-                                                                    <AlertDialogDescription>{t('deleteRoomWarning')}</AlertDialogDescription>
-                                                                </AlertDialogHeader>
-                                                                <AlertDialogFooter>
-                                                                    <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-                                                                    <AlertDialogAction onClick={() => deleteLocation(location.id)}>{t('delete')}</AlertDialogAction>
-                                                                </AlertDialogFooter>
-                                                            </AlertDialogContent>
-                                                        </AlertDialog>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <Button variant="ghost" size="icon" asChild>
+                                                        <Link href={`/dashboard/rooms/${location.id}/edit`}><Pencil className="h-4 w-4" /></Link>
+                                                    </Button>
+                                                    <AlertDialog>
+                                                        <AlertDialogTrigger asChild>
+                                                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                                                        </AlertDialogTrigger>
+                                                        <AlertDialogContent>
+                                                            <AlertDialogHeader>
+                                                                <AlertDialogTitle>{t('areYouSure')}</AlertDialogTitle>
+                                                                <AlertDialogDescription>{t('deleteRoomWarning')}</AlertDialogDescription>
+                                                            </AlertDialogHeader>
+                                                            <AlertDialogFooter>
+                                                                <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+                                                                <AlertDialogAction onClick={() => deleteLocation(location.id)}>{t('delete')}</AlertDialogAction>
+                                                            </AlertDialogFooter>
+                                                        </AlertDialogContent>
+                                                    </AlertDialog>
+                                                </div>
                                             </TableCell>
                                         </TableRow>
                                     ))}
@@ -271,35 +260,26 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                                             <TableCell><Badge variant={user.role === 'Admin' ? 'default' : 'secondary'}>{user.role}</Badge></TableCell>
                                             <TableCell>{format(new Date(user.joined_at), 'yyyy-MM-dd')}</TableCell>
                                             <TableCell className="text-right">
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" className="h-8 w-8 p-0" disabled={user.email === 'test@example.com'}>
-                                                            <span className="sr-only">Open menu</span>
-                                                            <MoreHorizontal className="h-4 w-4" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end">
-                                                        <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
-                                                        <DropdownMenuItem asChild>
-                                                            <Link href={`/dashboard/users/${user.id}/edit`}>{t('edit')}</Link>
-                                                        </DropdownMenuItem>
-                                                        <AlertDialog>
-                                                            <AlertDialogTrigger asChild>
-                                                                <DropdownMenuItem onSelect={(e) => e.preventDefault()} disabled={user.email === 'test@example.com'} className="text-destructive focus:text-destructive focus:bg-destructive/10">{t('delete')}</DropdownMenuItem>
-                                                            </AlertDialogTrigger>
-                                                            <AlertDialogContent>
-                                                                <AlertDialogHeader>
-                                                                    <AlertDialogTitle>{t('areYouSure')}</AlertDialogTitle>
-                                                                    <AlertDialogDescription>{t('deleteUserWarning')}</AlertDialogDescription>
-                                                                </AlertDialogHeader>
-                                                                <AlertDialogFooter>
-                                                                    <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-                                                                    <AlertDialogAction onClick={() => deleteUser(user.id)}>{t('delete')}</AlertDialogAction>
-                                                                </AlertDialogFooter>
-                                                            </AlertDialogContent>
-                                                        </AlertDialog>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
+                                               <div className="flex items-center justify-end gap-2">
+                                                    <Button variant="ghost" size="icon" asChild disabled={user.email === 'test@example.com'}>
+                                                        <Link href={`/dashboard/users/${user.id}/edit`}><Pencil className="h-4 w-4" /></Link>
+                                                    </Button>
+                                                    <AlertDialog>
+                                                        <AlertDialogTrigger asChild>
+                                                             <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" disabled={user.email === 'test@example.com'}><Trash2 className="h-4 w-4" /></Button>
+                                                        </AlertDialogTrigger>
+                                                        <AlertDialogContent>
+                                                            <AlertDialogHeader>
+                                                                <AlertDialogTitle>{t('areYouSure')}</AlertDialogTitle>
+                                                                <AlertDialogDescription>{t('deleteUserWarning')}</AlertDialogDescription>
+                                                            </AlertDialogHeader>
+                                                            <AlertDialogFooter>
+                                                                <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+                                                                <AlertDialogAction onClick={() => deleteUser(user.id)}>{t('delete')}</AlertDialogAction>
+                                                            </AlertDialogFooter>
+                                                        </AlertDialogContent>
+                                                    </AlertDialog>
+                                                </div>
                                             </TableCell>
                                         </TableRow>
                                     ))}
@@ -350,6 +330,6 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                     )}
                 </DialogContent>
             </Dialog>
-        </>
+        </div>
     );
 }

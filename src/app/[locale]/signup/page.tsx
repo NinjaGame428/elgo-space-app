@@ -70,7 +70,7 @@ export default function SignupPage() {
           data-ai-hint="modern office"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent"></div>
       </div>
       <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 animate-fade-in">
         <div className="mx-auto w-full max-w-md space-y-6">

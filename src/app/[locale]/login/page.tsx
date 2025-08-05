@@ -4,7 +4,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
@@ -101,9 +100,6 @@ export default function LoginPage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">{t('passwordLabel')}</Label>
-                   {/* <Link href="#" className="text-sm font-medium text-primary hover:underline">
-                        Forgot password?
-                    </Link> */}
                 </div>
                 <Input 
                   id="password" 
@@ -136,7 +132,7 @@ export default function LoginPage() {
           data-ai-hint="conference event"
           priority
         />
-         <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent"></div>
+         <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent"></div>
       </div>
     </div>
   );
