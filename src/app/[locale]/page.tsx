@@ -77,8 +77,8 @@ export default function HomePage() {
   };
   
   const LocationList = () => (
-    <div className="flex flex-col border-r border-border/60 h-full">
-      <div className="p-4 space-y-4 border-b border-border/60">
+    <div className="flex flex-col border-r bg-card h-full">
+      <div className="p-4 space-y-4 border-b">
         <h2 className="text-xl font-bold">{t('locations')}</h2>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -87,11 +87,11 @@ export default function HomePage() {
             placeholder={t('searchPlaceholder')}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="pl-10 h-11"
+            className="pl-10 h-11 bg-background"
           />
         </div>
         <Select value={selectedType} onValueChange={setSelectedType}>
-          <SelectTrigger className="h-11">
+          <SelectTrigger className="h-11 bg-background">
             <SelectValue placeholder={t('allTypes')} />
           </SelectTrigger>
           <SelectContent>

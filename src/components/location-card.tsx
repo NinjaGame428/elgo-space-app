@@ -20,8 +20,8 @@ export function LocationCard({ location, isSelected, onClick }: LocationCardProp
     <Card
       onClick={onClick}
       className={cn(
-        'cursor-pointer transition-all duration-200 border-2 border-transparent',
-        isSelected ? 'border-primary bg-muted/50' : 'hover:bg-muted/50'
+        'cursor-pointer transition-all duration-200 border-2',
+        isSelected ? 'border-primary bg-primary/5' : 'border-transparent hover:bg-muted/50'
       )}
     >
       <div className="flex items-center p-3 gap-4">

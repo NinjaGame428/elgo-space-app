@@ -8,6 +8,35 @@ body {
 
 @layer base {
   :root {
+    --background: 240 5% 96%; /* Light gray */
+    --foreground: 240 6% 10%; /* Almost black */
+    --card: 0 0% 100%; /* White */
+    --card-foreground: 240 6% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 6% 10%;
+    --primary: 258 88% 66%; /* Vibrant violet */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 240 5% 90%; /* Lighter gray */
+    --secondary-foreground: 240 6% 10%;
+    --muted: 240 5% 90%;
+    --muted-foreground: 240 4% 46%;
+    --accent: 240 5% 90%;
+    --accent-foreground: 240 6% 10%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 258 88% 70%;
+    --chart-1: 258 70% 50%;
+    --chart-2: 180 80% 40%;
+    --chart-3: 40 80% 55%;
+    --chart-4: 0 80% 60%;
+    --chart-5: 280 80% 65%;
+    --radius: 0.75rem;
+    --orange-500: 25 95% 53%;
+  }
+
+  .dark {
     --background: 224 71% 4%; /* Deep blue-black */
     --foreground: 210 40% 98%; /* Light gray for text */
     --card: 224 71% 8%; /* Slightly lighter card background */
@@ -84,8 +113,11 @@ body {
       background-size: 200% 200%;
       z-index: -1;
       pointer-events: none;
-      opacity: 0.5;
+      opacity: 0; /* Hidden by default, enable with a class */
       animation: aurora-move 16s ease-in-out infinite alternate;
+    }
+    .aurora-active .aurora-bg {
+      opacity: 0.5;
     }
 }
 
