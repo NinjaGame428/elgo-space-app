@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { format, isAfter } from 'date-fns';
+import { format, isAfter, isValid } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import type { Booking, Location } from '@/lib/types';
 import { Link } from '@/navigation';
@@ -112,6 +112,10 @@ export default function MyBookingsPage() {
         
         const isCancelled = booking.status === 'rejected';
 
+        const startDate = new Date(booking.startTime);
+        const endDate = new Date(booking.endTime);
+        const areDatesValid = isValid(startDate) && isValid(endDate);
+
         return (
             <div 
                 className={`p-4 border rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${!isUpcoming ? 'cursor-pointer hover:bg-muted/50' : ''}`}
@@ -120,7 +124,10 @@ export default function MyBookingsPage() {
                 <div>
                     <p className="font-semibold">{location ? tloc(location.name as any) : t('unknownLocation')}</p>
                     <p className="text-sm text-muted-foreground">
-                        {format(new Date(booking.startTime), 'PPP, p')} - {format(new Date(booking.endTime), 'p')}
+                        {areDatesValid 
+                            ? `${format(startDate, 'PPP, p')} - ${format(endDate, 'p')}`
+                            : 'Invalid date'
+                        }
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
