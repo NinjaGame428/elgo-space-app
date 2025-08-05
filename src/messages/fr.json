@@ -13,6 +13,9 @@
     "french": "Français",
     "signUpLink": "S'inscrire"
   },
+  "Footer": {
+    "builtBy": "Réalisé par Aki"
+  },
   "Home": {
     "locations": "Emplacements",
     "searchPlaceholder": "Rechercher des emplacements...",
@@ -130,6 +133,7 @@
     "department": "Département",
     "occasion": "Occasion",
     "mainDashboard": "Tableau de Bord",
+    "messagesTab": "Messages",
     "emailNotifications": "Modèles d'e-mails",
     "emailNotificationsDescription": "Personnalisez les messages électroniques automatisés envoyés aux utilisateurs.",
     "templateBookingPending": "Réservation en attente",
@@ -150,7 +154,12 @@
     "sendEmailTo": "Envoyer un email à {name}",
     "sendEmailToDesc": "Rédigez et envoyez un e-mail personnalisé à {email}.",
     "sendEmail": "Envoyer l'e-mail",
-    "sendingEmail": "Envoi en cours..."
+    "sendingEmail": "Envoi en cours...",
+    "liveChat": "Chat en direct",
+    "liveChatDescription": "Répondez aux messages des utilisateurs en temps réel.",
+    "conversations": "Conversations",
+    "selectConversation": "Sélectionnez une conversation pour voir les messages.",
+    "typeYourReply": "Tapez votre réponse..."
   },
   "AddRoomPage": {
     "backToDashboard": "Retour au tableau de bord",

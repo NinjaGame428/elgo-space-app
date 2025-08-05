@@ -50,3 +50,23 @@ export interface EmailTemplate {
     created_at: string;
     updated_at: string;
 }
+
+export interface Conversation {
+    id: string;
+    user_id: string;
+    admin_id: string | null;
+    status: 'open' | 'closed';
+    created_at: string;
+    updated_at: string;
+    user: User;
+    admin: User | null;
+}
+
+export interface Message {
+    id: number;
+    conversation_id: string;
+    sender_id: string;
+    content: string;
+    is_read: boolean;
+    created_at: string;
+}

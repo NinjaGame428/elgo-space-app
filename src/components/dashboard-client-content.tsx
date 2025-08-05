@@ -1,17 +1,17 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
-import type { Booking, Location, User, EmailTemplate } from '@/lib/types';
+import type { Booking, Location, User, EmailTemplate, Conversation, Message } from '@/lib/types';
 import { Link } from '@/navigation';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PlusCircle, Pencil, Trash2, CheckCircle, XCircle, User as UserIcon, Mail } from 'lucide-react';
+import { PlusCircle, Pencil, Trash2, CheckCircle, XCircle, User as UserIcon, Mail, MessageSquare, Send } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -23,15 +23,9 @@ import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { createClient } from '@/lib/supabase';
+import { Avatar, AvatarFallback } from './ui/avatar';
 
-interface DashboardData {
-    bookings: Booking[];
-    locations: Location[];
-    users: User[];
-}
-interface DashboardClientContentProps {
-    initialData: DashboardData;
-}
 
 function EmailTemplatesManager() {
     const t = useTranslations('DashboardPage');
@@ -91,7 +85,7 @@ function EmailTemplatesManager() {
             case 'booking_approved': return t('templateBookingApproved');
             case 'booking_rescheduled': return t('templateBookingRescheduled');
             case 'booking_cancellation': return t('templateBookingCancellation');
-            case 'booking_rejected': return t('templateBookingRejected');
+             case 'booking_rejected': return t('templateBookingRejected');
             default: return name;
         }
     }
@@ -162,6 +156,206 @@ function EmailTemplatesManager() {
     );
 }
 
+function MessagesManager() {
+    const t = useTranslations('DashboardPage');
+    const { toast } = useToast();
+    const [conversations, setConversations] = useState<Conversation[]>([]);
+    const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [newMessage, setNewMessage] = useState('');
+    const [isLoadingConvos, setIsLoadingConvos] = useState(true);
+    const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+    const [currentUser, setCurrentUser] = useState<User | null>(null);
+    const supabase = createClient();
+    const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+
+    useEffect(() => {
+        // Fetch current admin user
+        const userEmail = localStorage.getItem('userEmail');
+        if (userEmail) {
+            fetch(`/api/users?email=${userEmail}`)
+                .then(res => res.json())
+                .then(data => setCurrentUser(data[0]));
+        }
+
+        // Fetch all conversations
+        const fetchConversations = async () => {
+            try {
+                const res = await fetch('/api/chat/conversations');
+                if (!res.ok) throw new Error('Failed to fetch conversations');
+                const data = await res.json();
+                setConversations(data);
+            } catch (error) {
+                 toast({ variant: 'destructive', title: 'Error', description: 'Could not load conversations.' });
+            } finally {
+                setIsLoadingConvos(false);
+            }
+        };
+
+        fetchConversations();
+        
+        // Listen for new conversations in real-time
+        const channel = supabase
+            .channel('conversations')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' },
+                (payload) => {
+                   fetchConversations(); // Refetch all conversations on any change
+                }
+            )
+            .subscribe();
+        
+        return () => {
+            supabase.removeChannel(channel);
+        };
+
+    }, [toast, supabase]);
+
+    useEffect(() => {
+        if (!selectedConversation) return;
+
+        const fetchMessages = async () => {
+            setIsLoadingMessages(true);
+            try {
+                const res = await fetch(`/api/chat/messages?conversationId=${selectedConversation.id}`);
+                const data = await res.json();
+                setMessages(data);
+            } catch (error) {
+                 toast({ variant: 'destructive', title: 'Error', description: 'Could not load messages.' });
+            } finally {
+                 setIsLoadingMessages(false);
+            }
+        };
+        fetchMessages();
+        
+        const channel = supabase
+            .channel(`messages:${selectedConversation.id}`)
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'messages',
+                filter: `conversation_id=eq.${selectedConversation.id}`
+            }, (payload) => {
+                setMessages(currentMessages => [...currentMessages, payload.new as Message]);
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [selectedConversation, toast, supabase]);
+
+     useEffect(() => {
+        if (scrollAreaRef.current) {
+            scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+        }
+    }, [messages]);
+
+    const handleSendMessage = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newMessage.trim() || !currentUser || !selectedConversation) return;
+        
+        const content = newMessage;
+        setNewMessage('');
+
+        await fetch('/api/chat/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                conversationId: selectedConversation.id,
+                senderId: currentUser.id,
+                content,
+            }),
+        });
+    };
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><MessageSquare /> {t('liveChat')}</CardTitle>
+                <CardDescription>{t('liveChatDescription')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[600px]">
+                    <div className="col-span-1 border-r pr-4">
+                        <h3 className="font-semibold mb-2">{t('conversations')}</h3>
+                        <ScrollArea className="h-[540px]">
+                            {isLoadingConvos ? <p>{t('loading')}</p> : (
+                                <div className="space-y-2">
+                                    {conversations.map(convo => (
+                                        <div
+                                            key={convo.id}
+                                            onClick={() => setSelectedConversation(convo)}
+                                            className={cn("p-3 rounded-lg cursor-pointer border", selectedConversation?.id === convo.id ? "bg-primary/10 border-primary" : "hover:bg-muted/50")}
+                                        >
+                                            <p className="font-semibold truncate">{convo.user.name || convo.user.email}</p>
+                                            <p className="text-sm text-muted-foreground">{t('status')}: {convo.status}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </ScrollArea>
+                    </div>
+                    <div className="col-span-2 flex flex-col">
+                        {selectedConversation ? (
+                            <>
+                                <div className="flex-1 overflow-hidden">
+                                     <ScrollArea className="h-[500px] p-4" ref={scrollAreaRef}>
+                                        <div className="space-y-4">
+                                            {isLoadingMessages ? <p>{t('loading')}</p> : messages.map((msg) => (
+                                                 <div key={msg.id} className={cn("flex items-end gap-2", msg.sender_id === currentUser?.id ? 'justify-end' : 'justify-start')}>
+                                                    {msg.sender_id !== currentUser?.id && (
+                                                        <Avatar className="h-8 w-8">
+                                                            <AvatarFallback>{selectedConversation.user.name?.charAt(0) || 'U'}</AvatarFallback>
+                                                        </Avatar>
+                                                    )}
+                                                    <div className={cn("max-w-[75%] rounded-lg px-3 py-2 text-sm", msg.sender_id === currentUser?.id ? 'bg-primary text-primary-foreground' : 'bg-muted')}>
+                                                        <p>{msg.content}</p>
+                                                        <p className="text-xs text-right mt-1 opacity-70">{format(new Date(msg.created_at), 'p')}</p>
+                                                    </div>
+                                                     {msg.sender_id === currentUser?.id && (
+                                                        <Avatar className="h-8 w-8">
+                                                            <AvatarFallback>A</AvatarFallback>
+                                                        </Avatar>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </ScrollArea>
+                                </div>
+                                <form onSubmit={handleSendMessage} className="flex w-full items-center gap-2 pt-4 border-t">
+                                    <Input
+                                        placeholder={t('typeYourReply')}
+                                        value={newMessage}
+                                        onChange={(e) => setNewMessage(e.target.value)}
+                                        disabled={isLoadingMessages}
+                                    />
+                                    <Button type="submit" size="icon" disabled={!newMessage.trim() || isLoadingMessages}>
+                                        <Send className="h-5 w-5" />
+                                    </Button>
+                                </form>
+                            </>
+                        ) : (
+                            <div className="flex items-center justify-center h-full text-muted-foreground">
+                                <p>{t('selectConversation')}</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
+
+
+interface DashboardData {
+    bookings: Booking[];
+    locations: Location[];
+    users: User[];
+}
+interface DashboardClientContentProps {
+    initialData: DashboardData;
+}
 
 export function DashboardClientContent({ initialData }: DashboardClientContentProps) {
     const t = useTranslations('DashboardPage');
@@ -320,8 +514,9 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
             </header>
 
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-2 max-w-sm mb-8">
+                <TabsList className="grid w-full grid-cols-3 max-w-lg mb-8">
                     <TabsTrigger value="dashboard">{t('mainDashboard')}</TabsTrigger>
+                    <TabsTrigger value="messages">{t('messagesTab')}</TabsTrigger>
                     <TabsTrigger value="emails">{t('emailNotifications')}</TabsTrigger>
                 </TabsList>
 
@@ -500,6 +695,10 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                             </Card>
                         </div>
                     </div>
+                </TabsContent>
+
+                <TabsContent value="messages">
+                    <MessagesManager />
                 </TabsContent>
                 
                 <TabsContent value="emails">
