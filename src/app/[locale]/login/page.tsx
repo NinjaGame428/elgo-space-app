@@ -34,8 +34,9 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
-        localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('userEmail', email);
+        // Manually update localStorage to trigger 'storage' event listener in Header
+        window.localStorage.setItem('isLoggedIn', 'true');
+        window.localStorage.setItem('userEmail', email);
         
         const isAdmin = data.user.role === 'Admin';
         

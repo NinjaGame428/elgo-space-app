@@ -38,10 +38,14 @@ export function Header() {
           setUserEmail(email);
       }
     };
+    
+    // Initial check
     checkAuthStatus();
     
+    // Listen for storage changes to sync across tabs/windows
     window.addEventListener('storage', checkAuthStatus);
     
+    // Cleanup listener on component unmount
     return () => {
         window.removeEventListener('storage', checkAuthStatus);
     };
@@ -51,9 +55,9 @@ export function Header() {
     if (typeof window !== 'undefined') {
         localStorage.removeItem('isLoggedIn');
         localStorage.removeItem('userEmail');
+        // Manually trigger storage event for immediate UI update
+        window.dispatchEvent(new Event('storage'));
     }
-    setIsAuthenticated(false);
-    setUserEmail(null);
     router.push('/');
   };
 
@@ -137,14 +141,9 @@ export function Header() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-                <div className="space-x-2">
-                    <Button asChild variant="ghost">
-                        <Link href="/signup">{t('signUpLink')}</Link>
-                    </Button>
-                    <Button asChild className="font-bold">
-                        <Link href="/login">{t('login')}</Link>
-                    </Button>
-                </div>
+                <Button asChild className="font-bold">
+                    <Link href="/login">{t('login')}</Link>
+                </Button>
             )}
           </nav>
         </div>
