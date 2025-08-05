@@ -93,7 +93,7 @@ export default function SignupPage() {
               {t('loginLink')}
             </Link>
           </div>
-          <div className="mt-4 text-center text-sm text-muted-foreground">
+           <div className="mt-4 text-center text-sm text-muted-foreground">
             made by Heavenkeys
           </div>
         </div>
