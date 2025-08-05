@@ -1,36 +1,8 @@
 
 'use server';
 
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-import type { Amenity, Booking, Location, User } from '../types';
-
-// Note: The previous approach of exporting a createClient function caused build issues.
-// This refactored approach creates a single, memoized client instance that can be
-// safely used by all server-side functions in this file.
-
-const createClient = () => {
-  const cookieStore = cookies();
-
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-        set(name: string, value: string, options: any) {
-          cookieStore.set({ name, value, ...options });
-        },
-        remove(name: string, options: any) {
-          cookieStore.set({ name, value: '', ...options });
-        },
-      },
-    }
-  );
-};
-
+import { createClient } from './server-client';
+import type { Booking, Location, User } from '../types';
 
 export async function getLocations(): Promise<Location[]> {
     const supabase = createClient();
