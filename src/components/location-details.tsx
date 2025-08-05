@@ -236,7 +236,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
     <div className="p-4 md:p-6 animate-fade-in-up">
         <Card className="w-full max-w-6xl mx-auto overflow-hidden">
             <div className="grid md:grid-cols-2">
-                <div className="p-6 md:px-8 md:pt-8 md:pb-6 flex flex-col border-r">
+                <div className="p-6 md:px-8 md:pt-8 md:pb-6 flex flex-col">
                     <div>
                         <h2 className="text-2xl font-bold tracking-tight">{tloc(location.name as any)}</h2>
                         <p className="text-muted-foreground mt-1">{location.address}</p>
@@ -266,7 +266,9 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                                 <Calendar
                                     mode="single"
                                     modifiers={{ booked: approvedBookedDates }}
-                                    modifiersClassNames={{ booked: 'bg-orange-500/80 text-primary-foreground rounded-full' }}
+                                    modifiersClassNames={{ booked: 'bg-orange-500/80 text-primary-foreground' }}
+                                    locale={dateLocale}
+                                    disabled={(day) => day < new Date(new Date().setHours(0,0,0,0))}
                                 />
                             </div>
                        </div>
@@ -299,6 +301,8 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                                     disabled={(day) => day < new Date(new Date().setHours(0,0,0,0)) || day > addDays(new Date(), 60)}
                                     initialFocus
                                     locale={dateLocale}
+                                    modifiers={{ booked: approvedBookedDates }}
+                                    modifiersClassNames={{ booked: 'bg-orange-500/80 text-primary-foreground' }}
                                 />
                                 </PopoverContent>
                             </Popover>
@@ -353,5 +357,3 @@ export function LocationDetails({ location }: LocationDetailsProps) {
     </div>
   );
 }
-
-    
