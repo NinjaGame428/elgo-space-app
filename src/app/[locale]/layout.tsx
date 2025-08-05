@@ -27,13 +27,14 @@ export default async function LocaleLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="antialiased bg-background text-foreground">
+      <body className="antialiased bg-background text-foreground dark">
         <NextIntlClientProvider locale={locale} messages={messages}>
-            <div className="flex flex-col min-h-screen">
-              <Header />
-              <InnerLayout>
+            <div className="relative flex flex-col min-h-screen">
+               <div className="aurora-bg"></div>
+               <Header />
+               <InnerLayout>
                   {children}
-              </InnerLayout>
+               </InnerLayout>
             </div>
             <Toaster />
         </NextIntlClientProvider>

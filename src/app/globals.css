@@ -8,59 +8,31 @@ body {
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 215 25% 27%;
-    --card: 0 0% 100%;
-    --card-foreground: 215 25% 27%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 27%;
-    --primary: 195 91% 45%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 210 30% 94%;
-    --secondary-foreground: 215 25% 27%;
-    --muted: 210 30% 96%;
-    --muted-foreground: 215 15% 55%;
-    --accent: 210 30% 92%;
-    --accent-foreground: 215 25% 27%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 210 20% 91%;
-    --input: 210 20% 93%;
-    --ring: 195 91% 40%;
-    --chart-1: 195 70% 40%;
-    --chart-2: 180 80% 50%;
+    --background: 224 71% 4%; /* Deep blue-black */
+    --foreground: 210 40% 98%; /* Light gray for text */
+    --card: 224 71% 8%; /* Slightly lighter card background */
+    --card-foreground: 210 40% 98%;
+    --popover: 224 71% 4%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 258 88% 66%; /* Vibrant violet */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 27%; /* Violet-tinted border */
+    --input: 217 33% 17%;
+    --ring: 258 88% 70%; /* Lighter violet for rings */
+    --chart-1: 258 70% 50%;
+    --chart-2: 180 80% 40%;
     --chart-3: 40 80% 55%;
     --chart-4: 0 80% 60%;
     --chart-5: 280 80% 65%;
     --radius: 0.75rem;
-    --orange-500: 25 95% 53%;
-  }
-
-  .dark {
-    --background: 215 30% 15%;
-    --foreground: 210 20% 98%;
-    --card: 215 30% 18%;
-    --card-foreground: 210 20% 98%;
-    --popover: 215 30% 15%;
-    --popover-foreground: 210 20% 98%;
-    --primary: 195 81% 55%;
-    --primary-foreground: 215 25% 15%;
-    --secondary: 215 30% 24%;
-    --secondary-foreground: 210 20% 90%;
-    --muted: 215 30% 21%;
-    --muted-foreground: 210 15% 65%;
-    --accent: 215 30% 28%;
-    --accent-foreground: 210 20% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 215 30% 28%;
-    --input: 215 30% 26%;
-    --ring: 195 81% 50%;
-    --chart-1: 195 70% 50%;
-    --chart-2: 180 80% 40%;
-    --chart-3: 40 80% 45%;
-    --chart-4: 0 80% 50%;
-    --chart-5: 280 80% 55%;
     --orange-500: 25 95% 53%;
   }
 }
@@ -91,4 +63,34 @@ body {
         flex: 1;
         overflow-y: auto;
     }
+
+    /* Glassmorphism Card Style */
+    .glass-card {
+      @apply bg-card/60 backdrop-blur-xl border border-border/30 rounded-2xl shadow-lg shadow-primary/10;
+    }
+
+    /* Aurora Background */
+    .aurora-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-image:
+        radial-gradient(ellipse 80% 80% at 50% -20%, rgba(120, 119, 198, 0.3), transparent),
+        radial-gradient(ellipse 80% 80% at 80% 50%, rgba(138, 92, 244, 0.2), transparent),
+        radial-gradient(ellipse 80% 80% at 20% 50%, rgba(92, 244, 180, 0.2), transparent);
+      background-color: hsl(var(--background));
+      background-size: 200% 200%;
+      z-index: -1;
+      pointer-events: none;
+      opacity: 0.5;
+      animation: aurora-move 16s ease-in-out infinite alternate;
+    }
+}
+
+@keyframes aurora-move {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }

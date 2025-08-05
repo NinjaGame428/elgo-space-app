@@ -9,12 +9,12 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from '@/navigation';
 import { useTranslations } from 'next-intl';
-import Image from 'next/image';
 import { Building2 } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function LoginPage() {
   const t = useTranslations('LoginPage');
-  const router = useRouter();
+  router = useRouter();
   const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -44,11 +44,8 @@ export default function LoginPage() {
             description: isAdmin ? t('welcomeBackAdmin') : t('welcomeBackUser'),
         });
 
-        if (isAdmin) {
-            router.push('/dashboard');
-        } else {
-            router.push('/my-bookings');
-        }
+        router.push(isAdmin ? '/dashboard' : '/my-bookings');
+        
       } else {
         toast({
           variant: "destructive",
@@ -68,72 +65,59 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="w-full lg:grid lg:min-h-[calc(100vh-4rem)] lg:grid-cols-2">
-      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 animate-fade-in">
-        <div className="mx-auto w-full max-w-md space-y-6">
-          <div>
-            <Link href="/" className="flex items-center justify-center space-x-2 mb-6 text-foreground hover:text-primary transition-colors">
-              <Building2 className="h-8 w-8" />
-              <span className="text-2xl font-bold">Lauft</span>
-            </Link>
-            <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-foreground">
+    <div className="w-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 min-h-[calc(100vh-5rem)]">
+        <Card className="mx-auto w-full max-w-md space-y-6 glass-card">
+          <CardHeader className="text-center">
+             <div className="flex items-center justify-center space-x-2 mb-4">
+                <Building2 className="h-8 w-8 text-primary" />
+                <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">Lauft</span>
+             </div>
+            <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
               {t('login')}
-            </h2>
-            <p className="mt-2 text-center text-sm text-muted-foreground">
+            </CardTitle>
+            <CardDescription className="mt-2">
               {t('loginDescription')}
-            </p>
-          </div>
-           <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">{t('emailLabel')}</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isLoading}
-                  className="h-12 text-base"
-                />
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">{t('passwordLabel')}</Label>
+            </CardDescription>
+          </CardHeader>
+           <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">{t('emailLabel')}</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="m@example.com"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={isLoading}
+                    className="h-12 text-base"
+                  />
                 </div>
-                <Input 
-                  id="password" 
-                  type="password" 
-                  required 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isLoading}
-                  className="h-12 text-base"
-                />
-              </div>
-              <Button type="submit" className="w-full h-12 text-base" disabled={isLoading}>
-                {isLoading ? t('loggingInButton') : t('loginButton')}
-              </Button>
-            </form>
-            <p className="mt-6 text-center text-sm text-muted-foreground">
-                {t('noAccount')}{' '}
-                <Link href="/signup" className="font-medium text-primary hover:underline">
-                    {t('signUpLink')}
-                </Link>
-            </p>
-        </div>
-      </div>
-      <div className="hidden bg-muted lg:block relative">
-        <Image
-          src="https://placehold.co/1920x1080.png"
-          alt="Lauft workspace"
-          layout="fill"
-          className="h-full w-full object-cover"
-          data-ai-hint="conference event"
-          priority
-        />
-         <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent"></div>
-      </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">{t('passwordLabel')}</Label>
+                  <Input 
+                    id="password" 
+                    type="password" 
+                    required 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={isLoading}
+                    className="h-12 text-base"
+                  />
+                </div>
+                <Button type="submit" className="w-full h-12 text-base font-bold" disabled={isLoading}>
+                  {isLoading ? t('loggingInButton') : t('loginButton')}
+                </Button>
+              </form>
+              <p className="mt-6 text-center text-sm text-muted-foreground">
+                  {t('noAccount')}{' '}
+                  <Link href="/signup" className="font-medium text-primary hover:underline">
+                      {t('signUpLink')}
+                  </Link>
+              </p>
+           </CardContent>
+        </Card>
     </div>
   );
 }

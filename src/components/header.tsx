@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, Building2 } from 'lucide-react';
+import { User, Building2, Moon, Sun } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
@@ -27,7 +27,6 @@ export function Header() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -41,15 +40,9 @@ export function Header() {
     };
     checkAuthStatus();
     
-    const handleScroll = () => {
-        setIsScrolled(window.scrollY > 10);
-    };
-
-    window.addEventListener('scroll', handleScroll);
     window.addEventListener('storage', checkAuthStatus);
     
     return () => {
-        window.removeEventListener('scroll', handleScroll);
         window.removeEventListener('storage', checkAuthStatus);
     };
   }, []);
@@ -73,7 +66,7 @@ export function Header() {
 
   const headerClasses = cn(
     "sticky top-0 z-50 w-full transition-all duration-300",
-    isScrolled ? "border-b border-border/40 bg-background/80 backdrop-blur-lg" : "bg-transparent"
+    "bg-background/60 backdrop-blur-lg border-b border-border/30"
   );
 
 
@@ -81,10 +74,10 @@ export function Header() {
     return (
         <header className={headerClasses}>
             <div className="container flex h-20 items-center px-4 md:px-6">
-                <div className="mr-auto flex items-center">
-                  <Link href="/" className="flex items-center space-x-2">
-                    <Building2 className="h-6 w-6" />
-                    <span className="font-bold text-lg">{t('title')}</span>
+                 <div className="mr-auto flex items-center">
+                   <Link href="/" className="flex items-center space-x-2">
+                    <Building2 className="h-6 w-6 text-primary" />
+                    <span className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">{t('title')}</span>
                   </Link>
                 </div>
             </div>
@@ -97,8 +90,8 @@ export function Header() {
       <div className="container flex h-20 items-center px-4 md:px-6">
         <div className="mr-auto flex items-center">
             <Link href="/" className="flex items-center space-x-2 text-foreground hover:text-primary transition-colors">
-                <Building2 className="h-6 w-6" />
-                <span className="font-bold text-lg">{t('title')}</span>
+                <Building2 className="h-6 w-6 text-primary" />
+                <span className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">{t('title')}</span>
             </Link>
         </div>
         <div className="flex items-center space-x-4">
@@ -117,12 +110,12 @@ export function Header() {
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="secondary" size="icon" className="rounded-full">
+                  <Button variant="ghost" size="icon" className="rounded-full">
                     <User className="h-5 w-5" />
                     <span className="sr-only">{t('myAccount')}</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" className="glass-card">
                   <DropdownMenuLabel>{t('myAccount')}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                    <DropdownMenuItem asChild>
@@ -148,7 +141,7 @@ export function Header() {
                     <Button asChild variant="ghost">
                         <Link href="/signup">{t('signUpLink')}</Link>
                     </Button>
-                    <Button asChild>
+                    <Button asChild className="font-bold">
                         <Link href="/login">{t('login')}</Link>
                     </Button>
                 </div>
