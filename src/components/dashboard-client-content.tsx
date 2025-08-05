@@ -130,12 +130,12 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                         <CardHeader>
                             <CardTitle>{t('bookingCalendar')}</CardTitle>
                         </CardHeader>
-                        <CardContent className="flex justify-center">
+                        <CardContent>
                             <Calendar
                                 mode="single"
                                 selected={selectedDate}
                                 onSelect={setSelectedDate}
-                                className="rounded-md border"
+                                className="p-0"
                                 modifiers={{ booked: bookedDates }}
                                 modifiersClassNames={{ 
                                     booked: 'bg-orange-500 text-white hover:bg-orange-500/90 focus:bg-orange-500/90',

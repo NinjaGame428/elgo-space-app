@@ -2,7 +2,7 @@
 'use client';
 
 import Image from 'next/image';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { Location } from '@/lib/types';
 import { Separator } from './ui/separator';
@@ -259,7 +259,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
 
   if (!location) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-8">
+      <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-8 animate-fade-in">
         <Building className="w-16 h-16 mb-4 text-muted-foreground" />
         <p className="text-lg font-medium">{t('selectLocation')}</p>
       </div>
@@ -267,7 +267,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
   }
 
   return (
-    <div className="h-full">
+    <div className="h-full animate-fade-in">
         <div className="relative w-full h-64">
           <Image
             src={location.imageUrl ?? 'https://placehold.co/800x600.png'}
@@ -276,6 +276,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
             className="object-cover"
             data-ai-hint="office workspace"
             sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            priority
           />
         </div>
         <div className="p-6 space-y-8">
@@ -395,13 +396,13 @@ export function LocationDetails({ location }: LocationDetailsProps) {
             <div>
               <h3 className="text-xl font-semibold mb-4">{t('availability')}</h3>
               <p className="text-sm text-muted-foreground mb-4">{t('availabilityDesc')}</p>
-              <div className="p-4 rounded-lg border">
+              <div className="rounded-lg border bg-card">
                 {isLoading ? <Skeleton className="w-full h-[300px]" /> :
                     <Calendar
                         mode="multiple"
                         selected={approvedBookedDates}
                         locale={dateLocale}
-                        className="rounded-md p-0"
+                        className="p-0"
                         modifiers={{ booked: approvedBookedDates }}
                         modifiersClassNames={{
                             booked: 'bg-orange-500 text-white hover:bg-orange-500/90 focus:bg-orange-500/90',
