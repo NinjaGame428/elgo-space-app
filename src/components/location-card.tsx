@@ -2,7 +2,7 @@
 'use client';
 
 import Image from 'next/image';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Location } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Badge } from './ui/badge';
@@ -16,6 +16,11 @@ interface LocationCardProps {
 
 export function LocationCard({ location, isSelected, onClick }: LocationCardProps) {
   const t = useTranslations('LocationNames');
+  
+  const addressParts = location.address.split(', Gatineau,');
+  const addressLine1 = addressParts[0] ? `${addressParts[0]}, Gatineau,` : '';
+  const addressLine2 = addressParts[1] || '';
+
   return (
     <Card
       onClick={onClick}
@@ -37,7 +42,10 @@ export function LocationCard({ location, isSelected, onClick }: LocationCardProp
         </div>
         <div className="flex-1 overflow-hidden">
             <h3 className="text-base font-semibold truncate">{t(location.name as any)}</h3>
-            <p className="text-sm text-muted-foreground truncate">{location.address}</p>
+            <div className="text-sm text-muted-foreground">
+                <p className="truncate">{addressLine1}</p>
+                {addressLine2 && <p className="truncate">{addressLine2}</p>}
+            </div>
             <div className="flex flex-wrap gap-2 mt-2">
                 {location.bookables?.map(b => (
                     <Badge key={b.type} variant="secondary">{b.type}</Badge>
