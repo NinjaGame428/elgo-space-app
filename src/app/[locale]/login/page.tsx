@@ -47,7 +47,7 @@ export default function LoginPage() {
         if (isAdmin) {
             router.push('/dashboard');
         } else {
-            router.push('/');
+            router.push('/my-bookings');
         }
       } else {
         toast({
