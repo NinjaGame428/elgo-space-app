@@ -114,7 +114,9 @@
     "cancel": "Cancel",
     "bookingDeleted": "Booking deleted successfully.",
     "roomDeleted": "Room deleted successfully.",
+    "roomDeleteFailed": "Failed to delete room. It might have associated bookings.",
     "userDeleted": "User deleted successfully.",
+    "userDeleteFailed": "Failed to delete user.",
     "bookingDetails": "Booking Details",
     "bookingDetailsDescription": "Full details for this reservation.",
     "location": "Location",
@@ -135,6 +137,7 @@
       "uploadTab": "Upload",
       "amenitiesLabel": "Amenities",
       "addRoomButton": "Add Room",
+      "addingRoom": "Adding Room...",
       "roomAddedTitle": "Room Added",
       "roomAddedDescription": "The new room has been successfully added."
   },
@@ -151,6 +154,7 @@
       "uploadTab": "Upload",
       "amenitiesLabel": "Amenities",
       "saveChangesButton": "Save Changes",
+      "saving": "Saving...",
       "roomUpdatedTitle": "Room Updated",
       "roomUpdatedDescription": "The room details have been successfully updated.",
       "roomNotFound": "Room not found.",
@@ -162,12 +166,14 @@
       "addUserDescription": "Fill in the details to create a new user account.",
       "nameLabel": "Name",
       "emailLabel": "Email",
+      "passwordLabel": "Password",
       "roleLabel": "Role",
       "roleUser": "User",
       "roleAdmin": "Admin",
       "addUserButton": "Add User",
-      "userExistsTitle": "User Exists",
-      "userExistsDescription": "A user with this email already exists.",
+      "creatingUser": "Creating User...",
+      "userExistsTitle": "User Creation Failed",
+      "userExistsDescription": "A user with this email may already exist.",
       "userAddedTitle": "User Added",
       "userAddedDescription": "The new user has been successfully created."
   },
@@ -181,6 +187,7 @@
       "roleUser": "User",
       "roleAdmin": "Admin",
       "saveChangesButton": "Save Changes",
+      "saving": "Saving...",
       "emailInUseTitle": "Email In Use",
       "emailInUseDescription": "This email is already taken by another user.",
       "userUpdatedTitle": "User Updated",
@@ -285,3 +292,5 @@
     "impactJunior": "The Impact Junior"
   }
 }
+
+    

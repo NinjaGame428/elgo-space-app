@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -10,8 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from '@/navigation';
 import { useTranslations } from 'next-intl';
-import type { Location } from '@/lib/types';
-import { allAmenities, locations as initialLocations } from '@/lib/data';
+import { allAmenities } from '@/lib/data';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Image from 'next/image';
@@ -26,37 +25,39 @@ export default function AddRoomPage() {
     const [address, setAddress] = useState('');
     const [imageUrl, setImageUrl] = useState('https://placehold.co/800x600.png');
     const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
-    const [locations, setLocations] = useState<Location[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
 
-    useEffect(() => {
-        const storedLocations = localStorage.getItem('locations');
-        setLocations(storedLocations ? JSON.parse(storedLocations) : initialLocations);
-    }, []);
-
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsLoading(true);
+        
+        try {
+            const response = await fetch('/api/locations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, address, imageUrl, amenities: selectedAmenities.map(name => ({ name })) }),
+            });
 
-        const newLocation: Location = {
-            id: `location-${Date.now()}`,
-            name,
-            address,
-            imageUrl,
-            amenities: selectedAmenities.map(name => ({ name })),
-            bookables: [{
-                type: 'Meeting Room',
-                description: 'A newly added meeting room.',
-                price: '$50/hour'
-            }]
-        };
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to add room');
+            }
+            
+            toast({
+                title: t('roomAddedTitle'),
+                description: t('roomAddedDescription'),
+            });
+            router.push('/dashboard');
 
-        const updatedLocations = [...locations, newLocation];
-        localStorage.setItem('locations', JSON.stringify(updatedLocations));
-
-        toast({
-            title: t('roomAddedTitle'),
-            description: t('roomAddedDescription'),
-        });
-        router.push('/dashboard');
+        } catch (error: any) {
+            toast({
+                variant: 'destructive',
+                title: "Failed to add room",
+                description: error.message,
+            });
+        } finally {
+            setIsLoading(false);
+        }
     };
     
     const handleAmenityChange = (amenityName: string) => {
@@ -97,11 +98,11 @@ export default function AddRoomPage() {
                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                              <div className="space-y-2">
                                 <Label htmlFor="name">{t('roomNameLabel')}</Label>
-                                <Input id="name" value={name} onChange={e => setName(e.target.value)} required />
+                                <Input id="name" value={name} onChange={e => setName(e.target.value)} required disabled={isLoading} />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="address">{t('addressLabel')}</Label>
-                                <Input id="address" value={address} onChange={e => setAddress(e.target.value)} required />
+                                <Input id="address" value={address} onChange={e => setAddress(e.target.value)} required disabled={isLoading} />
                             </div>
                          </div>
                         
@@ -120,13 +121,13 @@ export default function AddRoomPage() {
                                 <TabsContent value="url" className="pt-2">
                                     <div className="space-y-2">
                                         <Label htmlFor="imageUrl" className="sr-only">{t('imageUrlLabel')}</Label>
-                                        <Input id="imageUrl" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="https://example.com/image.png" />
+                                        <Input id="imageUrl" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="https://example.com/image.png" disabled={isLoading} />
                                     </div>
                                 </TabsContent>
                                 <TabsContent value="upload" className="pt-2">
                                     <div className="space-y-2">
                                          <Label htmlFor="imageUpload" className="sr-only">{t('imageUploadLabel')}</Label>
-                                        <Input id="imageUpload" type="file" accept="image/*" onChange={handleImageUpload} />
+                                        <Input id="imageUpload" type="file" accept="image/*" onChange={handleImageUpload} disabled={isLoading} />
                                     </div>
                                 </TabsContent>
                             </Tabs>
@@ -140,6 +141,7 @@ export default function AddRoomPage() {
                                             id={amenity.name}
                                             checked={selectedAmenities.includes(amenity.name)}
                                             onCheckedChange={() => handleAmenityChange(amenity.name)}
+                                            disabled={isLoading}
                                         />
                                         <Label htmlFor={amenity.name} className="font-normal cursor-pointer">{amenity.name}</Label>
                                     </div>
@@ -148,10 +150,12 @@ export default function AddRoomPage() {
                         </div>
                     </CardContent>
                     <CardFooter className="border-t pt-6">
-                        <Button type="submit" size="lg">{t('addRoomButton')}</Button>
+                        <Button type="submit" size="lg" disabled={isLoading}>{isLoading ? t('addingRoom') : t('addRoomButton')}</Button>
                     </CardFooter>
                 </form>
             </Card>
         </div>
     );
 }
+
+    

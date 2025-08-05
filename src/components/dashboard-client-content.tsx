@@ -74,31 +74,29 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
             toast({ variant: 'destructive', title: "Error", description: "Could not update booking status." });
         }
     };
-
-    const deleteBooking = async (bookingId: string) => {
+    
+    const deleteLocation = async (locationId: string) => {
         try {
-            const response = await fetch(`/api/bookings/${bookingId}`, { method: 'DELETE' });
-            if (!response.ok) throw new Error('Failed to delete booking');
+            const response = await fetch(`/api/locations/${locationId}`, { method: 'DELETE' });
+            if (!response.ok) throw new Error(t('roomDeleteFailed'));
 
-            setBookings(bookings.filter(b => b.id !== bookingId));
-            toast({ title: t('bookingDeleted') });
-        } catch(error) {
-             toast({ variant: 'destructive', title: "Error", description: "Could not delete booking." });
+            setLocations(locations.filter(l => l.id !== locationId));
+            toast({ title: t('roomDeleted') });
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: "Error", description: error.message });
         }
     };
-    
-    const deleteLocation = (locationId: string) => {
-        const updatedLocations = locations.filter(l => l.id !== locationId);
-        localStorage.setItem('locations', JSON.stringify(updatedLocations));
-        setLocations(updatedLocations);
-        toast({ title: t('roomDeleted') });
-    };
 
-    const deleteUser = (userId: string) => {
-        const updatedUsers = users.filter(u => u.id !== userId);
-        localStorage.setItem('users', JSON.stringify(updatedUsers));
-        setUsers(updatedUsers);
-        toast({ title: t('userDeleted') });
+    const deleteUser = async (userId: string) => {
+        try {
+            const response = await fetch(`/api/users/${userId}`, { method: 'DELETE' });
+            if (!response.ok) throw new Error(t('userDeleteFailed'));
+            
+            setUsers(users.filter(u => u.id !== userId));
+            toast({ title: t('userDeleted') });
+        } catch(error: any) {
+             toast({ variant: 'destructive', title: "Error", description: error.message });
+        }
     };
 
     const bookingsForSelectedDay = useMemo(() => {
@@ -343,3 +341,5 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
         </div>
     );
 }
+
+    

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -10,10 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from '@/navigation';
 import { useTranslations } from 'next-intl';
-import type { User } from '@/lib/types';
-import { users as initialUsers } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { format } from 'date-fns';
 import { ArrowLeft } from 'lucide-react';
 
 export default function AddUserPage() {
@@ -23,43 +20,58 @@ export default function AddUserPage() {
     
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
     const [role, setRole] = useState<'User' | 'Admin'>('User');
-    const [users, setUsers] = useState<User[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
 
-    useEffect(() => {
-        const storedUsers = localStorage.getItem('users');
-        setUsers(storedUsers ? JSON.parse(storedUsers) : initialUsers);
-    }, []);
-
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsLoading(true);
 
-        if (users.some(user => user.email === email)) {
+        try {
+            // We use the standard signup API route to create the user.
+            // This ensures the same validation and creation logic is used.
+            const response = await fetch('/api/auth/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, password, phone: '' }), // Phone is not on this form
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                 throw new Error(data.message || t('userExistsDescription'));
+            }
+
+            // After successful creation via Auth, update the role via our user management API
+            if (role === 'Admin' && data.user?.id) {
+                const roleUpdateResponse = await fetch(`/api/users/${data.user.id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ role: 'Admin' }),
+                });
+
+                if (!roleUpdateResponse.ok) {
+                    // Log error but don't fail the whole process, user is created.
+                    console.error('Failed to set admin role for new user.');
+                }
+            }
+
             toast({
+                title: t('userAddedTitle'),
+                description: t('userAddedDescription'),
+            });
+            router.push('/dashboard');
+
+        } catch (error: any) {
+             toast({
                 variant: 'destructive',
                 title: t('userExistsTitle'),
-                description: t('userExistsDescription'),
+                description: error.message,
             });
-            return;
+        } finally {
+             setIsLoading(false);
         }
-
-        const newUser: User = {
-            id: `user-${Date.now()}`,
-            name,
-            email,
-            role,
-            joined_at: format(new Date(), 'yyyy-MM-dd'),
-            phone: null,
-        };
-
-        const updatedUsers = [...users, newUser];
-        localStorage.setItem('users', JSON.stringify(updatedUsers));
-
-        toast({
-            title: t('userAddedTitle'),
-            description: t('userAddedDescription'),
-        });
-        router.push('/dashboard');
     };
 
     return (
@@ -80,15 +92,19 @@ export default function AddUserPage() {
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="name">{t('nameLabel')}</Label>
-                            <Input id="name" value={name} onChange={e => setName(e.target.value)} required />
+                            <Input id="name" value={name} onChange={e => setName(e.target.value)} required disabled={isLoading} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="email">{t('emailLabel')}</Label>
-                            <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
+                            <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required disabled={isLoading} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="password">{t('passwordLabel')}</Label>
+                            <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required disabled={isLoading} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="role">{t('roleLabel')}</Label>
-                            <Select value={role} onValueChange={(value: 'User' | 'Admin') => setRole(value)}>
+                            <Select value={role} onValueChange={(value: 'User' | 'Admin') => setRole(value)} disabled={isLoading}>
                                 <SelectTrigger id="role">
                                     <SelectValue placeholder="Select a role" />
                                 </SelectTrigger>
@@ -100,10 +116,12 @@ export default function AddUserPage() {
                         </div>
                     </CardContent>
                     <CardFooter className="border-t pt-6">
-                         <Button type="submit" size="lg">{t('addUserButton')}</Button>
+                         <Button type="submit" size="lg" disabled={isLoading}>{isLoading ? t('creatingUser') : t('addUserButton')}</Button>
                     </CardFooter>
                 </form>
             </Card>
         </div>
     );
 }
+
+    

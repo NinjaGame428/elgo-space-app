@@ -114,7 +114,9 @@
     "cancel": "Annuler",
     "bookingDeleted": "Réservation supprimée avec succès.",
     "roomDeleted": "Salle supprimée avec succès.",
+    "roomDeleteFailed": "La suppression de la salle a échoué. Elle a peut-être des réservations associées.",
     "userDeleted": "Utilisateur supprimé avec succès.",
+    "userDeleteFailed": "La suppression de l'utilisateur a échoué.",
     "bookingDetails": "Détails de la réservation",
     "bookingDetailsDescription": "Détails complets de cette réservation.",
     "location": "Emplacement",
@@ -135,6 +137,7 @@
     "uploadTab": "Télécharger",
     "amenitiesLabel": "Équipements",
     "addRoomButton": "Ajouter la salle",
+    "addingRoom": "Ajout de la salle...",
     "roomAddedTitle": "Salle ajoutée",
     "roomAddedDescription": "La nouvelle salle a été ajoutée avec succès."
   },
@@ -151,6 +154,7 @@
       "uploadTab": "Télécharger",
       "amenitiesLabel": "Équipements",
       "saveChangesButton": "Enregistrer les modifications",
+      "saving": "Enregistrement...",
       "roomUpdatedTitle": "Salle mise à jour",
       "roomUpdatedDescription": "Les détails de la salle ont été mis à jour avec succès.",
       "roomNotFound": "Salle non trouvée.",
@@ -162,12 +166,14 @@
       "addUserDescription": "Remplissez les détails pour créer un nouveau compte utilisateur.",
       "nameLabel": "Nom",
       "emailLabel": "Email",
+      "passwordLabel": "Mot de passe",
       "roleLabel": "Rôle",
       "roleUser": "Utilisateur",
       "roleAdmin": "Admin",
       "addUserButton": "Ajouter l'utilisateur",
-      "userExistsTitle": "L'utilisateur existe déjà",
-      "userExistsDescription": "Un utilisateur avec cet email existe déjà.",
+      "creatingUser": "Création de l'utilisateur...",
+      "userExistsTitle": "Échec de la création de l'utilisateur",
+      "userExistsDescription": "Un utilisateur avec cet email existe peut-être déjà.",
       "userAddedTitle": "Utilisateur ajouté",
       "userAddedDescription": "Le nouvel utilisateur a été créé avec succès."
   },
@@ -181,6 +187,7 @@
       "roleUser": "Utilisateur",
       "roleAdmin": "Admin",
       "saveChangesButton": "Enregistrer les modifications",
+      "saving": "Enregistrement...",
       "emailInUseTitle": "Email déjà utilisé",
       "emailInUseDescription": "Cet email est déjà pris par un autre utilisateur.",
       "userUpdatedTitle": "Utilisateur mis à jour",
@@ -285,3 +292,5 @@
     "impactJunior": "L'Impact Junior"
   }
 }
+
+    
