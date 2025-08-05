@@ -138,9 +138,8 @@ export function LocationDetails({ location }: LocationDetailsProps) {
               endTime: format(endDateTime, 'p', { locale: dateLocale }),
             }),
         });
-        setSelectedDate(undefined);
-        setStartTime(null);
-        setEndTime(null);
+        
+        router.push('/my-bookings');
 
       } catch (error: any) {
          toast({
@@ -273,7 +272,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                        </div>
                 </div>
 
-                <div className="p-6 md:p-8 flex flex-col gap-6">
+                <div className="p-6 md:p-8 flex flex-col gap-6 bg-muted/30">
                      <h3 className="text-xl font-bold text-center">{t('bookYourSpace')}</h3>
                      
                      <div className="space-y-4">
@@ -284,7 +283,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                                 <Button
                                     variant={"outline"}
                                     className={cn(
-                                    "w-full justify-start text-left font-normal h-11",
+                                    "w-full justify-start text-left font-normal h-11 bg-background",
                                     !selectedDate && "text-muted-foreground"
                                     )}
                                 >
@@ -310,7 +309,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                                 <Label className="font-medium mb-2 block text-center">{t('selectTime')}</Label>
                                 <div className="grid grid-cols-2 gap-4">
                                      <Select value={startTime || ''} onValueChange={setStartTime} disabled={isLoading || !selectedDate}>
-                                        <SelectTrigger className="h-11">
+                                        <SelectTrigger className="h-11 bg-background">
                                             <SelectValue placeholder={t('startTime')} />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -322,7 +321,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                                         </SelectContent>
                                     </Select>
                                     <Select value={endTime || ''} onValueChange={setEndTime} disabled={isLoading || !startTime}>
-                                        <SelectTrigger className="h-11">
+                                        <SelectTrigger className="h-11 bg-background">
                                             <SelectValue placeholder={t('endTime')} />
                                         </SelectTrigger>
                                         <SelectContent>
