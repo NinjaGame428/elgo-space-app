@@ -4,10 +4,10 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: {
-    default: "Heavenkeys Booking",
-    template: `%s | Heavenkeys Booking`,
+    default: "Elgo Space",
+    template: `%s | Elgo Space`,
   },
-  description: 'Book your space with Heavenkeys.',
+  description: 'Book your space with Elgo Space.',
 };
 
 export default function RootLayout({

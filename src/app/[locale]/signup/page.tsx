@@ -9,8 +9,8 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from '@/navigation';
 import { useTranslations } from 'next-intl';
-import { Building2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ElgoIcon } from '@/components/elgo-icon';
 
 export default function SignupPage() {
   const t = useTranslations('SignupPage');
@@ -64,8 +64,8 @@ export default function SignupPage() {
         <Card className="mx-auto w-full max-w-md space-y-6 glass-card">
           <CardHeader className="text-center">
              <div className="flex items-center justify-center space-x-2 mb-4">
-                <Building2 className="h-8 w-8 text-primary" />
-                <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">Heavenkeys Booking</span>
+                <ElgoIcon className="h-8 w-8 text-primary" />
+                <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">Elgo Space</span>
              </div>
             <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
               {t('signUp')}

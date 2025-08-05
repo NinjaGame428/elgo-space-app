@@ -13,10 +13,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, Building2, Moon, Sun } from 'lucide-react';
+import { User, Moon, Sun } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import { ElgoIcon } from '@/components/elgo-icon';
 
 export function Header() {
   const t = useTranslations('Header');
@@ -66,7 +67,7 @@ export function Header() {
             <div className="container flex h-20 items-center px-4 md:px-6">
                  <div className="mr-auto flex items-center">
                    <Link href="/" className="flex items-center space-x-2">
-                    <Building2 className="h-6 w-6 text-primary" />
+                    <ElgoIcon className="h-6 w-6 text-primary" />
                     <span className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">{t('title')}</span>
                   </Link>
                 </div>
@@ -80,7 +81,7 @@ export function Header() {
       <div className="container flex h-20 items-center px-4 md:px-6">
         <div className="mr-auto flex items-center">
             <Link href="/" className="flex items-center space-x-2 text-foreground hover:text-primary transition-colors">
-                <Building2 className="h-6 w-6 text-primary" />
+                <ElgoIcon className="h-6 w-6 text-primary" />
                 <span className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">{t('title')}</span>
             </Link>
         </div>
