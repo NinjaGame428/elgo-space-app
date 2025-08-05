@@ -69,12 +69,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2">
-      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto w-full max-w-md space-y-8">
+    <div className="w-full lg:grid lg:min-h-[calc(100vh-4rem)] lg:grid-cols-2">
+      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 animate-fade-in">
+        <div className="mx-auto w-full max-w-md space-y-6">
           <div>
-            <Link href="/" className="flex items-center justify-center space-x-2 mb-6">
-              <Building2 className="h-8 w-8 text-primary" />
+            <Link href="/" className="flex items-center justify-center space-x-2 mb-6 text-foreground hover:text-primary transition-colors">
+              <Building2 className="h-8 w-8" />
               <span className="text-2xl font-bold">Lauft</span>
             </Link>
             <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-foreground">
@@ -84,7 +84,7 @@ export default function LoginPage() {
               {t('loginDescription')}
             </p>
           </div>
-           <form onSubmit={handleLogin} className="space-y-6">
+           <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">{t('emailLabel')}</Label>
                 <Input
@@ -95,11 +95,16 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
-                  className="h-12"
+                  className="h-12 text-base"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">{t('passwordLabel')}</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">{t('passwordLabel')}</Label>
+                   {/* <Link href="#" className="text-sm font-medium text-primary hover:underline">
+                        Forgot password?
+                    </Link> */}
+                </div>
                 <Input 
                   id="password" 
                   type="password" 
@@ -107,7 +112,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoading}
-                  className="h-12"
+                  className="h-12 text-base"
                 />
               </div>
               <Button type="submit" className="w-full h-12 text-base" disabled={isLoading}>
@@ -120,26 +125,18 @@ export default function LoginPage() {
                     {t('signUpLink')}
                 </Link>
             </p>
-            <Card className="mt-8 bg-muted/50 border-dashed">
-              <CardHeader>
-                <CardTitle className="text-base text-center">{t('demoCredentials')}</CardTitle>
-              </CardHeader>
-              <CardContent className="text-center text-sm space-y-2 text-muted-foreground">
-                <p>{t('adminUser', {email: 'test@example.com', password: 'password'})}</p>
-                <p>{t('regularUser', {password: 'password'})}</p>
-              </CardContent>
-            </Card>
         </div>
       </div>
-      <div className="hidden bg-muted lg:block">
+      <div className="hidden bg-muted lg:block relative">
         <Image
           src="https://placehold.co/1920x1080.png"
-          alt="Image"
-          width="1920"
-          height="1080"
+          alt="Lauft workspace"
+          layout="fill"
           className="h-full w-full object-cover"
           data-ai-hint="conference event"
+          priority
         />
+         <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent"></div>
       </div>
     </div>
   );

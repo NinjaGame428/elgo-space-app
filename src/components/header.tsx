@@ -16,6 +16,7 @@ import {
 import { User, Building2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 
 export function Header() {
   const t = useTranslations('Header');
@@ -26,6 +27,7 @@ export function Header() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -39,8 +41,17 @@ export function Header() {
     };
     checkAuthStatus();
     
+    const handleScroll = () => {
+        setIsScrolled(window.scrollY > 10);
+    };
+
+    window.addEventListener('scroll', handleScroll);
     window.addEventListener('storage', checkAuthStatus);
-    return () => window.removeEventListener('storage', checkAuthStatus);
+    
+    return () => {
+        window.removeEventListener('scroll', handleScroll);
+        window.removeEventListener('storage', checkAuthStatus);
+    };
   }, []);
 
   const handleLogout = () => {
@@ -60,10 +71,16 @@ export function Header() {
 
   const isAdmin = userEmail === 'test@example.com';
 
+  const headerClasses = cn(
+    "sticky top-0 z-50 w-full transition-all duration-300",
+    isScrolled ? "border-b border-border/40 bg-background/80 backdrop-blur-lg" : "bg-transparent"
+  );
+
+
   if (!isMounted) {
     return (
-        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="flex h-16 items-center px-4 md:px-6">
+        <header className={headerClasses}>
+            <div className="container flex h-20 items-center px-4 md:px-6">
                 <div className="mr-auto flex items-center">
                   <Link href="/" className="flex items-center space-x-2">
                     <Building2 className="h-6 w-6" />
@@ -76,24 +93,24 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-16 items-center px-4 md:px-6">
+    <header className={headerClasses}>
+      <div className="container flex h-20 items-center px-4 md:px-6">
         <div className="mr-auto flex items-center">
-            <Link href="/" className="flex items-center space-x-2">
+            <Link href="/" className="flex items-center space-x-2 text-foreground hover:text-primary transition-colors">
                 <Building2 className="h-6 w-6" />
                 <span className="font-bold text-lg">{t('title')}</span>
             </Link>
         </div>
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
-            <Label htmlFor="language-switch" className="font-semibold">EN</Label>
+            <Label htmlFor="language-switch" className="text-sm font-medium">EN</Label>
             <Switch
               id="language-switch"
               checked={locale === 'fr'}
               onCheckedChange={handleLocaleChange}
               aria-label="Language switch"
             />
-            <Label htmlFor="language-switch" className="font-semibold">FR</Label>
+            <Label htmlFor="language-switch" className="text-sm font-medium">FR</Label>
           </div>
 
           <nav className="flex items-center">

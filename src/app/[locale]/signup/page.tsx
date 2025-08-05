@@ -4,7 +4,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
@@ -61,12 +60,23 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2">
-      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto w-full max-w-md space-y-8">
+    <div className="w-full lg:grid lg:min-h-[calc(100vh-4rem)] lg:grid-cols-2">
+       <div className="hidden bg-muted lg:block relative">
+        <Image
+          src="https://placehold.co/1920x1080.png"
+          alt="Modern office space"
+          layout="fill"
+          className="h-full w-full object-cover"
+          data-ai-hint="modern office"
+          priority
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent"></div>
+      </div>
+      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 animate-fade-in">
+        <div className="mx-auto w-full max-w-md space-y-6">
            <div>
-            <Link href="/" className="flex items-center justify-center space-x-2 mb-6">
-              <Building2 className="h-8 w-8 text-primary" />
+            <Link href="/" className="flex items-center justify-center space-x-2 mb-6 text-foreground hover:text-primary transition-colors">
+              <Building2 className="h-8 w-8" />
               <span className="text-2xl font-bold">Lauft</span>
             </Link>
             <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-foreground">
@@ -76,7 +86,7 @@ export default function SignupPage() {
               {t('signUpDescription')}
             </p>
           </div>
-          <form onSubmit={handleSignup} className="space-y-6">
+          <form onSubmit={handleSignup} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">{t('nameLabel')}</Label>
               <Input
@@ -87,7 +97,7 @@ export default function SignupPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={isLoading}
-                className="h-12"
+                className="h-12 text-base"
               />
             </div>
             <div className="space-y-2">
@@ -100,7 +110,7 @@ export default function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
-                className="h-12"
+                className="h-12 text-base"
               />
             </div>
              <div className="space-y-2">
@@ -113,7 +123,7 @@ export default function SignupPage() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 disabled={isLoading}
-                className="h-12"
+                className="h-12 text-base"
               />
             </div>
             <div className="space-y-2">
@@ -125,7 +135,7 @@ export default function SignupPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
-                className="h-12"
+                className="h-12 text-base"
               />
             </div>
             <Button type="submit" className="w-full h-12 text-base" disabled={isLoading}>
@@ -139,16 +149,6 @@ export default function SignupPage() {
             </Link>
           </p>
         </div>
-      </div>
-      <div className="hidden bg-muted lg:block">
-        <Image
-          src="https://placehold.co/1920x1080.png"
-          alt="Image"
-          width="1920"
-          height="1080"
-          className="h-full w-full object-cover"
-          data-ai-hint="modern office"
-        />
       </div>
     </div>
   );
