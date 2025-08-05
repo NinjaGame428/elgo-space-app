@@ -33,6 +33,7 @@ body {
     --chart-4: 0 80% 60%;
     --chart-5: 280 80% 65%;
     --radius: 0.5rem;
+    --orange-500: 25 95% 53%;
   }
   .dark {
     --background: 220 10% 10%;
@@ -59,6 +60,7 @@ body {
     --chart-3: 40 80% 45%;
     --chart-4: 0 80% 50%;
     --chart-5: 280 80% 55%;
+    --orange-500: 25 95% 53%;
   }
 }
 
@@ -70,3 +72,4 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
