@@ -133,7 +133,6 @@
     "department": "Department",
     "occasion": "Occasion",
     "mainDashboard": "Dashboard",
-    "messagesTab": "Messages",
     "emailNotifications": "Email Templates",
     "emailNotificationsDescription": "Customize automated email messages sent to users.",
     "templateBookingPending": "Booking Pending",
@@ -154,12 +153,7 @@
     "sendEmailTo": "Send Email to {name}",
     "sendEmailToDesc": "Compose and send a custom email to {email}.",
     "sendEmail": "Send Email",
-    "sendingEmail": "Sending...",
-    "liveChat": "Live Chat",
-    "liveChatDescription": "Respond to user messages in real-time.",
-    "conversations": "Conversations",
-    "selectConversation": "Select a conversation to view messages.",
-    "typeYourReply": "Type your reply..."
+    "sendingEmail": "Sending..."
   },
   "AddRoomPage": {
       "backToDashboard": "Back to Dashboard",
