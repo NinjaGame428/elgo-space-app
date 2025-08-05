@@ -274,7 +274,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                        </div>
                 </div>
 
-                <div className="p-6 md:p-8 flex flex-col gap-6 bg-muted/30">
+                <div className="p-6 md:p-8 flex flex-col gap-4 bg-muted/30">
                      <h3 className="text-xl font-bold text-center">{t('bookYourSpace')}</h3>
                      
                      <div className="space-y-4">
@@ -346,7 +346,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
 
                      <Button 
                         onClick={handleBooking} 
-                        className="w-full h-12 text-base font-semibold" 
+                        className="w-full h-12 text-base font-semibold mt-auto"
                         disabled={isLoading || !selectedDate || !startTime || !endTime || isRangeInvalid}
                     >
                         {t('confirmBooking')}

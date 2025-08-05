@@ -1,9 +1,9 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format, isAfter, isValid } from 'date-fns';
 import { useRouter } from 'next/navigation';
@@ -12,62 +12,26 @@ import { Link } from '@/navigation';
 import { useTranslations } from 'next-intl';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, CalendarDays, Clock, MapPin } from 'lucide-react';
+import { MoreHorizontal, CalendarDays, MapPin } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getAllLocations } from '@/lib/supabase/server';
 
-export default function MyBookingsPage() {
+interface MyBookingsClientContentProps {
+    bookings: Booking[];
+    locations: Location[];
+}
+
+function MyBookingsClientContent({ bookings: initialBookings, locations: initialLocations }: MyBookingsClientContentProps) {
     const t = useTranslations('MyBookingsPage');
     const tloc = useTranslations('LocationNames');
-    const router = useRouter();
     const { toast } = useToast();
 
-    const [bookings, setBookings] = useState<Booking[]>([]);
-    const [locations, setLocations] = useState<Location[]>([]);
+    const [bookings, setBookings] = useState<Booking[]>(initialBookings);
+    const [locations, setLocations] = useState<Location[]>(initialLocations);
     const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
-    const [isClient, setIsClient] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        setIsClient(true);
-        const isLoggedIn = typeof window !== 'undefined' ? localStorage.getItem('isLoggedIn') === 'true' : false;
-        const userEmail = typeof window !== 'undefined' ? localStorage.getItem('userEmail') : null;
-
-        if (!isLoggedIn || !userEmail) {
-            router.push('/login');
-            return;
-        }
-
-        async function fetchData() {
-            try {
-                const [bookingsRes, locationsRes] = await Promise.all([
-                    fetch(`/api/bookings?userEmail=${userEmail}`),
-                    fetch('/api/locations')
-                ]);
-
-                if (!bookingsRes.ok || !locationsRes.ok) {
-                    throw new Error('Failed to fetch data');
-                }
-
-                const bookingsData = await bookingsRes.json();
-                const locationsData = await locationsRes.json();
-                
-                setBookings(bookingsData);
-                setLocations(locationsData);
-            } catch (error) {
-                console.error("Failed to fetch bookings/locations", error);
-                toast({ variant: 'destructive', title: "Error", description: "Could not load your data." });
-            } finally {
-                setIsLoading(false);
-            }
-        }
-        
-        fetchData();
-
-    }, [router, toast]);
-
 
     const sortedBookings = useMemo(() => {
         return [...bookings].sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
@@ -77,7 +41,8 @@ export default function MyBookingsPage() {
         const now = new Date();
         return sortedBookings.reduce((acc, booking) => {
             const endDate = new Date(booking.endTime);
-            if(isValid(endDate) && isAfter(endDate, now) && booking.status !== 'rejected') {
+            // A booking is upcoming if its end time is in the future and it hasn't been rejected.
+            if (isValid(endDate) && isAfter(endDate, now) && booking.status !== 'rejected') {
                 acc.upcomingBookings.push(booking);
             } else {
                 acc.pastBookings.push(booking);
@@ -120,14 +85,14 @@ export default function MyBookingsPage() {
         return (
              <Card 
                 className={`transition-all hover:shadow-md ${!isUpcoming ? 'cursor-pointer' : ''}`}
-                onClick={!isUpcoming ? () => handleBookingClick(booking) : undefined}
+                onClick={() => handleBookingClick(booking)}
             >
                 <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                      <div>
                         <p className="font-semibold text-lg">{location ? tloc(location.name as any) : t('unknownLocation')}</p>
                          <p className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
                             <MapPin className="h-4 w-4" />
-                            {location?.address}
+                            {location?.address || '...'}
                         </p>
                         <p className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
                            <CalendarDays className="h-4 w-4" />
@@ -177,24 +142,8 @@ export default function MyBookingsPage() {
         );
     };
 
-    if (!isClient || isLoading) {
-        return (
-            <div className="flex-1 space-y-8 p-4 sm:p-6 lg:p-8">
-                <header>
-                    <Skeleton className="h-10 w-60 mb-2" />
-                    <Skeleton className="h-5 w-80" />
-                </header>
-                <div className="space-y-4">
-                   <Skeleton className="h-24 w-full" />
-                   <Skeleton className="h-24 w-full" />
-                   <Skeleton className="h-24 w-full" />
-                </div>
-            </div>
-        )
-    }
-
     return (
-        <div className="flex-1 space-y-8 p-4 sm:p-6 lg:p-8">
+        <div className="flex-1 space-y-8 p-4 sm:p-6 lg:p-8 animate-fade-in-up">
              <header>
                 <h1 className="text-3xl font-bold tracking-tight">{t('yourReservations')}</h1>
                 <p className="text-lg text-muted-foreground">{t('reservationsDescription')}</p>
@@ -271,4 +220,86 @@ export default function MyBookingsPage() {
             </Dialog>
         </div>
     );
+}
+
+
+async function MyBookingsDataFetcher() {
+    // This is a server component that fetches ALL data needed for the page
+    const [locations] = await Promise.all([
+        getAllLocations(),
+    ]);
+
+    // We pass an empty array for bookings, as they will be fetched on the client
+    // based on the logged-in user. This is a temporary measure until we have
+    // a server-side way to get the current user.
+    return <MyBookingsClientContent bookings={[]} locations={locations} />;
+}
+
+
+function MyBookingsSkeleton() {
+    return (
+        <div className="flex-1 space-y-8 p-4 sm:p-6 lg:p-8">
+            <header>
+                <Skeleton className="h-10 w-60 mb-2" />
+                <Skeleton className="h-5 w-80" />
+            </header>
+            <div className="space-y-4">
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-24 w-full" />
+            </div>
+        </div>
+    )
+}
+
+export default function MyBookingsPage() {
+    const [isClient, setIsClient] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [bookings, setBookings] = useState<Booking[]>([]);
+    const [locations, setLocations] = useState<Location[]>([]);
+    const router = useRouter();
+    const toast = useToast();
+
+    useEffect(() => {
+        setIsClient(true);
+        const userEmail = localStorage.getItem('userEmail');
+
+        if (!userEmail) {
+            router.push('/login');
+            return;
+        }
+
+        async function fetchData() {
+            try {
+                const [bookingsRes, locationsRes] = await Promise.all([
+                    fetch(`/api/bookings?userEmail=${userEmail}`),
+                    fetch('/api/locations'),
+                ]);
+
+                if (!bookingsRes.ok || !locationsRes.ok) {
+                    throw new Error('Failed to fetch data');
+                }
+
+                const bookingsData = await bookingsRes.json();
+                const locationsData = await locationsRes.json();
+
+                setBookings(bookingsData);
+                setLocations(locationsData);
+            } catch (error) {
+                console.error("Failed to fetch data", error);
+                toast.toast({ variant: 'destructive', title: "Error", description: "Could not load your data." });
+            } finally {
+                setIsLoading(false);
+            }
+        }
+
+        fetchData();
+
+    }, [router, toast]);
+    
+    if (!isClient || isLoading) {
+        return <MyBookingsSkeleton />;
+    }
+
+    return <MyBookingsClientContent bookings={bookings} locations={locations} />;
 }
