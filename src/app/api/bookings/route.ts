@@ -5,11 +5,12 @@ import { v4 as uuidv4 } from 'uuid';
 
 export const dynamic = 'force-dynamic';
 
-// GET bookings, optionally filtered by locationId or userEmail
+// GET bookings, optionally filtered by locationId or userEmail or bookingId
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const locationId = searchParams.get('locationId');
     const userEmail = searchParams.get('userEmail');
+    const bookingId = searchParams.get('id');
 
     try {
         const supabase = createClient();
@@ -21,6 +22,10 @@ export async function GET(req: NextRequest) {
 
         if (userEmail) {
             query = query.eq('user_email', userEmail);
+        }
+
+        if (bookingId) {
+            query = query.eq('id', bookingId);
         }
 
         const { data, error } = await query;
@@ -96,3 +101,5 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ message: 'An internal server error occurred' }, { status: 500 });
     }
 }
+
+    

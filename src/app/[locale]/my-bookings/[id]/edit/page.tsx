@@ -6,18 +6,18 @@ import { useRouter, useParams } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import Link from 'next/link';
+import { Link } from '@/navigation';
 import { useTranslations } from 'next-intl';
 import type { Booking, Location } from '@/lib/types';
-import { bookings as initialBookings, locations as initialLocations } from '@/lib/data';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { addDays, format, formatISO, getDay, parse, eachDayOfInterval } from 'date-fns';
-import { Calendar as CalendarIcon, Clock, Coffee, Printer, Phone, Wifi, Car, UtensilsCrossed } from 'lucide-react';
+import { Calendar as CalendarIcon, ArrowLeft } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const timeSlots = Array.from({ length: 18 }, (_, i) => {
     const hour = 7 + Math.floor(i / 2);
@@ -33,7 +33,8 @@ export default function EditBookingPage() {
     const { id } = params;
     const { toast } = useToast();
 
-    const [allBookings, setAllBookings] = useState<Booking[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [allBookingsForLocation, setAllBookingsForLocation] = useState<Booking[]>([]);
     const [booking, setBooking] = useState<Booking | null>(null);
     const [location, setLocation] = useState<Location | null>(null);
 
@@ -42,31 +43,56 @@ export default function EditBookingPage() {
     const [endTime, setEndTime] = useState<string | null>(null);
 
     useEffect(() => {
-        const storedBookings = localStorage.getItem('bookings');
-        const parsedBookings = storedBookings ? JSON.parse(storedBookings) : initialBookings;
-        setAllBookings(parsedBookings);
+        if (!id) return;
 
-        const storedLocations = localStorage.getItem('locations');
-        const parsedLocations = storedLocations ? JSON.parse(storedLocations) : initialLocations;
+        async function fetchBookingData() {
+            try {
+                setIsLoading(true);
 
-        const foundBooking = parsedBookings.find((b: Booking) => b.id === id);
-        if (foundBooking) {
-            setBooking(foundBooking);
-            const foundLocation = parsedLocations.find((l: Location) => l.id === foundBooking.locationId);
-            setLocation(foundLocation);
+                // Fetch the specific booking being edited
+                const bookingRes = await fetch(`/api/bookings?id=${id}`);
+                if (!bookingRes.ok) throw new Error('Failed to fetch booking');
+                const bookingData: Booking[] = await bookingRes.json();
+                
+                if (bookingData.length === 0) {
+                     toast({ variant: 'destructive', title: t('bookingNotFound') });
+                     router.push('/my-bookings');
+                     return;
+                }
+                const currentBooking = bookingData[0];
+                setBooking(currentBooking);
+                
+                // Fetch the location details
+                const locationRes = await fetch(`/api/locations/${currentBooking.locationId}`);
+                if (!locationRes.ok) throw new Error('Failed to fetch location');
+                const locationData: Location = await locationRes.json();
+                setLocation(locationData);
 
-            const bookingStartDate = new Date(foundBooking.startTime);
-            const bookingEndDate = new Date(foundBooking.endTime);
-            setDate({ from: bookingStartDate, to: bookingEndDate });
-            setStartTime(format(bookingStartDate, 'HH:mm'));
-            setEndTime(format(bookingEndDate, 'HH:mm'));
-        } else {
-            toast({ variant: 'destructive', title: t('bookingNotFound') });
-            router.push('/my-bookings');
+                // Fetch all bookings for this location to check availability
+                const allBookingsRes = await fetch(`/api/bookings?locationId=${currentBooking.locationId}`);
+                if (!allBookingsRes.ok) throw new Error('Failed to fetch all bookings for location');
+                const allBookingsData: Booking[] = await allBookingsRes.json();
+                setAllBookingsForLocation(allBookingsData);
+                
+                const bookingStartDate = new Date(currentBooking.startTime);
+                const bookingEndDate = new Date(currentBooking.endTime);
+                setDate({ from: bookingStartDate, to: bookingEndDate });
+                setStartTime(format(bookingStartDate, 'HH:mm'));
+                setEndTime(format(bookingEndDate, 'HH:mm'));
+
+            } catch (error: any) {
+                console.error(error);
+                toast({ variant: 'destructive', title: "Error", description: error.message });
+                router.push('/my-bookings');
+            } finally {
+                setIsLoading(false);
+            }
         }
+        
+        fetchBookingData();
     }, [id, router, toast, t]);
     
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!booking || !location || !date?.from || !startTime || !endTime) {
@@ -75,21 +101,30 @@ export default function EditBookingPage() {
         }
 
         const bookingEndDate = date.to || date.from;
-        const updatedBooking: Booking = {
-            ...booking,
+        
+        const updatedBookingPayload = {
             startTime: formatISO(parse(startTime, 'HH:mm', date.from)),
             endTime: formatISO(parse(endTime, 'HH:mm', bookingEndDate)),
             status: 'pending', // Status goes back to pending for admin approval
         };
         
-        const updatedBookings = allBookings.map(b => b.id === id ? updatedBooking : b);
-        localStorage.setItem('bookings', JSON.stringify(updatedBookings));
+        try {
+             const response = await fetch(`/api/bookings/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedBookingPayload),
+            });
+            if (!response.ok) throw new Error('Failed to update booking');
 
-        toast({
-            title: t('bookingUpdatedTitle'),
-            description: t('bookingUpdatedDescription'),
-        });
-        router.push('/my-bookings');
+            toast({
+                title: t('bookingUpdatedTitle'),
+                description: t('bookingUpdatedDescription'),
+            });
+            router.push('/my-bookings');
+
+        } catch (error: any) {
+             toast({ variant: 'destructive', title: "Error", description: error.message });
+        }
     };
 
     const selectedDates = useMemo(() => {
@@ -112,13 +147,13 @@ export default function EditBookingPage() {
     const locationBookingsForDay = useCallback((day: Date) => {
         if (!location) return [];
         const formattedDate = format(day, "yyyy-MM-dd");
-        return allBookings.filter(b => 
+        return allBookingsForLocation.filter(b => 
             b.id !== id && // Exclude the current booking from checks
             b.locationId === location.id &&
             format(new Date(b.startTime), "yyyy-MM-dd") === formattedDate &&
             b.status === 'approved'
         );
-    }, [location, allBookings, id]);
+    }, [location, allBookingsForLocation, id]);
 
     const isTimeSlotBooked = useCallback((time: string, checkDate: Date) => {
         const checkTime = parse(time, 'HH:mm', checkDate).getTime();
@@ -175,29 +210,59 @@ export default function EditBookingPage() {
         return timeSlots.slice(startIndex + 1, endIndex + 1);
     }, [startTime, isTimeSlotBooked, isTimeSlotUnavailable, selectedDates]);
 
+    if (isLoading) {
+        return (
+            <div className="flex flex-col min-h-screen bg-background items-center justify-center p-4">
+                <Card className="w-full max-w-2xl">
+                    <CardHeader>
+                        <Skeleton className="h-8 w-3/4" />
+                        <Skeleton className="h-4 w-1/2" />
+                    </CardHeader>
+                    <CardContent className="space-y-6 pt-6">
+                        <Skeleton className="h-11 w-full" />
+                        <div className="grid grid-cols-2 gap-4">
+                            <Skeleton className="h-11 w-full" />
+                            <Skeleton className="h-11 w-full" />
+                        </div>
+                    </CardContent>
+                    <CardFooter className="flex justify-between">
+                        <Skeleton className="h-11 w-36" />
+                        <Skeleton className="h-11 w-36" />
+                    </CardFooter>
+                </Card>
+            </div>
+        )
+    }
 
     if (!booking || !location) {
         return <div className="flex items-center justify-center min-h-screen">{t('loading')}</div>;
     }
 
     return (
-        <div className="flex flex-col min-h-screen bg-background">
-            <main className="flex-1 flex items-center justify-center p-4">
+        <div className="flex flex-col min-h-screen bg-background items-center justify-center p-4">
+            <main className="flex-1 flex items-center justify-center w-full">
                 <Card className="w-full max-w-2xl">
                     <CardHeader>
-                        <CardTitle>{t('rescheduleTitle', { locationName: tloc(location.name as any) })}</CardTitle>
-                        <CardDescription>{t('rescheduleDescription')}</CardDescription>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <CardTitle>{t('rescheduleTitle', { locationName: tloc(location.name as any) })}</CardTitle>
+                                <CardDescription>{t('rescheduleDescription')}</CardDescription>
+                            </div>
+                            <Button variant="outline" size="icon" asChild>
+                                <Link href="/my-bookings"><ArrowLeft /></Link>
+                            </Button>
+                        </div>
                     </CardHeader>
                     <form onSubmit={handleSubmit}>
-                        <CardContent className="space-y-4">
+                        <CardContent className="space-y-6 pt-6">
                             <div>
-                                <h4 className="font-medium mb-2 text-sm">{t('selectDateRange')}</h4>
+                                <Label className="font-medium mb-2 block">{t('selectDateRange')}</Label>
                                 <Popover>
                                     <PopoverTrigger asChild>
                                     <Button
                                         variant={"outline"}
                                         className={cn(
-                                        "w-full justify-start text-left font-normal bg-background",
+                                        "w-full justify-start text-left font-normal h-11 bg-background",
                                         !date && "text-muted-foreground"
                                         )}
                                     >
@@ -230,12 +295,12 @@ export default function EditBookingPage() {
                             </div>
 
                             <div>
-                                <h4 className="font-medium mb-2 text-sm">{t('selectTime')}</h4>
+                                <Label className="font-medium mb-2 block">{t('selectTime')}</Label>
                                 <div className="grid grid-cols-2 gap-4">
-                                     <div className="flex items-center gap-2">
-                                        <Label className="text-xs whitespace-nowrap">{t('from')}</Label>
+                                     <div className="space-y-1">
+                                        <Label htmlFor="start-time" className="text-xs">{t('from')}</Label>
                                         <Select value={startTime || ''} onValueChange={setStartTime} disabled={!date?.from}>
-                                            <SelectTrigger>
+                                            <SelectTrigger id="start-time" className="h-11">
                                                 <SelectValue placeholder={t('startTime')} />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -247,10 +312,10 @@ export default function EditBookingPage() {
                                             </SelectContent>
                                         </Select>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <Label className="text-xs whitespace-nowrap">{t('to')}</Label>
+                                    <div className="space-y-1">
+                                        <Label htmlFor="end-time" className="text-xs">{t('to')}</Label>
                                         <Select value={endTime || ''} onValueChange={setEndTime} disabled={!startTime}>
-                                            <SelectTrigger>
+                                            <SelectTrigger id="end-time" className="h-11">
                                                 <SelectValue placeholder={t('endTime')} />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -269,11 +334,11 @@ export default function EditBookingPage() {
                             </div>
 
                         </CardContent>
-                        <CardFooter className="flex justify-between">
-                            <Button type="submit" disabled={isRangeInvalid || !date?.from || !startTime || !endTime}>{t('saveChangesButton')}</Button>
-                            <Button variant="outline" asChild>
+                        <CardFooter className="flex justify-between border-t pt-6">
+                            <Button variant="ghost" asChild>
                                 <Link href="/my-bookings">{t('backToBookings')}</Link>
                             </Button>
+                            <Button type="submit" disabled={isRangeInvalid || !date?.from || !startTime || !endTime}>{t('saveChangesButton')}</Button>
                         </CardFooter>
                     </form>
                 </Card>
@@ -281,3 +346,5 @@ export default function EditBookingPage() {
         </div>
     );
 }
+
+    
