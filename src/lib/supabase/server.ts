@@ -22,10 +22,11 @@ export async function getLocations(): Promise<Location[]> {
     }
 
     // Map snake_case from DB to camelCase for the app
+    // and override the address for all locations.
     return data.map((location: any) => ({
         id: location.id,
         name: location.name,
-        address: location.address,
+        address: '717 boul. St-Joseph, Gatineau, QC J8Y 4B6',
         imageUrl: location.image_url,
         bookables: [{
             type: 'Meeting Room',
