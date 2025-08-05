@@ -66,7 +66,7 @@ export function Header() {
     router.replace(pathname, { locale: newLocale });
   };
 
-  const isAdmin = userEmail === 'test@example.com';
+  const isAdmin = userEmail === 'heavenkeys2022@gmail.com';
 
   const headerClasses = cn(
     "sticky top-0 z-50 w-full transition-all duration-300",

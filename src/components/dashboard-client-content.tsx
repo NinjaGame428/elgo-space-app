@@ -47,7 +47,7 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
 
     useEffect(() => {
         const loggedInEmail = typeof window !== 'undefined' ? localStorage.getItem('userEmail') : null;
-        if (loggedInEmail !== 'test@example.com') { // Simple admin check
+        if (loggedInEmail !== 'heavenkeys2022@gmail.com') { // Simple admin check
             router.push('/login');
             return;
         }
@@ -265,12 +265,12 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                                             <TableCell>{format(new Date(user.joined_at), 'yyyy-MM-dd')}</TableCell>
                                             <TableCell className="text-right">
                                                <div className="flex items-center justify-end gap-2">
-                                                    <Button variant="outline" size="icon" asChild disabled={user.email === 'test@example.com'}>
+                                                    <Button variant="outline" size="icon" asChild disabled={user.email === 'heavenkeys2022@gmail.com'}>
                                                         <Link href={`/dashboard/users/${user.id}/edit`}><Pencil className="h-4 w-4" /></Link>
                                                     </Button>
                                                     <AlertDialog>
                                                         <AlertDialogTrigger asChild>
-                                                             <Button variant="destructive" size="icon" disabled={user.email === 'test@example.com'}><Trash2 className="h-4 w-4" /></Button>
+                                                             <Button variant="destructive" size="icon" disabled={user.email === 'heavenkeys2022@gmail.com'}><Trash2 className="h-4 w-4" /></Button>
                                                         </AlertDialogTrigger>
                                                         <AlertDialogContent>
                                                             <AlertDialogHeader>
