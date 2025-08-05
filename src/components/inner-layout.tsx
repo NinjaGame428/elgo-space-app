@@ -3,8 +3,8 @@
 
 export function InnerLayout({ children, locale }: { children: React.ReactNode; locale: string; }) {
   return (
-    <div className="flex-1 flex flex-col">
-        <main className="flex-1 flex flex-col animate-fade-in-up">
+    <div className="flex-1">
+        <main className="animate-fade-in-up">
             {children}
         </main>
     </div>
