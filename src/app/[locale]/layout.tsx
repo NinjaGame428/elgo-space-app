@@ -34,6 +34,9 @@ export default async function LocaleLayout({
                <InnerLayout>
                   {children}
                </InnerLayout>
+               <footer className="py-4 mt-auto text-center text-sm text-muted-foreground border-t">
+                  Built by Heavenkeys Ltd
+               </footer>
             </div>
             <Toaster />
         </NextIntlClientProvider>
