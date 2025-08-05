@@ -19,10 +19,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { fr, enUS } from 'date-fns/locale';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 
 interface DashboardData {
     bookings: Booking[];
@@ -56,27 +56,30 @@ function EmailTemplatesManager() {
         fetchTemplates();
     }, [toast]);
     
-    const handleTemplateChange = (index: number, field: 'subject' | 'body', value: string) => {
-        const newTemplates = [...templates];
-        newTemplates[index] = { ...newTemplates[index], [field]: value };
-        setTemplates(newTemplates);
+    const handleTemplateChange = (templateName: string, field: 'subject' | 'body', value: string) => {
+        setTemplates(currentTemplates => 
+            currentTemplates.map(t => 
+                t.name === templateName ? { ...t, [field]: value } : t
+            )
+        );
     };
 
-    const handleSaveTemplate = async (templateName: string) => {
+    const handleSaveAllTemplates = async () => {
         setIsSaving(true);
-        const template = templates.find(t => t.name === templateName);
-        if (!template) return;
-
         try {
-            const res = await fetch(`/api/email-templates/${templateName}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ subject: template.subject, body: template.body }),
-            });
-            if (!res.ok) throw new Error('Failed to save template');
-            toast({ title: 'Template Saved', description: `The "${templateName}" template has been updated.` });
-        } catch (error) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Could not save the email template.' });
+            for (const template of templates) {
+                const res = await fetch(`/api/email-templates/${template.name}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ subject: template.subject, body: template.body }),
+                });
+                if (!res.ok) {
+                    throw new Error(`Failed to save "${template.name}" template`);
+                }
+            }
+            toast({ title: 'Templates Saved', description: 'All email templates have been updated.' });
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: 'Error', description: error.message || 'Could not save all email templates.' });
         } finally {
             setIsSaving(false);
         }
@@ -88,10 +91,21 @@ function EmailTemplatesManager() {
             case 'booking_approved': return t('templateBookingApproved');
             case 'booking_rescheduled': return t('templateBookingRescheduled');
             case 'booking_cancellation': return t('templateBookingCancellation');
+            case 'booking_rejected': return t('templateBookingRejected');
             default: return name;
         }
     }
-
+    
+    const getTemplateDescription = (name: string) => {
+        switch (name) {
+            case 'booking_pending': return t('templateBookingPendingDesc');
+            case 'booking_approved': return t('templateBookingApprovedDesc');
+            case 'booking_rescheduled': return t('templateBookingRescheduledDesc');
+            case 'booking_cancellation': return t('templateBookingCancellationDesc');
+             case 'booking_rejected': return t('templateBookingRejectedDesc');
+            default: return `Template for: ${name}`;
+        }
+    }
 
     if (isLoading) {
         return <p>{t('loading')}</p>;
@@ -103,42 +117,47 @@ function EmailTemplatesManager() {
                 <CardTitle className="flex items-center gap-2"><Mail /> {t('emailNotifications')}</CardTitle>
                 <CardDescription>{t('emailNotificationsDescription')}</CardDescription>
             </CardHeader>
-            <CardContent>
-                <Accordion type="single" collapsible className="w-full">
-                    {templates.map((template, index) => (
-                        <AccordionItem value={template.name} key={template.id}>
-                            <AccordionTrigger>{getTemplateTitle(template.name)}</AccordionTrigger>
-                            <AccordionContent className="space-y-4">
-                                <div>
-                                    <Label htmlFor={`subject-${template.name}`}>{t('emailSubject')}</Label>
-                                    <Input 
-                                        id={`subject-${template.name}`} 
-                                        value={template.subject}
-                                        onChange={(e) => handleTemplateChange(index, 'subject', e.target.value)}
-                                        disabled={isSaving}
-                                    />
-                                </div>
-                                <div>
-                                    <Label htmlFor={`body-${template.name}`}>{t('emailBody')}</Label>
-                                    <Textarea
-                                         id={`body-${template.name}`}
-                                         value={template.body}
-                                         onChange={(e) => handleTemplateChange(index, 'body', e.target.value)}
-                                         rows={8}
-                                         disabled={isSaving}
-                                    />
-                                     <p className="text-xs text-muted-foreground mt-2">
-                                        {t('templateVariables')}: {'{{name}}'}, {'{{locationName}}'}, {'{{date}}'}, {'{{startTime}}'}, {'{{endTime}}'}
-                                    </p>
-                                </div>
-                                <Button onClick={() => handleSaveTemplate(template.name)} disabled={isSaving}>
-                                    {isSaving ? t('saving') : t('saveTemplate')}
-                                </Button>
-                            </AccordionContent>
-                        </AccordionItem>
-                    ))}
-                </Accordion>
+            <CardContent className="space-y-6">
+                {templates.map((template) => (
+                    <Card key={template.name} className="bg-muted/30">
+                        <CardHeader>
+                            <CardTitle className="text-lg">{getTemplateTitle(template.name)}</CardTitle>
+                            <CardDescription>{getTemplateDescription(template.name)}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                             <div>
+                                <Label htmlFor={`subject-${template.name}`} className="font-semibold">{t('emailSubject')}</Label>
+                                <Input 
+                                    id={`subject-${template.name}`} 
+                                    value={template.subject}
+                                    onChange={(e) => handleTemplateChange(template.name, 'subject', e.target.value)}
+                                    disabled={isSaving}
+                                    className="bg-background"
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor={`body-${template.name}`} className="font-semibold">{t('emailBody')}</Label>
+                                <Textarea
+                                     id={`body-${template.name}`}
+                                     value={template.body}
+                                     onChange={(e) => handleTemplateChange(template.name, 'body', e.target.value)}
+                                     rows={6}
+                                     disabled={isSaving}
+                                     className="bg-background"
+                                />
+                                 <p className="text-xs text-muted-foreground mt-2">
+                                    {t('templateVariables')}: {'{{name}}'}, {'{{locationName}}'}, {'{{date}}'}, {'{{startTime}}'}, {'{{endTime}}'}
+                                </p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
             </CardContent>
+            <CardFooter>
+                 <Button onClick={handleSaveAllTemplates} disabled={isSaving || isLoading}>
+                    {isSaving ? t('saving') : t('saveAllTemplates')}
+                </Button>
+            </CardFooter>
         </Card>
     );
 }
@@ -151,6 +170,7 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
     const router = useRouter();
     const { toast } = useToast();
 
+    const [activeTab, setActiveTab] = useState('dashboard');
     const [bookings, setBookings] = useState<Booking[]>(initialData.bookings);
     const [locations, setLocations] = useState<Location[]>(initialData.locations);
     const [users, setUsers] = useState<User[]>(initialData.users);
@@ -255,179 +275,192 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                 <h1 className="text-3xl font-bold tracking-tight">{t('adminDashboard')}</h1>
                 <p className="text-lg text-muted-foreground">{t('dashboardDescription')}</p>
             </header>
-            <div className="grid lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-1 space-y-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>{t('bookingCalendar')}</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="rounded-lg">
-                                <Calendar
-                                    mode="single"
-                                    selected={selectedDate}
-                                    onSelect={setSelectedDate}
-                                    className="p-0"
-                                    modifiers={{ booked: bookedDates }}
-                                    modifiersClassNames={{ 
-                                        booked: 'bg-orange-500 text-white hover:bg-orange-500/90 focus:bg-orange-500/90',
-                                    }}
-                                    locale={dateLocale}
-                                />
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>{t('bookingsFor', { date: selectedDate ? format(selectedDate, 'PPP', { locale: dateLocale }) : '...' })}</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <ScrollArea className="h-96">
-                                <div className="space-y-4 pr-4">
-                                    {bookingsForSelectedDay.length > 0 ? (
-                                        bookingsForSelectedDay.map(booking => {
-                                            const location = locations.find(l => l.id === booking.locationId);
-                                            return (
-                                                <div key={booking.id} className="p-4 border rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => handleBookingClick(booking)}>
-                                                    <div>
-                                                        <p className="font-semibold">{location ? tloc(location.name as any) : t('unknownLocation')}</p>
-                                                        <p className="text-sm text-muted-foreground">
-                                                            {format(new Date(booking.startTime), 'p')} - {format(new Date(booking.endTime), 'p')}
-                                                        </p>
-                                                        <p className="text-sm">{t('bookedBy', { email: booking.userEmail })}</p>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <Badge variant={booking.status === 'approved' ? 'default' : booking.status === 'rejected' ? 'destructive' : 'secondary'}>{t(booking.status as any)}</Badge>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })
-                                    ) : (
-                                        <p className="text-muted-foreground text-center py-8">{t('noBookings')}</p>
-                                    )}
-                                </div>
-                            </ScrollArea>
-                        </CardContent>
-                    </Card>
-                </div>
 
-                <div className="lg:col-span-2 space-y-8">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="grid w-full grid-cols-2 max-w-sm mb-8">
+                    <TabsTrigger value="dashboard">{t('mainDashboard')}</TabsTrigger>
+                    <TabsTrigger value="emails">{t('emailNotifications')}</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="dashboard">
+                     <div className="grid lg:grid-cols-3 gap-8">
+                        <div className="lg:col-span-1 space-y-6">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>{t('bookingCalendar')}</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="rounded-lg">
+                                        <Calendar
+                                            mode="single"
+                                            selected={selectedDate}
+                                            onSelect={setSelectedDate}
+                                            className="p-0"
+                                            modifiers={{ booked: bookedDates }}
+                                            modifiersClassNames={{ 
+                                                booked: 'bg-orange-500 text-white hover:bg-orange-500/90 focus:bg-orange-500/90',
+                                            }}
+                                            locale={dateLocale}
+                                        />
+                                    </div>
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>{t('bookingsFor', { date: selectedDate ? format(selectedDate, 'PPP', { locale: dateLocale }) : '...' })}</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <ScrollArea className="h-96">
+                                        <div className="space-y-4 pr-4">
+                                            {bookingsForSelectedDay.length > 0 ? (
+                                                bookingsForSelectedDay.map(booking => {
+                                                    const location = locations.find(l => l.id === booking.locationId);
+                                                    return (
+                                                        <div key={booking.id} className="p-4 border rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => handleBookingClick(booking)}>
+                                                            <div>
+                                                                <p className="font-semibold">{location ? tloc(location.name as any) : t('unknownLocation')}</p>
+                                                                <p className="text-sm text-muted-foreground">
+                                                                    {format(new Date(booking.startTime), 'p')} - {format(new Date(booking.endTime), 'p')}
+                                                                </p>
+                                                                <p className="text-sm">{t('bookedBy', { email: booking.userEmail })}</p>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                <Badge variant={booking.status === 'approved' ? 'default' : booking.status === 'rejected' ? 'destructive' : 'secondary'}>{t(booking.status as any)}</Badge>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })
+                                            ) : (
+                                                <p className="text-muted-foreground text-center py-8">{t('noBookings')}</p>
+                                            )}
+                                        </div>
+                                    </ScrollArea>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        <div className="lg:col-span-2 space-y-8">
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between">
+                                    <div>
+                                        <CardTitle>{t('roomManagement')}</CardTitle>
+                                        <CardDescription>{t('roomManagementDescription')}</CardDescription>
+                                    </div>
+                                    <Button asChild size="sm">
+                                        <Link href="/dashboard/rooms/add"><PlusCircle /> {t('addRoom')}</Link>
+                                    </Button>
+                                </CardHeader>
+                                <CardContent>
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>{t('roomName')}</TableHead>
+                                                <TableHead>{t('address')}</TableHead>
+                                                <TableHead className="text-right">{t('actions')}</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {locations.map(location => (
+                                                <TableRow key={location.id}>
+                                                    <TableCell className="font-medium">{tloc(location.name as any)}</TableCell>
+                                                    <TableCell>{location.address}</TableCell>
+                                                    <TableCell className="text-right">
+                                                        <div className="flex items-center justify-end gap-2">
+                                                            <Button variant="outline" size="icon" asChild>
+                                                                <Link href={`/dashboard/rooms/${location.id}/edit`}><Pencil className="h-4 w-4" /></Link>
+                                                            </Button>
+                                                            <AlertDialog>
+                                                                <AlertDialogTrigger asChild>
+                                                                    <Button variant="destructive" size="icon"><Trash2 className="h-4 w-4" /></Button>
+                                                                </AlertDialogTrigger>
+                                                                <AlertDialogContent>
+                                                                    <AlertDialogHeader>
+                                                                        <AlertDialogTitle>{t('areYouSure')}</AlertDialogTitle>
+                                                                        <AlertDialogDescription>{t('deleteRoomWarning')}</AlertDialogDescription>
+                                                                    </AlertDialogHeader>
+                                                                    <AlertDialogFooter>
+                                                                        <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+                                                                        <AlertDialogAction onClick={() => deleteLocation(location.id)}>{t('delete')}</AlertDialogAction>
+                                                                    </AlertDialogFooter>
+                                                                </AlertDialogContent>
+                                                            </AlertDialog>
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </CardContent>
+                            </Card>
+
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between">
+                                    <div>
+                                        <CardTitle>{t('userManagement')}</CardTitle>
+                                        <CardDescription>{t('userManagementDescription')}</CardDescription>
+                                    </div>
+                                    <Button asChild size="sm">
+                                        <Link href="/dashboard/users/add"><PlusCircle /> {t('addUser')}</Link>
+                                    </Button>
+                                </CardHeader>
+                                <CardContent>
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>{t('name')}</TableHead>
+                                                <TableHead>{t('email')}</TableHead>
+                                                <TableHead>{t('role')}</TableHead>
+                                                <TableHead>{t('joined')}</TableHead>
+                                                <TableHead className="text-right">{t('actions')}</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {users.map(user => (
+                                                <TableRow key={user.id} className={cn(user.email === currentUserEmail && "bg-muted/50")}>
+                                                    <TableCell className="font-medium flex items-center gap-2">
+                                                        {user.name || 'N/A'}
+                                                        {user.email === currentUserEmail && <UserIcon className="h-4 w-4 text-primary" />}
+                                                    </TableCell>
+                                                    <TableCell>{user.email}</TableCell>
+                                                    <TableCell><Badge variant={user.role === 'Admin' ? 'default' : 'secondary'}>{user.role}</Badge></TableCell>
+                                                    <TableCell>{format(new Date(user.joined_at), 'yyyy-MM-dd')}</TableCell>
+                                                    <TableCell className="text-right">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                            <Button variant="outline" size="icon" asChild>
+                                                                <Link href={`/dashboard/users/${user.id}/edit`}><Pencil className="h-4 w-4" /></Link>
+                                                            </Button>
+                                                            <AlertDialog>
+                                                                <AlertDialogTrigger asChild>
+                                                                    <Button variant="destructive" size="icon" disabled={user.email === currentUserEmail}><Trash2 className="h-4 w-4" /></Button>
+                                                                </AlertDialogTrigger>
+                                                                <AlertDialogContent>
+                                                                    <AlertDialogHeader>
+                                                                        <AlertDialogTitle>{t('areYouSure')}</AlertDialogTitle>
+                                                                        <AlertDialogDescription>{t('deleteUserWarning')}</AlertDialogDescription>
+                                                                    </AlertDialogHeader>
+                                                                    <AlertDialogFooter>
+                                                                        <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+                                                                        <AlertDialogAction onClick={() => deleteUser(user.id)}>{t('delete')}</AlertDialogAction>
+                                                                    </AlertDialogFooter>
+                                                                </AlertDialogContent>
+                                                            </AlertDialog>
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </div>
+                </TabsContent>
+                
+                <TabsContent value="emails">
                     <EmailTemplatesManager />
+                </TabsContent>
 
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <div>
-                                <CardTitle>{t('roomManagement')}</CardTitle>
-                                <CardDescription>{t('roomManagementDescription')}</CardDescription>
-                            </div>
-                            <Button asChild size="sm">
-                                <Link href="/dashboard/rooms/add"><PlusCircle /> {t('addRoom')}</Link>
-                            </Button>
-                        </CardHeader>
-                        <CardContent>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>{t('roomName')}</TableHead>
-                                        <TableHead>{t('address')}</TableHead>
-                                        <TableHead className="text-right">{t('actions')}</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {locations.map(location => (
-                                        <TableRow key={location.id}>
-                                            <TableCell className="font-medium">{tloc(location.name as any)}</TableCell>
-                                            <TableCell>{location.address}</TableCell>
-                                            <TableCell className="text-right">
-                                                <div className="flex items-center justify-end gap-2">
-                                                    <Button variant="outline" size="icon" asChild>
-                                                        <Link href={`/dashboard/rooms/${location.id}/edit`}><Pencil className="h-4 w-4" /></Link>
-                                                    </Button>
-                                                    <AlertDialog>
-                                                        <AlertDialogTrigger asChild>
-                                                            <Button variant="destructive" size="icon"><Trash2 className="h-4 w-4" /></Button>
-                                                        </AlertDialogTrigger>
-                                                        <AlertDialogContent>
-                                                            <AlertDialogHeader>
-                                                                <AlertDialogTitle>{t('areYouSure')}</AlertDialogTitle>
-                                                                <AlertDialogDescription>{t('deleteRoomWarning')}</AlertDialogDescription>
-                                                            </AlertDialogHeader>
-                                                            <AlertDialogFooter>
-                                                                <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-                                                                <AlertDialogAction onClick={() => deleteLocation(location.id)}>{t('delete')}</AlertDialogAction>
-                                                            </AlertDialogFooter>
-                                                        </AlertDialogContent>
-                                                    </AlertDialog>
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <div>
-                                <CardTitle>{t('userManagement')}</CardTitle>
-                                <CardDescription>{t('userManagementDescription')}</CardDescription>
-                            </div>
-                            <Button asChild size="sm">
-                                <Link href="/dashboard/users/add"><PlusCircle /> {t('addUser')}</Link>
-                            </Button>
-                        </CardHeader>
-                        <CardContent>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>{t('name')}</TableHead>
-                                        <TableHead>{t('email')}</TableHead>
-                                        <TableHead>{t('role')}</TableHead>
-                                        <TableHead>{t('joined')}</TableHead>
-                                        <TableHead className="text-right">{t('actions')}</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {users.map(user => (
-                                        <TableRow key={user.id} className={cn(user.email === currentUserEmail && "bg-muted/50")}>
-                                            <TableCell className="font-medium flex items-center gap-2">
-                                                {user.name || 'N/A'}
-                                                {user.email === currentUserEmail && <UserIcon className="h-4 w-4 text-primary" />}
-                                            </TableCell>
-                                            <TableCell>{user.email}</TableCell>
-                                            <TableCell><Badge variant={user.role === 'Admin' ? 'default' : 'secondary'}>{user.role}</Badge></TableCell>
-                                            <TableCell>{format(new Date(user.joined_at), 'yyyy-MM-dd')}</TableCell>
-                                            <TableCell className="text-right">
-                                               <div className="flex items-center justify-end gap-2">
-                                                    <Button variant="outline" size="icon" asChild>
-                                                        <Link href={`/dashboard/users/${user.id}/edit`}><Pencil className="h-4 w-4" /></Link>
-                                                    </Button>
-                                                    <AlertDialog>
-                                                        <AlertDialogTrigger asChild>
-                                                             <Button variant="destructive" size="icon" disabled={user.email === currentUserEmail}><Trash2 className="h-4 w-4" /></Button>
-                                                        </AlertDialogTrigger>
-                                                        <AlertDialogContent>
-                                                            <AlertDialogHeader>
-                                                                <AlertDialogTitle>{t('areYouSure')}</AlertDialogTitle>
-                                                                <AlertDialogDescription>{t('deleteUserWarning')}</AlertDialogDescription>
-                                                            </AlertDialogHeader>
-                                                            <AlertDialogFooter>
-                                                                <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-                                                                <AlertDialogAction onClick={() => deleteUser(user.id)}>{t('delete')}</AlertDialogAction>
-                                                            </AlertDialogFooter>
-                                                        </AlertDialogContent>
-                                                    </AlertDialog>
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </CardContent>
-                    </Card>
-                </div>
-            </div>
+            </Tabs>
 
             <Dialog open={!!selectedBooking} onOpenChange={(isOpen) => !isOpen && setSelectedBooking(null)}>
                 <DialogContent>

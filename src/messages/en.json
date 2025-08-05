@@ -1,7 +1,7 @@
 
 {
   "Header": {
-    "title": "Elgo Space",
+    "title": "Heavenkeys Booking",
     "login": "Login",
     "myAccount": "My Account",
     "profile": "Profile",
@@ -129,16 +129,23 @@
     "status": "Status",
     "department": "Department",
     "occasion": "Occasion",
-    "emailNotifications": "Email & Notifications",
+    "mainDashboard": "Dashboard",
+    "emailNotifications": "Email Templates",
     "emailNotificationsDescription": "Customize automated email messages sent to users.",
     "templateBookingPending": "Booking Pending",
+    "templateBookingPendingDesc": "Sent to the user when they first request a booking.",
     "templateBookingApproved": "Booking Approved",
+    "templateBookingApprovedDesc": "Sent to the user after an admin approves their request.",
+    "templateBookingRejected": "Booking Rejected",
+    "templateBookingRejectedDesc": "Sent to the user after an admin rejects their request.",
     "templateBookingRescheduled": "Booking Rescheduled",
+    "templateBookingRescheduledDesc": "Sent when a user changes their booking time.",
     "templateBookingCancellation": "Booking Cancellation",
+    "templateBookingCancellationDesc": "Sent when a user cancels their booking.",
     "emailSubject": "Email Subject",
     "emailBody": "Email Body",
     "templateVariables": "Available variables",
-    "saveTemplate": "Save Template",
+    "saveAllTemplates": "Save All Templates",
     "saving": "Saving..."
   },
   "AddRoomPage": {
