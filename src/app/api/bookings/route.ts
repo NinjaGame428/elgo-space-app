@@ -2,7 +2,9 @@
 import { createClient } from "@/lib/supabase/server-client";
 import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from 'uuid';
-import { getEmailTemplate } from "@/lib/supabase/server";
+import { getEmailTemplate, getLocations } from "@/lib/supabase/server";
+import { sendEmail } from "@/lib/email";
+
 
 export const dynamic = 'force-dynamic';
 
@@ -83,25 +85,27 @@ export async function POST(req: NextRequest) {
 
         if (error) throw error;
         
-        // "Send" pending email notification
+        // Send pending email notification via Brevo
         try {
+            const allLocations = await getLocations();
+            const location = allLocations.find(l => l.id === locationId);
             const template = await getEmailTemplate('booking_pending');
-            // In a real app, you would use a service like SendGrid, Resend, etc.
-            // and a real template engine like Handlebars.
-            console.log("--- Sending Email ---");
-            console.log("To:", userEmail);
-            console.log("Subject:", template.subject);
-            // Basic placeholder replacement
-            const body = template.body
-                .replace('{{name}}', userEmail) // No user name available here easily
-                .replace('{{locationName}}', `Location ID: ${locationId}`)
-                .replace('{{date}}', new Date(startTime).toLocaleDateString())
-                .replace('{{startTime}}', new Date(startTime).toLocaleTimeString())
-                .replace('{{endTime}}', new Date(endTime).toLocaleTimeString());
-            console.log("Body:", body);
-            console.log("--- Email Sent ---");
+
+            await sendEmail({
+                to: userEmail,
+                subject: template.subject,
+                body: template.body,
+                params: {
+                    name: userEmail.split('@')[0], // Simple name extraction
+                    locationName: location?.name || `Location ID: ${locationId}`,
+                    date: new Date(startTime).toLocaleDateString(),
+                    startTime: new Date(startTime).toLocaleTimeString(),
+                    endTime: new Date(endTime).toLocaleTimeString(),
+                }
+            });
+
         } catch(emailError) {
-            console.error("Failed to 'send' booking pending email:", emailError);
+            console.error("Failed to send booking pending email:", emailError);
             // Do not fail the request if email fails
         }
 

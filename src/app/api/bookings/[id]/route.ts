@@ -1,7 +1,8 @@
 
 import { createClient } from "@/lib/supabase/server-client";
-import { getEmailTemplate } from "@/lib/supabase/server";
+import { getEmailTemplate, getLocations } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import { sendEmail } from "@/lib/email";
 
 export const dynamic = 'force-dynamic';
 
@@ -27,23 +28,30 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
         if (error) throw error;
         
-        // If status was changed to 'approved' or 'rejected', send email
-        if (body.status === 'approved') {
+        // If status was changed, send the appropriate email
+        if (body.status) {
              try {
-                const template = await getEmailTemplate('booking_approved');
-                console.log("--- Sending Email ---");
-                console.log("To:", data.user_email);
-                console.log("Subject:", template.subject);
-                 const body = template.body
-                    .replace('{{name}}', data.user_email)
-                    .replace('{{locationName}}', `Location ID: ${data.location_id}`)
-                    .replace('{{date}}', new Date(data.start_time).toLocaleDateString())
-                    .replace('{{startTime}}', new Date(data.start_time).toLocaleTimeString())
-                    .replace('{{endTime}}', new Date(data.end_time).toLocaleTimeString());
-                console.log("Body:", body);
-                console.log("--- Email Sent ---");
+                const allLocations = await getLocations();
+                const location = allLocations.find(l => l.id === data.location_id);
+                const templateName = body.status === 'approved' ? 'booking_approved' : 'booking_rejected';
+                
+                const template = await getEmailTemplate(templateName);
+                
+                await sendEmail({
+                    to: data.user_email,
+                    subject: template.subject,
+                    body: template.body,
+                    params: {
+                        name: data.user_email.split('@')[0], // Simple name extraction
+                        locationName: location?.name || `Location ID: ${data.location_id}`,
+                        date: new Date(data.start_time).toLocaleDateString(),
+                        startTime: new Date(data.start_time).toLocaleTimeString(),
+                        endTime: new Date(data.end_time).toLocaleTimeString(),
+                    }
+                });
+
             } catch(emailError) {
-                console.error("Failed to 'send' booking approved email:", emailError);
+                console.error(`Failed to send booking ${body.status} email:`, emailError);
             }
         }
         
@@ -61,12 +69,35 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
      try {
         const supabase = createClient();
         
+        const { data: booking, error: fetchError } = await supabase.from('bookings').select().eq('id', id).single();
+        if(fetchError || !booking) throw fetchError || new Error('Booking not found');
+
         const { error } = await supabase
             .from('bookings')
             .delete()
             .eq('id', id);
 
         if (error) throw error;
+
+        // Send cancellation email
+        try {
+            const allLocations = await getLocations();
+            const location = allLocations.find(l => l.id === booking.location_id);
+            const template = await getEmailTemplate('booking_cancellation');
+            
+            await sendEmail({
+                to: booking.user_email,
+                subject: template.subject,
+                body: template.body,
+                params: {
+                    name: booking.user_email.split('@')[0],
+                    locationName: location?.name || `Location ID: ${booking.location_id}`,
+                    date: new Date(booking.start_time).toLocaleDateString(),
+                }
+            });
+        } catch(emailError) {
+            console.error("Failed to send cancellation email:", emailError);
+        }
         
         return NextResponse.json({ message: `Booking ${id} deleted successfully.` }, { status: 200 });
 
