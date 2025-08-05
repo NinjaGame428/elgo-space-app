@@ -30,35 +30,20 @@ export function Header() {
 
   useEffect(() => {
     setIsMounted(true);
-    const checkAuthStatus = () => {
-      if (typeof window !== 'undefined') {
-          const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
-          const email = localStorage.getItem('userEmail');
-          setIsAuthenticated(loggedIn);
-          setUserEmail(email);
-      }
-    };
-    
-    // Initial check
-    checkAuthStatus();
-    
-    // Listen for storage changes to sync across tabs/windows
-    window.addEventListener('storage', checkAuthStatus);
-    
-    // Cleanup listener on component unmount
-    return () => {
-        window.removeEventListener('storage', checkAuthStatus);
-    };
+    // On initial mount, check the auth status from localStorage
+    const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    const email = localStorage.getItem('userEmail');
+    setIsAuthenticated(loggedIn);
+    setUserEmail(email);
   }, []);
 
   const handleLogout = () => {
     if (typeof window !== 'undefined') {
         localStorage.removeItem('isLoggedIn');
         localStorage.removeItem('userEmail');
-        // Manually trigger storage event for immediate UI update
-        window.dispatchEvent(new Event('storage'));
+        // Hard redirect to homepage to ensure all state is cleared
+        window.location.href = '/';
     }
-    router.push('/');
   };
 
   const handleLocaleChange = (isFrench: boolean) => {

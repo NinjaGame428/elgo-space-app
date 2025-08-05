@@ -2,19 +2,17 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from '@/navigation';
-import { useTranslations } from 'next-intl';
 import { Building2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function LoginPage() {
   const t = useTranslations('LoginPage');
-  const router = useRouter();
   const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -34,7 +32,7 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
-        // Manually update localStorage to trigger 'storage' event listener in Header
+        // Set auth info in localStorage
         window.localStorage.setItem('isLoggedIn', 'true');
         window.localStorage.setItem('userEmail', email);
         
@@ -45,7 +43,8 @@ export default function LoginPage() {
             description: isAdmin ? t('welcomeBackAdmin') : t('welcomeBackUser'),
         });
 
-        router.push(isAdmin ? '/dashboard' : '/my-bookings');
+        // Hard redirect to ensure header state is re-evaluated
+        window.location.href = isAdmin ? '/dashboard' : '/my-bookings';
         
       } else {
         toast({
@@ -53,6 +52,7 @@ export default function LoginPage() {
           title: t('loginFailedTitle'),
           description: data.message || t('loginFailedDescription'),
         });
+        setIsLoading(false);
       }
     } catch (error) {
        toast({
@@ -60,13 +60,13 @@ export default function LoginPage() {
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
       });
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   return (
     <div className="w-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 min-h-[calc(100vh-5rem)]">
+      <div className="aurora-bg"></div>
         <Card className="mx-auto w-full max-w-md space-y-6 glass-card">
           <CardHeader className="text-center">
              <div className="flex items-center justify-center space-x-2 mb-4">
