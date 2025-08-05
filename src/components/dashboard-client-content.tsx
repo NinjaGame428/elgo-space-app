@@ -78,7 +78,11 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
     const deleteLocation = async (locationId: string) => {
         try {
             const response = await fetch(`/api/locations/${locationId}`, { method: 'DELETE' });
-            if (!response.ok) throw new Error(t('roomDeleteFailed'));
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || t('roomDeleteFailed'));
+            }
 
             setLocations(locations.filter(l => l.id !== locationId));
             toast({ title: t('roomDeleted') });
@@ -90,7 +94,11 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
     const deleteUser = async (userId: string) => {
         try {
             const response = await fetch(`/api/users/${userId}`, { method: 'DELETE' });
-            if (!response.ok) throw new Error(t('userDeleteFailed'));
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || t('userDeleteFailed'));
+            }
             
             setUsers(users.filter(u => u.id !== userId));
             toast({ title: t('userDeleted') });
@@ -267,12 +275,12 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                                             <TableCell>{format(new Date(user.joined_at), 'yyyy-MM-dd')}</TableCell>
                                             <TableCell className="text-right">
                                                <div className="flex items-center justify-end gap-2">
-                                                    <Button variant="outline" size="icon" asChild disabled={user.role === 'Admin'}>
+                                                    <Button variant="outline" size="icon" asChild>
                                                         <Link href={`/dashboard/users/${user.id}/edit`}><Pencil className="h-4 w-4" /></Link>
                                                     </Button>
                                                     <AlertDialog>
                                                         <AlertDialogTrigger asChild>
-                                                             <Button variant="destructive" size="icon" disabled={user.role === 'Admin'}><Trash2 className="h-4 w-4" /></Button>
+                                                             <Button variant="destructive" size="icon"><Trash2 className="h-4 w-4" /></Button>
                                                         </AlertDialogTrigger>
                                                         <AlertDialogContent>
                                                             <AlertDialogHeader>
@@ -341,5 +349,3 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
         </div>
     );
 }
-
-    

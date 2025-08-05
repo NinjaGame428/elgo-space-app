@@ -9,53 +9,142 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Link } from '@/navigation';
 import { useTranslations } from 'next-intl';
+import type { User } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ProfilePage() {
   const t = useTranslations('ProfilePage');
   const router = useRouter();
   const { toast } = useToast();
-  const [userEmail, setUserEmail] = useState('');
-  const [userName, setUserName] = useState('');
-  const [isClient, setIsClient] = useState(false);
+  
+  const [user, setUser] = useState<User | null>(null);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
   
   useEffect(() => {
-    setIsClient(true);
-    const isLoggedIn = typeof window !== 'undefined' ? localStorage.getItem('isLoggedIn') === 'true' : false;
-    if (!isLoggedIn) {
+    const userEmail = localStorage.getItem('userEmail');
+    if (!userEmail) {
       router.push('/login');
       return;
     }
-    const email = localStorage.getItem('userEmail');
-    if (email) {
-      setUserEmail(email);
-      setUserName(email.split('@')[0]); // Mock user name
-    }
-  }, [router]);
 
-  const handleUpdateInfo = (e: React.FormEvent) => {
+    async function fetchUser() {
+        try {
+            // Find user by email - a more robust approach would be to have a dedicated endpoint
+            const res = await fetch(`/api/users?email=${userEmail}`);
+            if(!res.ok) throw new Error('Failed to fetch user');
+            const users: User[] = await res.json();
+            if(users.length > 0) {
+                const currentUser = users[0];
+                setUser(currentUser);
+                setName(currentUser.name || '');
+                setEmail(currentUser.email || '');
+            } else {
+                 throw new Error('User not found');
+            }
+        } catch (error) {
+            console.error(error);
+            toast({ variant: 'destructive', title: "Error", description: "Could not load your profile data." });
+        } finally {
+            setIsLoading(false);
+        }
+    }
+    fetchUser();
+  }, [router, toast]);
+
+  const handleUpdateInfo = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({ title: t('profileUpdatedTitle'), description: t('profileUpdatedDescription') });
+    if (!user) return;
+    setIsUpdating(true);
+
+    try {
+        const response = await fetch(`/api/users/${user.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to update profile');
+        }
+        toast({ title: t('profileUpdatedTitle'), description: t('profileUpdatedDescription') });
+
+        if (email !== user.email) {
+            localStorage.setItem('userEmail', email);
+        }
+
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: "Update Failed", description: error.message });
+    } finally {
+        setIsUpdating(false);
+    }
   };
   
   const handleUpdatePassword = (e: React.FormEvent) => {
     e.preventDefault();
+    // In a real app, this would call an API endpoint to securely update the password.
+    // This requires handling current password verification on the server.
+    // For now, we just show a success message as a placeholder.
     toast({ title: t('passwordChangedTitle'), description: t('passwordChangedDescription') });
+    (e.target as HTMLFormElement).reset();
   };
   
-  const handleDeleteAccount = () => {
-     toast({
-        title: t('accountDeletedTitle'),
-        description: t('accountDeletedDescription'),
-        variant: "destructive"
-    });
-    localStorage.clear();
-    router.push('/');
+  const handleDeleteAccount = async () => {
+    if(!user) return;
+    try {
+        const response = await fetch(`/api/users/${user.id}`, {
+            method: 'DELETE',
+        });
+        if (!response.ok) throw new Error('Failed to delete account.');
+
+        toast({
+            title: t('accountDeletedTitle'),
+            description: t('accountDeletedDescription'),
+            variant: "destructive"
+        });
+        localStorage.clear();
+        router.push('/');
+
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: "Error", description: error.message });
+    }
   };
 
-  if (!isClient) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  if (isLoading) {
+    return (
+        <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+            <header className="mb-8">
+                <Skeleton className="h-10 w-48" />
+                <Skeleton className="h-6 w-72 mt-2" />
+            </header>
+            <div className="grid md:grid-cols-3 gap-8">
+                <div className="md:col-span-2 space-y-8">
+                    <Card>
+                        <CardHeader>
+                            <Skeleton className="h-7 w-40" />
+                            <Skeleton className="h-5 w-64 mt-2" />
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <Skeleton className="h-10 w-full" />
+                            <Skeleton className="h-10 w-full" />
+                        </CardContent>
+                        <CardFooter className="border-t pt-4">
+                           <Skeleton className="h-11 w-28" />
+                        </CardFooter>
+                    </Card>
+                </div>
+            </div>
+        </div>
+    )
+  }
+
+  if(!user) {
+    return <div className="flex items-center justify-center min-h-screen">User not found.</div>;
   }
 
   return (
@@ -76,15 +165,15 @@ export default function ProfilePage() {
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="name">{t('nameLabel')}</Label>
-                            <Input id="name" value={userName} onChange={(e) => setUserName(e.target.value)} />
+                            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} disabled={isUpdating} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="email">{t('emailLabel')}</Label>
-                            <Input id="email" type="email" value={userEmail} onChange={(e) => setUserEmail(e.target.value)} />
+                            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} disabled={isUpdating}/>
                         </div>
                     </CardContent>
                     <CardFooter className="border-t bg-muted/50 px-6 py-4">
-                        <Button type="submit">{t('saveChanges')}</Button>
+                        <Button type="submit" disabled={isUpdating}>{isUpdating ? "Saving..." : t('saveChanges')}</Button>
                     </CardFooter>
                 </form>
             </Card>
