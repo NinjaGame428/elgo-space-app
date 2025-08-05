@@ -65,9 +65,23 @@ export function ChatWidget() {
 
         // Fetch initial messages
         const fetchMessages = async () => {
-            const res = await fetch(`/api/chat/messages?conversationId=${conversation.id}`);
-            const data = await res.json();
-            setMessages(data);
+            try {
+                const res = await fetch(`/api/chat/messages?conversationId=${conversation.id}`);
+                if (!res.ok) {
+                    setMessages([]); // Set to empty array on error
+                    return;
+                }
+                const data = await res.json();
+                // Ensure data is an array before setting state
+                if (Array.isArray(data)) {
+                    setMessages(data);
+                } else {
+                    setMessages([]);
+                }
+            } catch (error) {
+                console.error("Failed to fetch messages:", error);
+                setMessages([]);
+            }
         };
         fetchMessages();
 
