@@ -17,7 +17,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getAllLocations } from '@/lib/supabase/server';
+import { getLocations } from '@/lib/supabase/server';
 
 interface MyBookingsClientContentProps {
     bookings: Booking[];
@@ -226,7 +226,7 @@ function MyBookingsClientContent({ bookings: initialBookings, locations: initial
 async function MyBookingsDataFetcher() {
     // This is a server component that fetches ALL data needed for the page
     const [locations] = await Promise.all([
-        getAllLocations(),
+        getLocations(),
     ]);
 
     // We pass an empty array for bookings, as they will be fetched on the client
@@ -258,7 +258,7 @@ export default function MyBookingsPage() {
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [locations, setLocations] = useState<Location[]>([]);
     const router = useRouter();
-    const toast = useToast();
+    const { toast } = useToast();
 
     useEffect(() => {
         setIsClient(true);
@@ -287,7 +287,7 @@ export default function MyBookingsPage() {
                 setLocations(locationsData);
             } catch (error) {
                 console.error("Failed to fetch data", error);
-                toast.toast({ variant: 'destructive', title: "Error", description: "Could not load your data." });
+                toast({ variant: 'destructive', title: "Error", description: "Could not load your data." });
             } finally {
                 setIsLoading(false);
             }
