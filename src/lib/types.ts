@@ -2,6 +2,7 @@
 import type { ElementType } from 'react';
 
 export interface Amenity {
+  id: number;
   name: string;
   icon?: ElementType; // Icon is optional now
 }
@@ -16,9 +17,9 @@ export interface Location {
   id: string;
   name:string;
   address: string;
-  imageUrl: string;
-  bookables: BookableItem[];
-  amenities: Omit<Amenity, 'icon'>[];
+  imageUrl: string | null;
+  bookables?: BookableItem[]; // Make optional as it's not in the DB
+  amenities: Amenity[];
 }
 
 export interface Booking {
@@ -32,8 +33,8 @@ export interface Booking {
 
 export interface User {
   id: string;
-  name: string;
-  email: string;
+  name: string | null;
+  email: string | null;
   role: 'Admin' | 'User';
-  joined: string;
+  joined_at: string;
 }

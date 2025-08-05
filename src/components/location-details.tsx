@@ -14,7 +14,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { format, addDays, parse, getDay, eachDayOfInterval, formatISO } from 'date-fns';
 import { fr, enUS } from 'date-fns/locale';
-import { bookings as initialBookings } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
 import type { DateRange } from 'react-day-picker';
@@ -22,6 +21,7 @@ import { useRouter } from 'next/navigation';
 import { Clock, Coffee, Printer, Phone, Wifi, Car, UtensilsCrossed } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import type { Booking } from '@/lib/types';
+import { Skeleton } from './ui/skeleton';
 
 const amenityIcons = {
   "24/7 Access": Clock,
@@ -56,47 +56,42 @@ export function LocationDetails({ location }: LocationDetailsProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const dateLocale = locale === 'fr' ? fr : enUS;
 
   useEffect(() => {
-    const storedBookings = localStorage.getItem('bookings');
-    setBookings(storedBookings ? JSON.parse(storedBookings) : initialBookings);
-    
     if (typeof window !== 'undefined') {
         const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
         setIsAuthenticated(loggedIn);
         setUserEmail(localStorage.getItem('userEmail'));
     }
-
-    const handleStorageChange = () => {
-        const storedBookings = localStorage.getItem('bookings');
-        setBookings(storedBookings ? JSON.parse(storedBookings) : initialBookings);
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => {
-        window.removeEventListener('storage', handleStorageChange);
-    };
   }, []);
-
-  const approvedBookingsForLocation = useMemo(() => {
-    if (!location) return [];
-    return bookings
-      .filter(b => b.status === 'approved' && b.locationId === location.id)
-      .flatMap(b => {
-        const start = new Date(b.startTime);
-        const end = new Date(b.endTime);
-        return eachDayOfInterval({start, end});
-      });
-  }, [location, bookings]);
 
   useEffect(() => {
     // Reset selections when location changes
     setDate(undefined);
     setStartTime(null);
     setEndTime(null);
-  }, [location]);
+
+    async function fetchBookings() {
+        if (!location) return;
+        setIsLoading(true);
+        try {
+            const response = await fetch(`/api/bookings?locationId=${location.id}`);
+            if (!response.ok) throw new Error("Failed to fetch bookings");
+            const data = await response.json();
+            setBookings(data);
+        } catch (error) {
+            console.error(error);
+            toast({ variant: "destructive", title: "Error", description: "Could not load booking data for this location." });
+        } finally {
+            setIsLoading(false);
+        }
+    }
+    fetchBookings();
+
+  }, [location, toast]);
 
   useEffect(() => {
     setStartTime(null);
@@ -107,7 +102,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
     setEndTime(null);
   }, [startTime]);
 
-  const handleBooking = () => {
+  const handleBooking = async () => {
     if (!isAuthenticated || !userEmail) {
         router.push('/login');
         return;
@@ -116,34 +111,50 @@ export function LocationDetails({ location }: LocationDetailsProps) {
     if (location && date?.from && startTime && endTime) {
       const bookingEndDate = date.to || date.from;
       
-      const newBooking: Booking = {
-        id: `booking-${Date.now()}`,
+      const newBookingData = {
         locationId: location.id,
         userEmail: userEmail,
         startTime: formatISO(parse(startTime, 'HH:mm', date.from)),
         endTime: formatISO(parse(endTime, 'HH:mm', bookingEndDate)),
-        status: 'pending',
       };
-      
-      const updatedBookings = [...bookings, newBooking];
-      localStorage.setItem('bookings', JSON.stringify(updatedBookings));
-      setBookings(updatedBookings); // Update local state to trigger re-render
 
-      toast({
-        title: t('bookingConfirmedTitle'),
-        description: t('bookingConfirmedDescription', {
-          locationName: tloc(location.name as any),
-          startDate: format(date.from, "PPP", { locale: dateLocale }),
-          endDate: format(bookingEndDate, "PPP", { locale: dateLocale }),
-          startTime: startTime,
-          endTime: endTime
-        }),
-      });
-      // Reset form
-      setDate(undefined);
-      setStartTime(null);
-      setEndTime(null);
+      try {
+        const response = await fetch('/api/bookings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newBookingData),
+        });
 
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to create booking');
+        }
+
+        const newBooking = await response.json();
+        setBookings(prev => [...prev, newBooking]); // Optimistically update UI
+
+        toast({
+            title: t('bookingConfirmedTitle'),
+            description: t('bookingConfirmedDescription', {
+            locationName: tloc(location.name as any),
+            startDate: format(date.from, "PPP", { locale: dateLocale }),
+            endDate: format(bookingEndDate, "PPP", { locale: dateLocale }),
+            startTime: startTime,
+            endTime: endTime
+            }),
+        });
+        // Reset form
+        setDate(undefined);
+        setStartTime(null);
+        setEndTime(null);
+
+      } catch (error: any) {
+         toast({
+            variant: "destructive",
+            title: t('bookingFailedTitle'),
+            description: error.message,
+        });
+      }
     } else {
         toast({
             variant: "destructive",
@@ -152,6 +163,22 @@ export function LocationDetails({ location }: LocationDetailsProps) {
         });
     }
   };
+
+   const approvedBookingsForLocation = useMemo(() => {
+    if (!location) return [];
+    return bookings
+      .filter(b => b.status === 'approved')
+      .flatMap(b => {
+        const start = new Date(b.startTime);
+        const end = new Date(b.endTime);
+        // If start and end are on the same day, just return that day.
+        // Otherwise, create an interval.
+        if (format(start, 'yyyy-MM-dd') === format(end, 'yyyy-MM-dd')) {
+            return [start];
+        }
+        return eachDayOfInterval({start, end});
+      });
+  }, [bookings]);
 
   const selectedDates = useMemo(() => {
     if (!date?.from) return [];
@@ -185,7 +212,6 @@ export function LocationDetails({ location }: LocationDetailsProps) {
     if (!location) return [];
     const formattedDate = format(day, "yyyy-MM-dd");
     return bookings.filter(b => 
-        b.locationId === location.id &&
         format(new Date(b.startTime), "yyyy-MM-dd") === formattedDate &&
         b.status === 'approved'
     );
@@ -264,7 +290,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
       <div className={cn("bg-card rounded-lg")}>
         <div className="relative w-full h-60 md:h-80">
           <Image
-            src={location.imageUrl}
+            src={location.imageUrl ?? 'https://placehold.co/800x600.png'}
             alt={tloc(location.name as any)}
             fill
             className="object-cover rounded-t-lg"
@@ -326,7 +352,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                       <div className="grid grid-cols-2 gap-4">
                           <div className="flex items-center gap-2">
                               <Label className="text-xs whitespace-nowrap">{t('from')}</Label>
-                              <Select value={startTime || ''} onValueChange={setStartTime} disabled={!date?.from}>
+                              <Select value={startTime || ''} onValueChange={setStartTime} disabled={!date?.from || isLoading}>
                                   <SelectTrigger>
                                       <SelectValue placeholder={t('startTime')} />
                                   </SelectTrigger>
@@ -341,7 +367,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                           </div>
                            <div className="flex items-center gap-2">
                               <Label className="text-xs whitespace-nowrap">{t('to')}</Label>
-                               <Select value={endTime || ''} onValueChange={setEndTime} disabled={!startTime}>
+                               <Select value={endTime || ''} onValueChange={setEndTime} disabled={!startTime || isLoading}>
                                   <SelectTrigger>
                                       <SelectValue placeholder={t('endTime')} />
                                   </SelectTrigger>
@@ -360,7 +386,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                       )}
                   </div>
                   <div className="md:col-span-2">
-                    <Button onClick={handleBooking} className="w-full" disabled={isRangeInvalid || !date?.from || !startTime || !endTime}>
+                    <Button onClick={handleBooking} className="w-full" disabled={isLoading || isRangeInvalid || !date?.from || !startTime || !endTime}>
                         {t('bookNow')}
                     </Button>
                   </div>
@@ -373,15 +399,17 @@ export function LocationDetails({ location }: LocationDetailsProps) {
               <h3 className="text-xl font-semibold mb-4">{t('availability')}</h3>
               <p className="text-sm text-muted-foreground mb-4">{t('availabilityDesc')}</p>
               <div className="flex justify-center p-4 rounded-lg bg-muted/50">
-                <Calendar
-                    mode="multiple"
-                    selected={approvedBookingsForLocation}
-                    locale={dateLocale}
-                    className="rounded-md p-0"
-                    classNames={{
-                        day_selected: "bg-orange-500 text-white hover:bg-orange-500/90 focus:bg-orange-500/90",
-                    }}
-                />
+                {isLoading ? <Skeleton className="w-full h-[300px]" /> :
+                    <Calendar
+                        mode="multiple"
+                        selected={approvedBookingsForLocation}
+                        locale={dateLocale}
+                        className="rounded-md p-0"
+                        classNames={{
+                            day_selected: "bg-orange-500 text-white hover:bg-orange-500/90 focus:bg-orange-500/90",
+                        }}
+                    />
+                }
               </div>
             </div>
             

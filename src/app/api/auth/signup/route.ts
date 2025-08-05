@@ -1,6 +1,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
 
     const supabase = createClient();
     
-    // Sign up the user
+    // Sign up the user in Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
@@ -31,22 +31,8 @@ export async function POST(req: NextRequest) {
          return NextResponse.json({ message: 'Signup successful, but user data not returned.' }, { status: 500 });
     }
 
-    // In a real application, you might also want to insert a corresponding row into a `profiles` table
-    // with the user's role and other details.
-    // For example:
-    // const { error: profileError } = await supabase.from('profiles').insert({
-    //   id: authData.user.id,
-    //   email: email,
-    //   name: name,
-    //   role: 'User' // Default role
-    // });
-    // if (profileError) {
-    //    console.error('Error creating user profile:', profileError);
-    //    // You might want to handle this case, e.g., by deleting the auth user if the profile creation fails.
-    // }
+    // The trigger `on_auth_user_created` in the database will automatically create a profile in the `users` table.
 
-    // Supabase handles sending a confirmation email automatically if you enable it in your project settings.
-    
     return NextResponse.json({ message: 'Signup successful! Please check your email to confirm your account.' }, { status: 201 });
 
   } catch (error) {
