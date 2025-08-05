@@ -11,8 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useTranslations } from 'next-intl';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Search } from 'lucide-react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 
 export default function HomePage() {
@@ -24,7 +24,6 @@ export default function HomePage() {
   const [allLocations, setAllLocations] = useState<Location[]>([]);
   const [filteredLocations, setFilteredLocations] = useState<Location[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('All Types');
   const [loading, setLoading] = useState(true);
@@ -47,6 +46,8 @@ export default function HomePage() {
             if (initialLocation) {
               handleLocationSelect(initialLocation);
             }
+        } else if (!isMobile && locationsData.length > 0) {
+            setSelectedLocation(locationsData[0]);
         }
 
       } catch (error) {
@@ -57,7 +58,7 @@ export default function HomePage() {
     }
     fetchLocations();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+  }, [searchParams, isMobile]);
 
   useEffect(() => {
     const filtered = allLocations.filter(location => {
@@ -72,9 +73,6 @@ export default function HomePage() {
 
   const handleLocationSelect = (location: Location) => {
     setSelectedLocation(location);
-    if (isMobile) {
-      setIsSheetOpen(true);
-    }
   };
   
   const LocationList = () => (
@@ -101,57 +99,56 @@ export default function HomePage() {
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-2 p-4 overflow-y-auto flex-1">
-        {loading ? (
-          <div className="space-y-4 pt-4 overflow-y-auto">
-            <Skeleton className="h-28 w-full rounded-lg" />
-            <Skeleton className="h-28 w-full rounded-lg" />
-            <Skeleton className="h-28 w-full rounded-lg" />
-            <Skeleton className="h-28 w-full rounded-lg" />
-          </div>
-        ) : filteredLocations.length > 0 ? (
-          filteredLocations.map(location => (
-            <LocationCard
-              key={location.id}
-              location={location}
-              isSelected={selectedLocation?.id === location.id}
-              onClick={() => handleLocationSelect(location)}
-            />
-          ))
-        ) : (
-          <div className="flex flex-col items-center justify-center text-center p-8 h-full">
-            <p className="text-lg font-medium">{t('noLocationsFound')}</p>
-            <p className="text-sm text-muted-foreground">{t('noLocationsFoundHint')}</p>
-          </div>
-        )}
-      </div>
+      <ScrollArea className="flex-1">
+        <div className="space-y-2 p-4">
+            {loading ? (
+            <div className="space-y-4 pt-4">
+                <Skeleton className="h-28 w-full rounded-lg" />
+                <Skeleton className="h-28 w-full rounded-lg" />
+                <Skeleton className="h-28 w-full rounded-lg" />
+                <Skeleton className="h-28 w-full rounded-lg" />
+            </div>
+            ) : filteredLocations.length > 0 ? (
+            filteredLocations.map(location => (
+                <LocationCard
+                key={location.id}
+                location={location}
+                isSelected={selectedLocation?.id === location.id}
+                onClick={() => handleLocationSelect(location)}
+                />
+            ))
+            ) : (
+            <div className="flex flex-col items-center justify-center text-center p-8 h-full">
+                <p className="text-lg font-medium">{t('noLocationsFound')}</p>
+                <p className="text-sm text-muted-foreground">{t('noLocationsFoundHint')}</p>
+            </div>
+            )}
+        </div>
+      </ScrollArea>
     </div>
   );
 
   if (isMobile) {
     return (
-      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <main className="h-[calc(100vh-5rem)]">
-          <LocationList />
+        <main className="mobile-split-screen h-[calc(100vh-5rem)]">
+            <div className="mobile-split-screen_top">
+                <LocationList />
+            </div>
+            <div className="mobile-split-screen_bottom">
+                <ScrollArea className="h-full">
+                     <LocationDetails location={selectedLocation} />
+                </ScrollArea>
+            </div>
         </main>
-        <SheetContent side="bottom" className="h-[95vh] flex flex-col p-0">
-           <SheetHeader className="p-4 border-b">
-              <SheetTitle>{selectedLocation ? tloc(selectedLocation.name as any) : t('selectLocation')}</SheetTitle>
-            </SheetHeader>
-          <div className="overflow-y-auto flex-1">
-            <LocationDetails location={selectedLocation} />
-          </div>
-        </SheetContent>
-      </Sheet>
     )
   }
 
   return (
     <main className="grid md:grid-cols-[380px_1fr] h-[calc(100vh-5rem)]">
         <LocationList />
-        <div className="overflow-y-auto">
+        <ScrollArea className="h-full">
             <LocationDetails location={selectedLocation} />
-        </div>
+        </ScrollArea>
     </main>
   );
 }

@@ -267,7 +267,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
   }
 
   return (
-    <div className="animate-fade-in-up">
+    <div className="h-full">
         <div className="relative w-full h-64">
           <Image
             src={location.imageUrl ?? 'https://placehold.co/800x600.png'}
@@ -396,7 +396,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
             <div>
               <h3 className="text-xl font-semibold mb-4">{t('availability')}</h3>
               <p className="text-sm text-muted-foreground mb-4">{t('availabilityDesc')}</p>
-              <div className="rounded-lg bg-card">
+              <div className="rounded-lg border">
                 {isLoading ? <Skeleton className="w-full h-[300px]" /> :
                     <Calendar
                         mode="multiple"

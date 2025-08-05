@@ -75,3 +75,20 @@ body {
     -moz-osx-font-smoothing: grayscale;
   }
 }
+
+@layer components {
+    .mobile-split-screen {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    .mobile-split-screen_top {
+        flex: 0 0 40%;
+        overflow-y: auto;
+        border-bottom: 1px solid hsl(var(--border));
+    }
+    .mobile-split-screen_bottom {
+        flex: 1;
+        overflow-y: auto;
+    }
+}
