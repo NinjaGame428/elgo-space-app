@@ -17,7 +17,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getLocations } from '@/lib/supabase/server';
 
 interface MyBookingsClientContentProps {
     bookings: Booking[];
@@ -276,17 +275,6 @@ function MyBookingsClientContent({ bookings: initialBookings, locations: initial
         </div>
     );
 }
-
-
-async function MyBookingsDataFetcher() {
-    // This is a server component that fetches ALL data needed for the page
-    const locations = await getLocations();
-
-    // We pass an empty array for bookings, as they will be fetched on the client
-    // based on the logged-in user.
-    return <MyBookingsClientContent bookings={[]} locations={locations} />;
-}
-
 
 function MyBookingsSkeleton() {
     return (
