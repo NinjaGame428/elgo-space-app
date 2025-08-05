@@ -11,7 +11,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { format, addDays, parse, eachDayOfInterval, formatISO, isValid, setHours, setMinutes } from 'date-fns';
+import { format, addDays, parse, eachDayOfInterval, formatISO, isValid, setHours, setMinutes, getDay } from 'date-fns';
 import { fr, enUS } from 'date-fns/locale';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
@@ -20,6 +20,7 @@ import { Clock, Coffee, Printer, Phone, Wifi, Car, UtensilsCrossed, Building } f
 import { useLocale, useTranslations } from 'next-intl';
 import type { Booking } from '@/lib/types';
 import { Skeleton } from './ui/skeleton';
+import { Separator } from './ui/separator';
 
 const amenityIcons = {
   "24/7 Access": Clock,
@@ -35,10 +36,11 @@ interface LocationDetailsProps {
   location: Location | null;
 }
 
-const timeSlots = Array.from({ length: 24 }, (_, i) => {
-    const hour = 7 + i;
-    if (hour > 21) return null; // 7am to 9pm
-    return `${String(hour).padStart(2, '0')}:00`;
+const timeSlots = Array.from({ length: 28 }, (_, i) => {
+    const hour = 7 + Math.floor(i / 2);
+    const minute = i % 2 === 0 ? '00' : '30';
+    if(hour > 20) return null
+    return `${String(hour).padStart(2, '0')}:${minute}`;
 }).filter(Boolean) as string[];
 
 export function LocationDetails({ location }: LocationDetailsProps) {
@@ -49,8 +51,9 @@ export function LocationDetails({ location }: LocationDetailsProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [duration, setDuration] = useState<number>(60);
+  
+  const [startTime, setStartTime] = useState<string | null>(null);
+  const [endTime, setEndTime] = useState<string | null>(null);
   
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -69,7 +72,8 @@ export function LocationDetails({ location }: LocationDetailsProps) {
 
   useEffect(() => {
     setSelectedDate(undefined);
-    setSelectedTime(null);
+    setStartTime(null);
+    setEndTime(null);
 
     async function fetchBookings() {
         if (!location) {
@@ -93,23 +97,21 @@ export function LocationDetails({ location }: LocationDetailsProps) {
 
   }, [location, toast]);
 
-
   const handleBooking = async () => {
     if (!isAuthenticated || !userEmail) {
         router.push('/login');
         return;
     }
 
-    if (location && selectedDate && selectedTime) {
-      const [hour, minute] = selectedTime.split(':').map(Number);
-      const startTime = setMinutes(setHours(selectedDate, hour), minute);
-      const endTime = new Date(startTime.getTime() + duration * 60000);
+    if (location && selectedDate && startTime && endTime) {
+      const startDateTime = parse(startTime, 'HH:mm', selectedDate);
+      const endDateTime = parse(endTime, 'HH:mm', selectedDate);
       
       const newBookingData = {
         locationId: location.id,
         userEmail: userEmail,
-        startTime: formatISO(startTime),
-        endTime: formatISO(endTime),
+        startTime: formatISO(startDateTime),
+        endTime: formatISO(endDateTime),
       };
 
       try {
@@ -132,12 +134,13 @@ export function LocationDetails({ location }: LocationDetailsProps) {
             description: t('bookingConfirmedDescription', {
               locationName: tloc(location.name as any),
               date: format(selectedDate, "PPP", { locale: dateLocale }),
-              startTime: format(startTime, 'p', { locale: dateLocale }),
-              endTime: format(endTime, 'p', { locale: dateLocale }),
+              startTime: format(startDateTime, 'p', { locale: dateLocale }),
+              endTime: format(endDateTime, 'p', { locale: dateLocale }),
             }),
         });
         setSelectedDate(undefined);
-        setSelectedTime(null);
+        setStartTime(null);
+        setEndTime(null);
 
       } catch (error: any) {
          toast({
@@ -154,7 +157,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
         });
     }
   };
-
+  
   const approvedBookedDates = useMemo(() => {
     return bookings
       .filter(b => b.status === 'approved')
@@ -166,80 +169,81 @@ export function LocationDetails({ location }: LocationDetailsProps) {
       });
   }, [bookings]);
 
-
   const isTimeBooked = useCallback((time: string, date: Date) => {
-    if (!date) return false;
-    const [hour, minute] = time.split(':').map(Number);
-    const checkStartTime = setMinutes(setHours(date, hour), minute).getTime();
-    const checkEndTime = checkStartTime + duration * 60000;
-
+    const checkTime = parse(time, 'HH:mm', date).getTime();
+    
     return bookings.some(booking => {
         if(booking.status !== 'approved') return false;
         const bookingStart = new Date(booking.startTime).getTime();
         const bookingEnd = new Date(booking.endTime).getTime();
-        // Check for any overlap
-        return (checkStartTime < bookingEnd) && (checkEndTime > bookingStart);
+        return checkTime >= bookingStart && checkTime < bookingEnd;
     });
-  }, [bookings, duration]);
-
-  const availableTimeSlots = useMemo(() => {
-      if (!selectedDate) return [];
-      return timeSlots.filter(time => !isTimeBooked(time, selectedDate));
+  }, [bookings]);
+  
+  const isTimeSlotDisabled = useCallback((time: string) => {
+      if (!selectedDate) return true;
+      return isTimeBooked(time, selectedDate);
   }, [selectedDate, isTimeBooked]);
 
+  const isRangeInvalid = useMemo(() => {
+    if (!startTime || !endTime || !selectedDate) return false;
+    const start = parse(startTime, 'HH:mm', new Date());
+    const end = parse(endTime, 'HH:mm', new Date());
+
+    for (let d = new Date(start); d < end; d.setMinutes(d.getMinutes() + 30)) {
+        const timeStr = format(d, 'HH:mm');
+        if (isTimeBooked(timeStr, selectedDate)) {
+            return true;
+        }
+    }
+    return false;
+  }, [startTime, endTime, selectedDate, isTimeBooked]);
+    
+  const availableEndTimes = useMemo(() => {
+      if (!startTime || !selectedDate) return [];
+      const startIndex = timeSlots.indexOf(startTime);
+      let endIndex = timeSlots.length;
+
+      for (let i = startIndex + 1; i < timeSlots.length; i++) {
+          const currentTimeSlot = timeSlots[i];
+          if (isTimeBooked(currentTimeSlot, selectedDate)) {
+              endIndex = i;
+              break;
+          }
+      }
+      return timeSlots.slice(startIndex + 1, endIndex + 1);
+  }, [startTime, selectedDate, isTimeBooked]);
+
+
   useEffect(() => {
-    setSelectedTime(null);
+    setStartTime(null);
+    setEndTime(null);
   }, [selectedDate]);
 
+  useEffect(() => {
+    setEndTime(null);
+  }, [startTime]);
 
   if (!location) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-8 animate-fade-in">
-        <Building className="w-16 h-16 mb-4 text-muted-foreground" />
+      <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-8 animate-fade-in-up">
+        <Building className="w-16 h-16 mb-4 text-primary" />
         <p className="text-lg font-medium">{t('selectLocation')}</p>
       </div>
     );
   }
 
   return (
-    <div className="p-4 md:p-8 animate-fade-in-up">
+    <div className="p-4 md:p-6 animate-fade-in-up">
         <Card className="w-full max-w-6xl mx-auto overflow-hidden">
             <div className="grid md:grid-cols-2">
-                {/* Left Panel */}
-                <div className="p-8 border-r flex flex-col gap-8">
+                <div className="p-6 md:p-8 flex flex-col gap-8 border-r">
+                    <div>
+                        <h2 className="text-2xl font-bold tracking-tight">{tloc(location.name as any)}</h2>
+                        <p className="text-muted-foreground mt-1">{location.address}</p>
+                    </div>
+                    <Separator />
                      <div>
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="relative h-14 w-14 flex-shrink-0">
-                                <Image
-                                    src={'https://placehold.co/128x128.png'}
-                                    alt={tloc(location.name as any)}
-                                    fill
-                                    className="object-cover rounded-full"
-                                    sizes="56px"
-                                />
-                            </div>
-                            <div>
-                               <p className="font-semibold">{tloc(location.name as any)}</p>
-                               <h2 className="text-2xl font-bold tracking-tight">{t('mainHeading')}</h2>
-                            </div>
-                        </div>
-                        <div className="p-4 rounded-lg bg-secondary text-sm text-secondary-foreground">
-                            {t('eventDescription')}
-                        </div>
-                     </div>
-                     <div className="space-y-4 text-sm">
-                        <div className="flex items-center gap-3">
-                           <Clock className="w-5 h-5 text-muted-foreground"/>
-                           <span>{t('duration', {minutes: duration})}</span>
-                        </div>
-                        {selectedDate && selectedTime && (
-                           <div className="flex items-center gap-3">
-                               <CalendarIcon className="w-5 h-5 text-muted-foreground"/>
-                               <span>{format(setMinutes(setHours(selectedDate, parseInt(selectedTime.split(':')[0])), parseInt(selectedTime.split(':')[1])), 'PPPPp', {locale: dateLocale})}</span>
-                           </div>
-                        )}
-                     </div>
-                      <div>
                         <h3 className="text-lg font-semibold mb-4">{t('amenities')}</h3>
                         <div className="grid grid-cols-2 gap-y-4 gap-x-2">
                             {location.amenities.map((amenity) => {
@@ -255,67 +259,92 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                             })}
                         </div>
                       </div>
+                      <Separator />
+                       <div>
+                            <h3 className="text-lg font-semibold mb-4">{t('availability')}</h3>
+                            <p className="text-sm text-muted-foreground mb-4">{t('availabilityHint')}</p>
+                            <div className="flex justify-center">
+                                <Calendar
+                                    mode="single"
+                                    modifiers={{ booked: approvedBookedDates }}
+                                    modifiersClassNames={{ booked: 'bg-orange-500/80 text-primary-foreground rounded-full' }}
+                                />
+                            </div>
+                       </div>
                 </div>
 
-                {/* Right Panel */}
-                <div className="p-8">
-                     <h3 className="text-xl font-bold mb-4">{t('selectServiceDate')}</h3>
+                <div className="p-6 md:p-8 flex flex-col gap-6">
+                     <h3 className="text-xl font-bold text-center">{t('bookYourSpace')}</h3>
                      
-                     <div className="mb-6">
-                        <Label className="font-medium mb-2 block">{t('selectService')}</Label>
-                        <Select defaultValue='meeting-room'>
-                            <SelectTrigger className="h-11">
-                                <SelectValue placeholder="Select a service" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="meeting-room">{t('meetingRoom')}</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        <div className="mt-2 text-sm text-muted-foreground flex items-center gap-2 p-3 bg-secondary rounded-lg">
-                           <Clock className="w-4 h-4"/>
-                           <span>{t('durationInfo', {minutes: duration})}</span>
+                     <div className="space-y-4">
+                        <div>
+                            <Label className="font-medium mb-2 block text-center">{t('selectDate')}</Label>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                <Button
+                                    variant={"outline"}
+                                    className={cn(
+                                    "w-full justify-start text-left font-normal h-11",
+                                    !selectedDate && "text-muted-foreground"
+                                    )}
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {selectedDate ? format(selectedDate, "PPP", {locale: dateLocale}) : <span>{t('pickDate')}</span>}
+                                </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                    mode="single"
+                                    selected={selectedDate}
+                                    onSelect={setSelectedDate}
+                                    disabled={(day) => day < new Date(new Date().setHours(0,0,0,0)) || day > addDays(new Date(), 60)}
+                                    initialFocus
+                                    locale={dateLocale}
+                                />
+                                </PopoverContent>
+                            </Popover>
                         </div>
-                     </div>
-
-                     <div>
-                        <Label className="font-medium mb-2 block">{t('selectDate')}</Label>
-                        <Calendar
-                            mode="single"
-                            selected={selectedDate}
-                            onSelect={setSelectedDate}
-                            disabled={(day) => day < new Date(new Date().setHours(0,0,0,0)) || day > addDays(new Date(), 60)}
-                            initialFocus
-                            locale={dateLocale}
-                        />
-                     </div>
-
-                     {selectedDate && (
-                        <div className="mt-6">
-                            <Label className="font-medium mb-2 block">{t('selectTime')}</Label>
-                            <div className="grid grid-cols-3 gap-2">
-                                {isLoading ? (
-                                    Array.from({length: 6}).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)
-                                ) : availableTimeSlots.length > 0 ? (
-                                    availableTimeSlots.map(time => (
-                                        <Button 
-                                            key={time} 
-                                            variant={selectedTime === time ? 'default' : 'outline'}
-                                            onClick={() => setSelectedTime(time)}
-                                        >
-                                            {time}
-                                        </Button>
-                                    ))
-                                ) : (
-                                    <p className="col-span-3 text-muted-foreground text-center p-4">{t('noSlots')}</p>
+                        
+                        {selectedDate && (
+                            <div className="animate-fade-in-up">
+                                <Label className="font-medium mb-2 block text-center">{t('selectTime')}</Label>
+                                <div className="grid grid-cols-2 gap-4">
+                                     <Select value={startTime || ''} onValueChange={setStartTime} disabled={isLoading || !selectedDate}>
+                                        <SelectTrigger className="h-11">
+                                            <SelectValue placeholder={t('startTime')} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {timeSlots.map(time => (
+                                                <SelectItem key={time} value={time} disabled={isTimeSlotDisabled(time)}>
+                                                    {time}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <Select value={endTime || ''} onValueChange={setEndTime} disabled={isLoading || !startTime}>
+                                        <SelectTrigger className="h-11">
+                                            <SelectValue placeholder={t('endTime')} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {availableEndTimes.map(time => (
+                                                <SelectItem key={time} value={time}>
+                                                    {time}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                {isRangeInvalid && (
+                                    <p className="text-sm text-destructive mt-2 text-center">{t('rangeInvalid')}</p>
                                 )}
                             </div>
-                        </div>
-                     )}
+                        )}
+                     </div>
 
                      <Button 
                         onClick={handleBooking} 
-                        className="w-full h-11 text-base font-semibold mt-8" 
-                        disabled={isLoading || !selectedDate || !selectedTime}
+                        className="w-full h-12 text-base font-semibold mt-auto" 
+                        disabled={isLoading || !selectedDate || !startTime || !endTime || isRangeInvalid}
                     >
                         {t('confirmBooking')}
                     </Button>
