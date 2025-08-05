@@ -65,7 +65,7 @@ export default function SignupPage() {
           <CardHeader className="text-center">
              <div className="flex items-center justify-center space-x-2 mb-4">
                 <Building2 className="h-8 w-8 text-primary" />
-                <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">Lauft</span>
+                <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">Heavenkeys Booking</span>
              </div>
             <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
               {t('signUp')}

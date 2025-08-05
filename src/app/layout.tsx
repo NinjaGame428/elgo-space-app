@@ -3,8 +3,11 @@ import type {Metadata} from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Lauft Locations',
-  description: 'Find your next workspace with Lauft.',
+  title: {
+    default: "Heavenkeys Booking",
+    template: `%s | Heavenkeys Booking`,
+  },
+  description: 'Book your space with Heavenkeys.',
 };
 
 export default function RootLayout({
