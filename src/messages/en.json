@@ -18,7 +18,8 @@
     "searchPlaceholder": "Search locations...",
     "allTypes": "All Types",
     "meetingRoom": "Meeting Room",
-    "noLocationsFound": "No locations found."
+    "noLocationsFound": "No locations found.",
+    "noLocationsFoundHint": "Try adjusting your search or filters."
   },
   "LocationDetails": {
     "selectLocation": "Select a location to see details",
@@ -41,15 +42,15 @@
     "amenities": "Amenities"
   },
   "LoginPage": {
-    "login": "Login",
-    "loginDescription": "Enter your email below to login to your account",
+    "login": "Sign in to your account",
+    "loginDescription": "Welcome back! Please enter your details.",
     "emailLabel": "Email",
     "passwordLabel": "Password",
-    "loginButton": "Login",
-    "loggingInButton": "Logging in...",
+    "loginButton": "Sign In",
+    "loggingInButton": "Signing In...",
     "noAccount": "Don't have an account?",
     "signUpLink": "Sign up",
-    "demoCredentials": "Demo Credentials:",
+    "demoCredentials": "Demo Credentials",
     "adminUser": "Admin: {email} / {password}",
     "regularUser": "User: Any other email / {password}",
     "loginSuccessTitle": "Login Successful",
@@ -59,8 +60,8 @@
     "loginFailedDescription": "Invalid email or password. Please try again."
   },
   "SignupPage": {
-    "signUp": "Sign Up",
-    "signUpDescription": "Enter your information to create an account",
+    "signUp": "Create an account",
+    "signUpDescription": "Enter your information to get started.",
     "nameLabel": "Name",
     "emailLabel": "Email",
     "phoneLabel": "Phone Number",
@@ -68,7 +69,7 @@
     "createAccountButton": "Create Account",
     "creatingAccountButton": "Creating Account...",
     "hasAccount": "Already have an account?",
-    "loginLink": "Login",
+    "loginLink": "Sign in",
     "accountCreatedTitle": "Account Created",
     "accountCreatedDescription": "Please check your email to confirm your account.",
     "userExistsTitle": "Signup Failed",
@@ -77,6 +78,7 @@
   "DashboardPage": {
     "loading": "Loading...",
     "adminDashboard": "Admin Dashboard",
+    "dashboardDescription": "Oversee and manage all bookings, rooms, and users.",
     "logout": "Logout",
     "bookingCalendar": "Booking Calendar",
     "calendarDescription": "Select a date to view bookings.",
@@ -196,6 +198,8 @@
     "upcoming": "Upcoming",
     "past": "Past",
     "noUpcomingBookings": "You have no upcoming bookings.",
+    "noUpcomingBookingsHint": "Ready to find your next workspace?",
+    "browseLocations": "Browse Locations",
     "noPastBookings": "You have no past bookings.",
     "reschedule": "Reschedule",
     "cancelBooking": "Cancel Booking",

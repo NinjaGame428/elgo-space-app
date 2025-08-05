@@ -28,9 +28,6 @@ export default function HomePage() {
   useEffect(() => {
     async function fetchLocations() {
       try {
-        // Since this is a client component, we can't directly call a server function.
-        // In a real app, you'd fetch from an API route. For this demo, we'll mimic that.
-        // This is a temporary solution to make it work.
         const response = await fetch('/api/locations');
         if (!response.ok) {
           throw new Error('Failed to fetch locations');
@@ -57,8 +54,7 @@ export default function HomePage() {
     const filtered = allLocations.filter(location => {
       const locationName = tloc(location.name as any) || location.name;
       const matchesSearch = locationName.toLowerCase().includes(searchTerm.toLowerCase());
-      // The type filter is static for now as we only have 'Meeting Room'
-      const matchesType = selectedType === 'All Types' || selectedType === 'Meeting Room';
+      const matchesType = selectedType === 'All Types' || (location.bookables?.some(b => b.type === selectedType));
       return matchesSearch && matchesType;
     });
     setFilteredLocations(filtered);
@@ -71,48 +67,47 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <main className="flex-1 grid md:grid-cols-2 gap-8 py-6 px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-6">
-          <div className="p-4 space-y-4 border rounded-lg bg-card shadow-sm">
-            <Skeleton className="h-10 w-1/2" />
+      <main className="flex-1 grid md:grid-cols-3 xl:grid-cols-4 gap-8 py-6 px-4 sm:px-6 lg:px-8">
+        <div className="md:col-span-1 xl:col-span-1 space-y-6">
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-full" />
-          </div>
-          <div className="space-y-4">
+          <div className="space-y-4 pt-4">
             <Skeleton className="h-40 w-full rounded-lg" />
             <Skeleton className="h-40 w-full rounded-lg" />
             <Skeleton className="h-40 w-full rounded-lg" />
           </div>
         </div>
-        <div className="sticky top-24 self-start">
-          <Skeleton className="h-[600px] w-full rounded-lg" />
+        <div className="md:col-span-2 xl:col-span-3 sticky top-24 self-start">
+          <Skeleton className="h-[calc(100vh-8rem)] w-full rounded-lg" />
         </div>
       </main>
     );
   }
 
   return (
-      <main className="flex-1 grid md:grid-cols-2 gap-8 py-6 px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-6">
+      <main className="flex-1 grid md:grid-cols-3 xl:grid-cols-4 gap-8 py-6 px-4 sm:px-6 lg:px-8">
+        <div className="md:col-span-1 xl:col-span-1 flex flex-col gap-6">
           <div className="p-4 space-y-4 border rounded-lg bg-card shadow-sm">
             <h2 className="text-2xl font-bold">{t('locations')}</h2>
-            <Input
-              type="text"
-              placeholder={t('searchPlaceholder')}
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-            />
-            <Select value={selectedType} onValueChange={setSelectedType}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All Types">{t('allTypes')}</SelectItem>
-                <SelectItem value="Meeting Room">{t('meetingRoom')}</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="space-y-2">
+              <Input
+                type="text"
+                placeholder={t('searchPlaceholder')}
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+              />
+              <Select value={selectedType} onValueChange={setSelectedType}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t('allTypes')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All Types">{t('allTypes')}</SelectItem>
+                  <SelectItem value="Meeting Room">{t('meetingRoom')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto">
             {filteredLocations.length > 0 ? (
               filteredLocations.map(location => (
                 <LocationCard
@@ -123,15 +118,19 @@ export default function HomePage() {
                 />
               ))
             ) : (
-              <p className="text-muted-foreground text-center py-8">{t('noLocationsFound')}</p>
+              <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg h-60">
+                <p className="text-lg font-medium">{t('noLocationsFound')}</p>
+                <p className="text-sm text-muted-foreground">{t('noLocationsFoundHint')}</p>
+              </div>
             )}
           </div>
         </div>
         
-        <div className="sticky top-24 self-start">
+        <div className="md:col-span-2 xl:col-span-3 sticky top-24 self-start h-[calc(100vh-8rem)] overflow-y-auto">
             <LocationDetails location={selectedLocation} />
         </div>
       </main>
   );
 }
+
 

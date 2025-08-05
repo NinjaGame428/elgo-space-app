@@ -76,7 +76,8 @@ export default function MyBookingsPage() {
     const { upcomingBookings, pastBookings } = useMemo(() => {
         const now = new Date();
         return sortedBookings.reduce((acc, booking) => {
-            if (isAfter(new Date(booking.endTime), now) && booking.status !== 'rejected') {
+            const endDate = new Date(booking.endTime);
+            if(isValid(endDate) && isAfter(endDate, now) && booking.status !== 'rejected') {
                 acc.upcomingBookings.push(booking);
             } else {
                 acc.pastBookings.push(booking);
@@ -108,17 +109,17 @@ export default function MyBookingsPage() {
 
     const BookingCard = ({ booking }: { booking: Booking }) => {
         const location = locations.find(l => l.id === booking.locationId);
-        const isUpcoming = isAfter(new Date(booking.endTime), new Date()) && booking.status !== 'rejected';
+        const endDate = new Date(booking.endTime);
+        const isUpcoming = isValid(endDate) && isAfter(endDate, new Date()) && booking.status !== 'rejected';
         
         const isCancelled = booking.status === 'rejected';
 
         const startDate = new Date(booking.startTime);
-        const endDate = new Date(booking.endTime);
         const areDatesValid = isValid(startDate) && isValid(endDate);
 
         return (
             <div 
-                className={`p-4 border rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${!isUpcoming ? 'cursor-pointer hover:bg-muted/50' : ''}`}
+                className={`p-4 border rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 transition-shadow hover:shadow-md ${!isUpcoming ? 'cursor-pointer' : ''}`}
                 onClick={!isUpcoming ? () => handleBookingClick(booking) : undefined}
             >
                 <div>
@@ -148,7 +149,7 @@ export default function MyBookingsPage() {
                                 </DropdownMenuItem>
                                 <AlertDialog>
                                     <AlertDialogTrigger asChild>
-                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">{t('cancelBooking')}</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:bg-destructive/10 focus:text-destructive">{t('cancelBooking')}</DropdownMenuItem>
                                     </AlertDialogTrigger>
                                     <AlertDialogContent>
                                         <AlertDialogHeader>
@@ -171,65 +172,57 @@ export default function MyBookingsPage() {
 
     if (!isClient || isLoading) {
         return (
-            <div className="grid md:grid-cols-3 gap-6 flex-1 p-4 sm:p-6 lg:p-8">
-                <div className="md:col-span-2">
-                    <Card className="flex flex-col h-full">
-                        <CardHeader>
-                            <Skeleton className="h-8 w-48" />
-                            <Skeleton className="h-4 w-64 mt-2" />
-                        </CardHeader>
-                        <CardContent className="flex flex-col flex-1 pt-4">
-                            <div className="space-y-4">
-                               <Skeleton className="h-24 w-full" />
-                               <Skeleton className="h-24 w-full" />
-                               <Skeleton className="h-24 w-full" />
-                            </div>
-                        </CardContent>
-                    </Card>
+            <div className="flex-1 space-y-8 p-4 sm:p-6 lg:p-8">
+                <header>
+                    <Skeleton className="h-10 w-60 mb-2" />
+                    <Skeleton className="h-5 w-80" />
+                </header>
+                <div className="space-y-4">
+                   <Skeleton className="h-24 w-full" />
+                   <Skeleton className="h-24 w-full" />
+                   <Skeleton className="h-24 w-full" />
                 </div>
             </div>
         )
     }
 
     return (
-        <div className="grid md:grid-cols-3 gap-6 flex-1 p-4 sm:p-6 lg:p-8">
-            <div className="md:col-span-2">
-                <Card className="flex flex-col h-full">
-                    <CardHeader>
-                        <CardTitle>{t('yourReservations')}</CardTitle>
-                        <CardDescription>{t('reservationsDescription')}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex flex-col flex-1">
-                        <Tabs defaultValue="upcoming" className="flex flex-col flex-1">
-                            <TabsList className="grid w-full grid-cols-2">
-                                <TabsTrigger value="upcoming">{t('upcoming')}</TabsTrigger>
-                                <TabsTrigger value="past">{t('past')}</TabsTrigger>
-                            </TabsList>
-                            <TabsContent value="upcoming" className="pt-4 flex-1">
-                                <div className="space-y-4">
-                                    {upcomingBookings.length > 0 ? (
-                                        upcomingBookings.map(booking => <BookingCard key={booking.id} booking={booking} />)
-                                    ) : (
-                                        <p className="text-muted-foreground text-center py-8">{t('noUpcomingBookings')}</p>
-                                    )}
-                                </div>
-                            </TabsContent>
-                            <TabsContent value="past" className="pt-4 flex-1">
-                                <div className="space-y-4">
-                                    {pastBookings.length > 0 ? (
-                                        pastBookings.map(booking => <BookingCard key={booking.id} booking={booking} />)
-                                    ) : (
-                                        <p className="text-muted-foreground text-center py-8">{t('noPastBookings')}</p>
-                                    )}
-                                </div>
-                            </TabsContent>
-                        </Tabs>
-                    </CardContent>
-                </Card>
-            </div>
-            <div className="md:col-span-1">
-                {/* Extra column for future content or spacing */}
-            </div>
+        <div className="flex-1 space-y-8 p-4 sm:p-6 lg:p-8">
+             <header>
+                <h1 className="text-3xl font-bold tracking-tight">{t('yourReservations')}</h1>
+                <p className="text-lg text-muted-foreground">{t('reservationsDescription')}</p>
+            </header>
+
+            <Tabs defaultValue="upcoming">
+                <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
+                    <TabsTrigger value="upcoming">{t('upcoming')}</TabsTrigger>
+                    <TabsTrigger value="past">{t('past')}</TabsTrigger>
+                </TabsList>
+                <TabsContent value="upcoming" className="pt-6">
+                    <div className="space-y-4">
+                        {upcomingBookings.length > 0 ? (
+                            upcomingBookings.map(booking => <BookingCard key={booking.id} booking={booking} />)
+                        ) : (
+                            <div className="text-center py-16 px-4 border-2 border-dashed rounded-lg">
+                                <h3 className="text-lg font-medium">{t('noUpcomingBookings')}</h3>
+                                <p className="text-muted-foreground text-sm mt-1">{t('noUpcomingBookingsHint')}</p>
+                                <Button asChild className="mt-4">
+                                    <Link href="/">{t('browseLocations')}</Link>
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                </TabsContent>
+                <TabsContent value="past" className="pt-6">
+                    <div className="space-y-4">
+                        {pastBookings.length > 0 ? (
+                            pastBookings.map(booking => <BookingCard key={booking.id} booking={booking} />)
+                        ) : (
+                            <p className="text-muted-foreground text-center py-16">{t('noPastBookings')}</p>
+                        )}
+                    </div>
+                </TabsContent>
+            </Tabs>
 
             <Dialog open={!!selectedBooking} onOpenChange={(isOpen) => !isOpen && setSelectedBooking(null)}>
                 <DialogContent>
@@ -242,14 +235,14 @@ export default function MyBookingsPage() {
                         const endDate = new Date(selectedBooking.endTime);
                         const areDatesValid = isValid(startDate) && isValid(endDate);
                         return (
-                            <div className="space-y-4">
+                            <div className="space-y-4 pt-4">
                                 <div>
-                                    <h4 className="font-semibold">{t('location')}</h4>
+                                    <h4 className="font-semibold text-sm text-muted-foreground">{t('location')}</h4>
                                     <p>{selectedBookingLocation ? tloc(selectedBookingLocation.name as any) : ''}</p>
                                     <p className="text-sm text-muted-foreground">{selectedBookingLocation?.address}</p>
                                 </div>
                                 <div>
-                                    <h4 className="font-semibold">{t('dateTime')}</h4>
+                                    <h4 className="font-semibold text-sm text-muted-foreground">{t('dateTime')}</h4>
                                     <p>
                                         {areDatesValid 
                                             ? `${format(startDate, 'PPP, p')} - ${format(endDate, 'p')}`
@@ -258,7 +251,7 @@ export default function MyBookingsPage() {
                                     </p>
                                 </div>
                                 <div>
-                                    <h4 className="font-semibold">{t('status')}</h4>
+                                    <h4 className="font-semibold text-sm text-muted-foreground">{t('status')}</h4>
                                     <Badge variant={
                                         selectedBooking.status === 'approved' ? 'default' :
                                         selectedBooking.status === 'rejected' ? 'destructive' : 'secondary'

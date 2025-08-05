@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from '@/navigation';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
+import { Building2 } from 'lucide-react';
 
 export default function LoginPage() {
   const t = useTranslations('LoginPage');
@@ -68,17 +69,23 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2 xl:min-h-screen">
-      <div className="flex items-center justify-center py-12">
-        <div className="mx-auto grid w-[350px] gap-6">
-          <div className="grid gap-2 text-center">
-             <h1 className="text-3xl font-bold">{t('login')}</h1>
-            <p className="text-balance text-muted-foreground">
+    <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2">
+      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto w-full max-w-md space-y-8">
+          <div>
+            <Link href="/" className="flex items-center justify-center space-x-2 mb-6">
+              <Building2 className="h-8 w-8 text-primary" />
+              <span className="text-2xl font-bold">Lauft</span>
+            </Link>
+            <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-foreground">
+              {t('login')}
+            </h2>
+            <p className="mt-2 text-center text-sm text-muted-foreground">
               {t('loginDescription')}
             </p>
           </div>
-           <form onSubmit={handleLogin} className="grid gap-4">
-              <div className="grid gap-2">
+           <form onSubmit={handleLogin} className="space-y-6">
+              <div className="space-y-2">
                 <Label htmlFor="email">{t('emailLabel')}</Label>
                 <Input
                   id="email"
@@ -88,12 +95,11 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
+                  className="h-12"
                 />
               </div>
-              <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">{t('passwordLabel')}</Label>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">{t('passwordLabel')}</Label>
                 <Input 
                   id="password" 
                   type="password" 
@@ -101,26 +107,28 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoading}
+                  className="h-12"
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full h-12 text-base" disabled={isLoading}>
                 {isLoading ? t('loggingInButton') : t('loginButton')}
               </Button>
             </form>
-            <div className="mt-4 text-center text-sm">
+            <p className="mt-6 text-center text-sm text-muted-foreground">
                 {t('noAccount')}{' '}
-                <Link href="/signup" className="underline">
+                <Link href="/signup" className="font-medium text-primary hover:underline">
                     {t('signUpLink')}
                 </Link>
-            </div>
-            <div className="mt-4 text-center text-sm space-y-2 border-t pt-4">
-            <p className="text-muted-foreground">{t('demoCredentials')}</p>
-            <p>{t('adminUser', {email: 'test@example.com', password: 'password'})}</p>
-            <p>{t('regularUser', {password: 'password'})}</p>
-            </div>
-            <div className="mt-4 text-center text-sm text-muted-foreground">
-              made by Heavenkeys
-            </div>
+            </p>
+            <Card className="mt-8 bg-muted/50">
+              <CardHeader>
+                <CardTitle className="text-base text-center">{t('demoCredentials')}</CardTitle>
+              </CardHeader>
+              <CardContent className="text-center text-sm space-y-2 text-muted-foreground">
+                <p>{t('adminUser', {email: 'test@example.com', password: 'password'})}</p>
+                <p>{t('regularUser', {password: 'password'})}</p>
+              </CardContent>
+            </Card>
         </div>
       </div>
       <div className="hidden bg-muted lg:block">
@@ -129,7 +137,7 @@ export default function LoginPage() {
           alt="Image"
           width="1920"
           height="1080"
-          className="h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+          className="h-full w-full object-cover"
           data-ai-hint="conference event"
         />
       </div>

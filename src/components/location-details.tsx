@@ -56,7 +56,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const dateLocale = locale === 'fr' ? fr : enUS;
 
@@ -69,13 +69,15 @@ export function LocationDetails({ location }: LocationDetailsProps) {
   }, []);
 
   useEffect(() => {
-    // Reset selections when location changes
     setDate(undefined);
     setStartTime(null);
     setEndTime(null);
 
     async function fetchBookings() {
-        if (!location) return;
+        if (!location) {
+            setIsLoading(false);
+            return;
+        }
         setIsLoading(true);
         try {
             const response = await fetch(`/api/bookings?locationId=${location.id}`);
@@ -131,7 +133,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
         }
 
         const newBooking = await response.json();
-        setBookings(prev => [...prev, newBooking]); // Optimistically update UI
+        setBookings(prev => [...prev, newBooking]);
 
         toast({
             title: t('bookingConfirmedTitle'),
@@ -143,7 +145,6 @@ export function LocationDetails({ location }: LocationDetailsProps) {
             endTime: endTime
             }),
         });
-        // Reset form
         setDate(undefined);
         setStartTime(null);
         setEndTime(null);
@@ -165,14 +166,11 @@ export function LocationDetails({ location }: LocationDetailsProps) {
   };
 
    const approvedBookingsForLocation = useMemo(() => {
-    if (!location) return [];
     return bookings
       .filter(b => b.status === 'approved')
       .flatMap(b => {
         const start = new Date(b.startTime);
         const end = new Date(b.endTime);
-        // If start and end are on the same day, just return that day.
-        // Otherwise, create an interval.
         if (format(start, 'yyyy-MM-dd') === format(end, 'yyyy-MM-dd')) {
             return [start];
         }
@@ -188,34 +186,13 @@ export function LocationDetails({ location }: LocationDetailsProps) {
     });
   }, [date]);
 
-  const isTimeSlotUnavailable = useCallback((time: string, checkDate: Date | undefined): boolean => {
-    if (!checkDate) return false;
-
-    const day = getDay(checkDate);
-    const [hour, minute] = time.split(':').map(Number);
-    const totalMinutes = hour * 60 + minute;
-
-    if (day === 0) { // Sunday
-        if (totalMinutes >= 420 && totalMinutes < 1020) return true;
-    }
-    if (day === 3) { // Wednesday
-        if (totalMinutes >= 1170 && totalMinutes < 1320) return true;
-    }
-    if (day === 5) { // Friday
-        if (totalMinutes >= 1080 && totalMinutes < 1290) return true;
-    }
-
-    return false;
-  }, []);
-
   const locationBookingsForDay = useCallback((day: Date) => {
-    if (!location) return [];
     const formattedDate = format(day, "yyyy-MM-dd");
     return bookings.filter(b => 
         format(new Date(b.startTime), "yyyy-MM-dd") === formattedDate &&
         b.status === 'approved'
     );
-  }, [location, bookings]);
+  }, [bookings]);
 
   const isTimeSlotBooked = useCallback((time: string, checkDate: Date) => {
     const checkTime = parse(time, 'HH:mm', checkDate).getTime();
@@ -229,12 +206,12 @@ export function LocationDetails({ location }: LocationDetailsProps) {
   const isTimeSlotDisabled = useCallback((time: string) => {
     if (selectedDates.length === 0) return true;
     for(const day of selectedDates) {
-        if (isTimeSlotBooked(time, day) || isTimeSlotUnavailable(time, day)) {
+        if (isTimeSlotBooked(time, day)) {
             return true;
         }
     }
     return false;
-  }, [selectedDates, isTimeSlotBooked, isTimeSlotUnavailable]);
+  }, [selectedDates, isTimeSlotBooked]);
 
   const isRangeInvalid = useMemo(() => {
     if(!startTime || !endTime || selectedDates.length === 0) return false;
@@ -245,13 +222,13 @@ export function LocationDetails({ location }: LocationDetailsProps) {
     for (const day of selectedDates) {
         for (let d = new Date(start); d < end; d.setMinutes(d.getMinutes() + 30)) {
             const timeStr = format(d, 'HH:mm');
-            if (isTimeSlotBooked(timeStr, day) || isTimeSlotUnavailable(timeStr, day)) {
+            if (isTimeSlotBooked(timeStr, day)) {
                 return true;
             }
         }
     }
     return false;
-  }, [startTime, endTime, selectedDates, isTimeSlotBooked, isTimeSlotUnavailable]);
+  }, [startTime, endTime, selectedDates, isTimeSlotBooked]);
 
   const availableEndTimes = useMemo(() => {
     if (!startTime) return [];
@@ -262,7 +239,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
         const currentTimeSlot = timeSlots[i];
         let isDisabled = false;
         for (const day of selectedDates) {
-            if (isTimeSlotBooked(currentTimeSlot, day) || isTimeSlotUnavailable(currentTimeSlot, day)) {
+            if (isTimeSlotBooked(currentTimeSlot, day)) {
                 isDisabled = true;
                 break;
             }
@@ -275,7 +252,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
     
     return timeSlots.slice(startIndex + 1, endIndex + 1);
     
-  }, [startTime, isTimeSlotBooked, isTimeSlotUnavailable, selectedDates]);
+  }, [startTime, isTimeSlotBooked, selectedDates]);
 
   if (!location) {
     return (
@@ -286,7 +263,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
   }
 
   return (
-    <div className="rounded-lg border bg-card shadow-sm">
+    <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
       <div className={cn("bg-card rounded-lg")}>
         <div className="relative w-full h-60 md:h-80">
           <Image
@@ -314,7 +291,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                           <Button
                               variant={"outline"}
                               className={cn(
-                              "w-full justify-start text-left font-normal bg-background",
+                              "w-full justify-start text-left font-normal bg-background h-11",
                               !date && "text-muted-foreground"
                               )}
                           >
@@ -350,43 +327,37 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                   <div>
                       <h4 className="font-medium mb-2 text-sm">{t('selectTime')}</h4>
                       <div className="grid grid-cols-2 gap-4">
-                          <div className="flex items-center gap-2">
-                              <Label className="text-xs whitespace-nowrap">{t('from')}</Label>
-                              <Select value={startTime || ''} onValueChange={setStartTime} disabled={!date?.from || isLoading}>
-                                  <SelectTrigger>
-                                      <SelectValue placeholder={t('startTime')} />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                      {timeSlots.map(time => (
-                                          <SelectItem key={time} value={time} disabled={isTimeSlotDisabled(time)}>
-                                              {time}
-                                          </SelectItem>
-                                      ))}
-                                  </SelectContent>
-                              </Select>
-                          </div>
-                           <div className="flex items-center gap-2">
-                              <Label className="text-xs whitespace-nowrap">{t('to')}</Label>
-                               <Select value={endTime || ''} onValueChange={setEndTime} disabled={!startTime || isLoading}>
-                                  <SelectTrigger>
-                                      <SelectValue placeholder={t('endTime')} />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                      {availableEndTimes.map(time => (
-                                         <SelectItem key={time} value={time}>
-                                           {time}
-                                         </SelectItem>
-                                      ))}
-                                  </SelectContent>
-                              </Select>
-                          </div>
+                            <Select value={startTime || ''} onValueChange={setStartTime} disabled={!date?.from || isLoading}>
+                                <SelectTrigger className="h-11">
+                                    <SelectValue placeholder={t('startTime')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {timeSlots.map(time => (
+                                        <SelectItem key={time} value={time} disabled={isTimeSlotDisabled(time)}>
+                                            {time}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <Select value={endTime || ''} onValueChange={setEndTime} disabled={!startTime || isLoading}>
+                                <SelectTrigger className="h-11">
+                                    <SelectValue placeholder={t('endTime')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {availableEndTimes.map(time => (
+                                        <SelectItem key={time} value={time}>
+                                        {time}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                       </div>
                        {isRangeInvalid && (
                           <p className="text-sm text-destructive mt-2">{t('rangeInvalid')}</p>
                       )}
                   </div>
-                  <div className="md:col-span-2">
-                    <Button onClick={handleBooking} className="w-full" disabled={isLoading || isRangeInvalid || !date?.from || !startTime || !endTime}>
+                  <div>
+                    <Button onClick={handleBooking} className="w-full h-11 text-base font-semibold" disabled={isLoading || isRangeInvalid || !date?.from || !startTime || !endTime}>
                         {t('bookNow')}
                     </Button>
                   </div>
@@ -405,8 +376,9 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                         selected={approvedBookingsForLocation}
                         locale={dateLocale}
                         className="rounded-md p-0"
-                        classNames={{
-                            day_selected: "bg-orange-500 text-white hover:bg-orange-500/90 focus:bg-orange-500/90",
+                        modifiers={{ booked: approvedBookingsForLocation }}
+                        modifiersClassNames={{
+                            booked: 'bg-orange-500 text-white hover:bg-orange-500/90 focus:bg-orange-500/90',
                         }}
                     />
                 }

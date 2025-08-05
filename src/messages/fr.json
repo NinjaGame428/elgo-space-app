@@ -18,7 +18,8 @@
     "searchPlaceholder": "Rechercher des emplacements...",
     "allTypes": "Tous les types",
     "meetingRoom": "Salle de réunion",
-    "noLocationsFound": "Aucun emplacement trouvé."
+    "noLocationsFound": "Aucun emplacement trouvé.",
+    "noLocationsFoundHint": "Essayez d'ajuster votre recherche ou vos filtres."
   },
   "LocationDetails": {
     "selectLocation": "Sélectionnez un emplacement pour voir les détails",
@@ -41,15 +42,15 @@
     "amenities": "Équipements"
   },
   "LoginPage": {
-    "login": "Connexion",
-    "loginDescription": "Entrez votre email ci-dessous pour vous connecter à votre compte",
+    "login": "Connectez-vous à votre compte",
+    "loginDescription": "Bon retour ! Veuillez entrer vos coordonnées.",
     "emailLabel": "Email",
     "passwordLabel": "Mot de passe",
     "loginButton": "Se connecter",
     "loggingInButton": "Connexion en cours...",
     "noAccount": "Vous n'avez pas de compte ?",
     "signUpLink": "S'inscrire",
-    "demoCredentials": "Identifiants de démo :",
+    "demoCredentials": "Identifiants de démo",
     "adminUser": "Admin : {email} / {password}",
     "regularUser": "Utilisateur : Tout autre email / {password}",
     "loginSuccessTitle": "Connexion réussie",
@@ -59,8 +60,8 @@
     "loginFailedDescription": "Email ou mot de passe invalide. Veuillez réessayer."
   },
   "SignupPage": {
-    "signUp": "S'inscrire",
-    "signUpDescription": "Entrez vos informations pour créer un compte",
+    "signUp": "Créer un compte",
+    "signUpDescription": "Entrez vos informations pour commencer.",
     "nameLabel": "Nom",
     "emailLabel": "Email",
     "phoneLabel": "Numéro de téléphone",
@@ -77,6 +78,7 @@
   "DashboardPage": {
     "loading": "Chargement...",
     "adminDashboard": "Tableau de Bord Admin",
+    "dashboardDescription": "Supervisez et gérez toutes les réservations, salles et utilisateurs.",
     "logout": "Déconnexion",
     "bookingCalendar": "Calendrier des réservations",
     "calendarDescription": "Sélectionnez une date pour voir les réservations.",
@@ -87,7 +89,7 @@
     "approve": "Approuver",
     "reject": "Rejeter",
     "approved": "Approuvée",
-    "rejected": "Annulée",
+    "rejected": "Rejetée",
     "pending": "En attente",
     "noBookings": "Aucune réservation pour cette date.",
     "roomManagement": "Gestion des salles",
@@ -196,6 +198,8 @@
     "upcoming": "À venir",
     "past": "Passées",
     "noUpcomingBookings": "Vous n'avez aucune réservation à venir.",
+    "noUpcomingBookingsHint": "Prêt à trouver votre prochain espace de travail ?",
+    "browseLocations": "Parcourir les emplacements",
     "noPastBookings": "Vous n'avez aucune réservation passée.",
     "reschedule": "Reporter",
     "cancelBooking": "Annuler la réservation",
