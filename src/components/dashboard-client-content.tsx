@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
@@ -11,12 +11,13 @@ import { useRouter } from 'next/navigation';
 import type { Booking, Location, User } from '@/lib/types';
 import { Link } from '@/navigation';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PlusCircle, Pencil, Trash2 } from 'lucide-react';
+import { PlusCircle, Pencil, Trash2, CheckCircle, XCircle } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { fr, enUS } from 'date-fns/locale';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface DashboardData {
     bookings: Booking[];
@@ -131,17 +132,19 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                             <CardTitle>{t('bookingCalendar')}</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <Calendar
-                                mode="single"
-                                selected={selectedDate}
-                                onSelect={setSelectedDate}
-                                className="p-0"
-                                modifiers={{ booked: bookedDates }}
-                                modifiersClassNames={{ 
-                                    booked: 'bg-orange-500 text-white hover:bg-orange-500/90 focus:bg-orange-500/90',
-                                }}
-                                locale={dateLocale}
-                            />
+                            <div className="rounded-lg">
+                                <Calendar
+                                    mode="single"
+                                    selected={selectedDate}
+                                    onSelect={setSelectedDate}
+                                    className="p-0"
+                                    modifiers={{ booked: bookedDates }}
+                                    modifiersClassNames={{ 
+                                        booked: 'bg-orange-500 text-white hover:bg-orange-500/90 focus:bg-orange-500/90',
+                                    }}
+                                    locale={dateLocale}
+                                />
+                            </div>
                         </CardContent>
                     </Card>
                     <Card>
@@ -149,29 +152,31 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                             <CardTitle>{t('bookingsFor', { date: selectedDate ? format(selectedDate, 'PPP', { locale: dateLocale }) : '...' })}</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="space-y-4">
-                                {bookingsForSelectedDay.length > 0 ? (
-                                    bookingsForSelectedDay.map(booking => {
-                                        const location = locations.find(l => l.id === booking.locationId);
-                                        return (
-                                            <div key={booking.id} className="p-4 border rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => handleBookingClick(booking)}>
-                                                <div>
-                                                    <p className="font-semibold">{location ? tloc(location.name as any) : t('unknownLocation')}</p>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        {format(new Date(booking.startTime), 'p')} - {format(new Date(booking.endTime), 'p')}
-                                                    </p>
-                                                    <p className="text-sm">{t('bookedBy', { email: booking.userEmail })}</p>
+                            <ScrollArea className="h-96">
+                                <div className="space-y-4 pr-4">
+                                    {bookingsForSelectedDay.length > 0 ? (
+                                        bookingsForSelectedDay.map(booking => {
+                                            const location = locations.find(l => l.id === booking.locationId);
+                                            return (
+                                                <div key={booking.id} className="p-4 border rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => handleBookingClick(booking)}>
+                                                    <div>
+                                                        <p className="font-semibold">{location ? tloc(location.name as any) : t('unknownLocation')}</p>
+                                                        <p className="text-sm text-muted-foreground">
+                                                            {format(new Date(booking.startTime), 'p')} - {format(new Date(booking.endTime), 'p')}
+                                                        </p>
+                                                        <p className="text-sm">{t('bookedBy', { email: booking.userEmail })}</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <Badge variant={booking.status === 'approved' ? 'default' : booking.status === 'rejected' ? 'destructive' : 'secondary'}>{t(booking.status as any)}</Badge>
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center gap-2">
-                                                    <Badge variant={booking.status === 'approved' ? 'default' : booking.status === 'rejected' ? 'destructive' : 'secondary'}>{t(booking.status as any)}</Badge>
-                                                </div>
-                                            </div>
-                                        );
-                                    })
-                                ) : (
-                                    <p className="text-muted-foreground text-center py-8">{t('noBookings')}</p>
-                                )}
-                            </div>
+                                            );
+                                        })
+                                    ) : (
+                                        <p className="text-muted-foreground text-center py-8">{t('noBookings')}</p>
+                                    )}
+                                </div>
+                            </ScrollArea>
                         </CardContent>
                     </Card>
                 </div>
@@ -183,7 +188,7 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                                 <CardTitle>{t('roomManagement')}</CardTitle>
                                 <CardDescription>{t('roomManagementDescription')}</CardDescription>
                             </div>
-                            <Button asChild>
+                            <Button asChild size="sm">
                                 <Link href="/dashboard/rooms/add"><PlusCircle /> {t('addRoom')}</Link>
                             </Button>
                         </CardHeader>
@@ -203,12 +208,12 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                                             <TableCell>{location.address}</TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex items-center justify-end gap-2">
-                                                    <Button variant="ghost" size="icon" asChild>
+                                                    <Button variant="outline" size="icon" asChild>
                                                         <Link href={`/dashboard/rooms/${location.id}/edit`}><Pencil className="h-4 w-4" /></Link>
                                                     </Button>
                                                     <AlertDialog>
                                                         <AlertDialogTrigger asChild>
-                                                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                                                            <Button variant="destructive" size="icon"><Trash2 className="h-4 w-4" /></Button>
                                                         </AlertDialogTrigger>
                                                         <AlertDialogContent>
                                                             <AlertDialogHeader>
@@ -236,7 +241,7 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                                 <CardTitle>{t('userManagement')}</CardTitle>
                                 <CardDescription>{t('userManagementDescription')}</CardDescription>
                             </div>
-                            <Button asChild>
+                            <Button asChild size="sm">
                                 <Link href="/dashboard/users/add"><PlusCircle /> {t('addUser')}</Link>
                             </Button>
                         </CardHeader>
@@ -260,12 +265,12 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                                             <TableCell>{format(new Date(user.joined_at), 'yyyy-MM-dd')}</TableCell>
                                             <TableCell className="text-right">
                                                <div className="flex items-center justify-end gap-2">
-                                                    <Button variant="ghost" size="icon" asChild disabled={user.email === 'test@example.com'}>
+                                                    <Button variant="outline" size="icon" asChild disabled={user.email === 'test@example.com'}>
                                                         <Link href={`/dashboard/users/${user.id}/edit`}><Pencil className="h-4 w-4" /></Link>
                                                     </Button>
                                                     <AlertDialog>
                                                         <AlertDialogTrigger asChild>
-                                                             <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" disabled={user.email === 'test@example.com'}><Trash2 className="h-4 w-4" /></Button>
+                                                             <Button variant="destructive" size="icon" disabled={user.email === 'test@example.com'}><Trash2 className="h-4 w-4" /></Button>
                                                         </AlertDialogTrigger>
                                                         <AlertDialogContent>
                                                             <AlertDialogHeader>
@@ -296,6 +301,7 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                         <DialogDescription>{t('bookingDetailsDescription')}</DialogDescription>
                     </DialogHeader>
                     {selectedBooking && (
+                        <>
                         <div className="space-y-4 pt-4">
                             <div>
                                 <h4 className="font-semibold text-sm text-muted-foreground">{t('location')}</h4>
@@ -317,15 +323,16 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                                     selectedBooking.status === 'rejected' ? 'destructive' : 'secondary'
                                 }>{t(selectedBooking.status as any)}</Badge>
                             </div>
-                             <div className="flex gap-2 pt-4">
-                                {selectedBooking.status === 'pending' && (
-                                    <>
-                                        <Button onClick={() => handleApproval(selectedBooking.id, 'approved')} className="w-full">{t('approve')}</Button>
-                                        <Button onClick={() => handleApproval(selectedBooking.id, 'rejected')} className="w-full" variant="outline">{t('reject')}</Button>
-                                    </>
-                                )}
-                             </div>
                         </div>
+                         <DialogFooter>
+                            {selectedBooking.status === 'pending' && (
+                                <>
+                                    <Button onClick={() => handleApproval(selectedBooking.id, 'rejected')} variant="outline"><XCircle/>{t('reject')}</Button>
+                                    <Button onClick={() => handleApproval(selectedBooking.id, 'approved')}><CheckCircle/>{t('approve')}</Button>
+                                </>
+                            )}
+                         </DialogFooter>
+                        </>
                     )}
                 </DialogContent>
             </Dialog>

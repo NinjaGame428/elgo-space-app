@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import Link from 'next/link';
+import { Link } from '@/navigation';
 import { useTranslations } from 'next-intl';
 
 export default function ProfilePage() {
@@ -59,110 +59,94 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex-1 grid md:grid-cols-3 gap-6 p-4 sm:p-6 lg:p-8">
-      <div className="md:col-span-2 space-y-6">
-          <header>
-              <h1 className="text-3xl font-bold">{t('profile')}</h1>
-              <p className="text-muted-foreground">{t('profileDescription')}</p>
-          </header>
+    <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+        <header className="mb-8">
+            <h1 className="text-3xl font-bold tracking-tight">{t('profile')}</h1>
+            <p className="text-lg text-muted-foreground">{t('profileDescription')}</p>
+        </header>
 
-          <Card>
-              <CardHeader>
-                  <CardTitle>{t('personalInfo')}</CardTitle>
-                  <CardDescription>{t('personalInfoDescription')}</CardDescription>
-              </CardHeader>
-               <form onSubmit={handleUpdateInfo}>
-                  <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                          <Label htmlFor="name">{t('nameLabel')}</Label>
-                          <Input id="name" value={userName} onChange={(e) => setUserName(e.target.value)} />
-                      </div>
-                      <div className="space-y-2">
-                          <Label htmlFor="email">{t('emailLabel')}</Label>
-                          <Input id="email" type="email" value={userEmail} onChange={(e) => setUserEmail(e.target.value)} />
-                      </div>
-                  </CardContent>
-                  <CardFooter className="border-t pt-6">
-                      <Button type="submit">{t('saveChanges')}</Button>
-                  </CardFooter>
-               </form>
-          </Card>
+        <div className="grid md:grid-cols-3 gap-8">
+        <div className="md:col-span-2 space-y-8">
+            <Card>
+                <CardHeader>
+                    <CardTitle>{t('personalInfo')}</CardTitle>
+                    <CardDescription>{t('personalInfoDescription')}</CardDescription>
+                </CardHeader>
+                <form onSubmit={handleUpdateInfo}>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="name">{t('nameLabel')}</Label>
+                            <Input id="name" value={userName} onChange={(e) => setUserName(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="email">{t('emailLabel')}</Label>
+                            <Input id="email" type="email" value={userEmail} onChange={(e) => setUserEmail(e.target.value)} />
+                        </div>
+                    </CardContent>
+                    <CardFooter className="border-t bg-muted/50 px-6 py-4">
+                        <Button type="submit">{t('saveChanges')}</Button>
+                    </CardFooter>
+                </form>
+            </Card>
 
-          <Card>
-              <CardHeader>
-                  <CardTitle>{t('security')}</CardTitle>
-                  <CardDescription>{t('securityDescription')}</CardDescription>
-              </CardHeader>
-              <form onSubmit={handleUpdatePassword}>
-                  <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                          <Label htmlFor="current-password">{t('currentPassword')}</Label>
-                          <Input id="current-password" type="password" />
-                      </div>
-                      <div className="space-y-2">
-                          <Label htmlFor="new-password">{t('newPassword')}</Label>
-                          <Input id="new-password" type="password" />
-                      </div>
-                       <div className="space-y-2">
-                          <Label htmlFor="confirm-password">{t('confirmNewPassword')}</Label>
-                          <Input id="confirm-password" type="password" />
-                      </div>
-                  </CardContent>
-                  <CardFooter className="border-t pt-6">
-                      <Button type="submit">{t('updatePassword')}</Button>
-                  </CardFooter>
-              </form>
-          </Card>
-      </div>
-      <div className="md:col-span-1 space-y-6">
-          <Card>
-              <CardHeader>
-                  <CardTitle>{t('myBookings')}</CardTitle>
-                  <CardDescription>{t('myBookingsDescription')}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                  <p className="text-muted-foreground">{t('myBookingsInfo')}</p>
-              </CardContent>
-              <CardFooter className="border-t pt-6">
-                  <Button variant="outline" asChild>
-                      <Link href="/my-bookings">{t('viewMyBookings')}</Link>
-                  </Button>
-              </CardFooter>
-          </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>{t('security')}</CardTitle>
+                    <CardDescription>{t('securityDescription')}</CardDescription>
+                </CardHeader>
+                <form onSubmit={handleUpdatePassword}>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="current-password">{t('currentPassword')}</Label>
+                            <Input id="current-password" type="password" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="new-password">{t('newPassword')}</Label>
+                            <Input id="new-password" type="password" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="confirm-password">{t('confirmNewPassword')}</Label>
+                            <Input id="confirm-password" type="password" />
+                        </div>
+                    </CardContent>
+                    <CardFooter className="border-t bg-muted/50 px-6 py-4">
+                        <Button type="submit">{t('updatePassword')}</Button>
+                    </CardFooter>
+                </form>
+            </Card>
+        </div>
 
-          <Card className="border-destructive">
-              <CardHeader>
-                  <CardTitle>{t('dangerZone')}</CardTitle>
-                  <CardDescription>{t('dangerZoneDescription')}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                  <p className="text-muted-foreground">{t('dangerZoneInfo')}</p>
-              </CardContent>
-              <CardFooter className="border-t pt-6">
-                  <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                         <Button variant="destructive">{t('deleteAccount')}</Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                          <AlertDialogHeader>
-                          <AlertDialogTitle>{t('areYouSure')}</AlertDialogTitle>
-                          <AlertDialogDescription>
-                              {t('deleteAccountWarning')}
-                          </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                          <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-                          <AlertDialogAction onClick={handleDeleteAccount} className="bg-destructive hover:bg-destructive/90">
-                              {t('delete')}
-                          </AlertDialogAction>
-                          </AlertDialogFooter>
-                      </AlertDialogContent>
-                  </AlertDialog>
-              </CardFooter>
-          </Card>
+        <div className="md:col-span-1 space-y-8">
+            <Card className="border-destructive">
+                <CardHeader>
+                    <CardTitle>{t('dangerZone')}</CardTitle>
+                    <CardDescription>{t('dangerZoneDescription')}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-sm text-muted-foreground mb-4">{t('dangerZoneInfo')}</p>
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="destructive">{t('deleteAccount')}</Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                            <AlertDialogTitle>{t('areYouSure')}</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                {t('deleteAccountWarning')}
+                            </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleDeleteAccount} className="bg-destructive hover:bg-destructive/90">
+                                {t('delete')}
+                            </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </CardContent>
+            </Card>
+        </div>
         </div>
     </div>
   );
 }
-
-    

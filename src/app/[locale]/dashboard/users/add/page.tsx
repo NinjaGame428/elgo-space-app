@@ -8,12 +8,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import Link from 'next/link';
+import { Link } from '@/navigation';
 import { useTranslations } from 'next-intl';
 import type { User } from '@/lib/types';
 import { users as initialUsers } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
+import { ArrowLeft } from 'lucide-react';
 
 export default function AddUserPage() {
     const t = useTranslations('AddUserPage');
@@ -47,7 +48,8 @@ export default function AddUserPage() {
             name,
             email,
             role,
-            joined: format(new Date(), 'yyyy-MM-dd')
+            joined_at: format(new Date(), 'yyyy-MM-dd'),
+            phone: null,
         };
 
         const updatedUsers = [...users, newUser];
@@ -61,45 +63,47 @@ export default function AddUserPage() {
     };
 
     return (
-        <div className="flex flex-col min-h-screen bg-background">
-            <main className="flex-1 flex items-center justify-center p-4">
-                <Card className="w-full max-w-lg">
-                    <CardHeader>
-                        <CardTitle>{t('addUserTitle')}</CardTitle>
-                        <CardDescription>{t('addUserDescription')}</CardDescription>
-                    </CardHeader>
-                    <form onSubmit={handleSubmit}>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="name">{t('nameLabel')}</Label>
-                                <Input id="name" value={name} onChange={e => setName(e.target.value)} required />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="email">{t('emailLabel')}</Label>
-                                <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="role">{t('roleLabel')}</Label>
-                                <Select value={role} onValueChange={(value: 'User' | 'Admin') => setRole(value)}>
-                                    <SelectTrigger id="role">
-                                        <SelectValue placeholder="Select a role" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="User">{t('roleUser')}</SelectItem>
-                                        <SelectItem value="Admin">{t('roleAdmin')}</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </CardContent>
-                        <CardFooter className="flex justify-between">
-                            <Button type="submit">{t('addUserButton')}</Button>
-                             <Button variant="outline" asChild>
-                                <Link href="/dashboard">{t('backToDashboard')}</Link>
-                            </Button>
-                        </CardFooter>
-                    </form>
-                </Card>
-            </main>
+        <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4 sm:p-6 lg:p-8">
+            <Card className="w-full max-w-lg animate-fade-in-up">
+                <CardHeader>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle className="text-2xl">{t('addUserTitle')}</CardTitle>
+                            <CardDescription>{t('addUserDescription')}</CardDescription>
+                        </div>
+                        <Button variant="outline" size="icon" asChild>
+                            <Link href="/dashboard"><ArrowLeft/></Link>
+                        </Button>
+                    </div>
+                </CardHeader>
+                <form onSubmit={handleSubmit}>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="name">{t('nameLabel')}</Label>
+                            <Input id="name" value={name} onChange={e => setName(e.target.value)} required />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="email">{t('emailLabel')}</Label>
+                            <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="role">{t('roleLabel')}</Label>
+                            <Select value={role} onValueChange={(value: 'User' | 'Admin') => setRole(value)}>
+                                <SelectTrigger id="role">
+                                    <SelectValue placeholder="Select a role" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="User">{t('roleUser')}</SelectItem>
+                                    <SelectItem value="Admin">{t('roleAdmin')}</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </CardContent>
+                    <CardFooter className="border-t pt-6">
+                         <Button type="submit" size="lg">{t('addUserButton')}</Button>
+                    </CardFooter>
+                </form>
+            </Card>
         </div>
     );
 }

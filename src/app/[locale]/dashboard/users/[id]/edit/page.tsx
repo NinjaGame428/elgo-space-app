@@ -8,11 +8,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import Link from 'next/link';
+import { Link } from '@/navigation';
 import { useTranslations } from 'next-intl';
 import type { User } from '@/lib/types';
 import { users as initialUsers } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowLeft } from 'lucide-react';
 
 export default function EditUserPage() {
     const t = useTranslations('EditUserPage');
@@ -35,8 +36,8 @@ export default function EditUserPage() {
         const foundUser = parsedUsers.find((u: User) => u.id === id);
         if (foundUser) {
             setUser(foundUser);
-            setName(foundUser.name);
-            setEmail(foundUser.email);
+            setName(foundUser.name || '');
+            setEmail(foundUser.email || '');
             setRole(foundUser.role);
         } else {
             toast({ variant: 'destructive', title: t('userNotFound') });
@@ -74,45 +75,47 @@ export default function EditUserPage() {
     }
 
     return (
-        <div className="flex flex-col min-h-screen bg-background">
-            <main className="flex-1 flex items-center justify-center p-4">
-                <Card className="w-full max-w-lg">
-                    <CardHeader>
-                        <CardTitle>{t('editUserTitle')}</CardTitle>
-                        <CardDescription>{t('editUserDescription')}</CardDescription>
-                    </CardHeader>
-                    <form onSubmit={handleSubmit}>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="name">{t('nameLabel')}</Label>
-                                <Input id="name" value={name} onChange={e => setName(e.target.value)} required />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="email">{t('emailLabel')}</Label>
-                                <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="role">{t('roleLabel')}</Label>
-                                <Select value={role} onValueChange={(value: 'User' | 'Admin') => setRole(value)}>
-                                    <SelectTrigger id="role">
-                                        <SelectValue placeholder="Select a role" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="User">{t('roleUser')}</SelectItem>
-                                        <SelectItem value="Admin">{t('roleAdmin')}</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </CardContent>
-                        <CardFooter className="flex justify-between">
-                            <Button type="submit">{t('saveChangesButton')}</Button>
-                            <Button variant="outline" asChild>
-                                <Link href="/dashboard">{t('backToDashboard')}</Link>
-                            </Button>
-                        </CardFooter>
-                    </form>
-                </Card>
-            </main>
+        <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4 sm:p-6 lg:p-8">
+            <Card className="w-full max-w-lg animate-fade-in-up">
+                 <CardHeader>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle className="text-2xl">{t('editUserTitle')}</CardTitle>
+                            <CardDescription>{t('editUserDescription')}</CardDescription>
+                        </div>
+                        <Button variant="outline" size="icon" asChild>
+                            <Link href="/dashboard"><ArrowLeft /></Link>
+                        </Button>
+                    </div>
+                </CardHeader>
+                <form onSubmit={handleSubmit}>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="name">{t('nameLabel')}</Label>
+                            <Input id="name" value={name} onChange={e => setName(e.target.value)} required />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="email">{t('emailLabel')}</Label>
+                            <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="role">{t('roleLabel')}</Label>
+                            <Select value={role} onValueChange={(value: 'User' | 'Admin') => setRole(value)}>
+                                <SelectTrigger id="role">
+                                    <SelectValue placeholder="Select a role" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="User">{t('roleUser')}</SelectItem>
+                                    <SelectItem value="Admin">{t('roleAdmin')}</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </CardContent>
+                    <CardFooter className="border-t pt-6">
+                        <Button type="submit" size="lg">{t('saveChangesButton')}</Button>
+                    </CardFooter>
+                </form>
+            </Card>
         </div>
     );
 }

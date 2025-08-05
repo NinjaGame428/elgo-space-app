@@ -12,8 +12,8 @@ import { Link } from '@/navigation';
 import { useTranslations } from 'next-intl';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal } from 'lucide-react';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { MoreHorizontal, CalendarDays, Clock, MapPin } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -118,55 +118,62 @@ export default function MyBookingsPage() {
         const areDatesValid = isValid(startDate) && isValid(endDate);
 
         return (
-            <div 
-                className={`p-4 border rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 transition-shadow hover:shadow-md ${!isUpcoming ? 'cursor-pointer' : ''}`}
+             <Card 
+                className={`transition-all hover:shadow-md ${!isUpcoming ? 'cursor-pointer' : ''}`}
                 onClick={!isUpcoming ? () => handleBookingClick(booking) : undefined}
             >
-                <div>
-                    <p className="font-semibold">{location ? tloc(location.name as any) : t('unknownLocation')}</p>
-                    <p className="text-sm text-muted-foreground">
-                        {areDatesValid 
-                            ? `${format(startDate, 'PPP, p')} - ${format(endDate, 'p')}`
-                            : 'Invalid date'
-                        }
-                    </p>
-                </div>
-                <div className="flex items-center gap-2">
-                    <Badge variant={
-                        isCancelled ? 'destructive' :
-                        booking.status === 'approved' ? 'default' : 'secondary'
-                    }>{t(booking.status as any)}</Badge>
-                    {isUpcoming && (
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem asChild>
-                                    <Link href={`/my-bookings/${booking.id}/edit`}>{t('reschedule')}</Link>
-                                </DropdownMenuItem>
-                                <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:bg-destructive/10 focus:text-destructive">{t('cancelBooking')}</DropdownMenuItem>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                            <AlertDialogTitle>{t('areYouSure')}</AlertDialogTitle>
-                                            <AlertDialogDescription>{t('cancelWarning')}</AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel>{t('goBack')}</AlertDialogCancel>
-                                            <AlertDialogAction onClick={() => cancelBooking(booking.id)}>{t('confirmCancel')}</AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    )}
-                </div>
-            </div>
+                <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                     <div>
+                        <p className="font-semibold text-lg">{location ? tloc(location.name as any) : t('unknownLocation')}</p>
+                         <p className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
+                            <MapPin className="h-4 w-4" />
+                            {location?.address}
+                        </p>
+                        <p className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
+                           <CalendarDays className="h-4 w-4" />
+                            {areDatesValid 
+                                ? `${format(startDate, 'PPP, p')} - ${format(endDate, 'p')}`
+                                : t('invalidDate')
+                            }
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-2 self-start sm:self-center">
+                        <Badge variant={
+                            isCancelled ? 'destructive' :
+                            booking.status === 'approved' ? 'default' : 'secondary'
+                        }>{t(booking.status as any)}</Badge>
+                        {isUpcoming && (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem asChild>
+                                        <Link href={`/my-bookings/${booking.id}/edit`}>{t('reschedule')}</Link>
+                                    </DropdownMenuItem>
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:bg-destructive/10 focus:text-destructive">{t('cancelBooking')}</DropdownMenuItem>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>{t('areYouSure')}</AlertDialogTitle>
+                                                <AlertDialogDescription>{t('cancelWarning')}</AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>{t('goBack')}</AlertDialogCancel>
+                                                <AlertDialogAction onClick={() => cancelBooking(booking.id)}>{t('confirmCancel')}</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        )}
+                    </div>
+                </CardContent>
+             </Card>
         );
     };
 
@@ -246,7 +253,7 @@ export default function MyBookingsPage() {
                                     <p>
                                         {areDatesValid 
                                             ? `${format(startDate, 'PPP, p')} - ${format(endDate, 'p')}`
-                                            : 'Invalid date'
+                                            : t('invalidDate')
                                         }
                                     </p>
                                 </div>

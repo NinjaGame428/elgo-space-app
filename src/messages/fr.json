@@ -213,7 +213,8 @@
     "bookingDetailsDescription": "Résumé de votre réservation passée.",
     "location": "Emplacement",
     "dateTime": "Date et heure",
-    "status": "Statut"
+    "status": "Statut",
+    "invalidDate": "Date invalide"
   },
     "EditBookingPage": {
     "loading": "Chargement...",
