@@ -11,13 +11,14 @@ import { useRouter } from 'next/navigation';
 import type { Booking, Location, User } from '@/lib/types';
 import { Link } from '@/navigation';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PlusCircle, Pencil, Trash2, CheckCircle, XCircle } from 'lucide-react';
+import { PlusCircle, Pencil, Trash2, CheckCircle, XCircle, User as UserIcon } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { fr, enUS } from 'date-fns/locale';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
 
 interface DashboardData {
     bookings: Booking[];
@@ -41,17 +42,21 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
     
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
     const [isAdmin, setIsAdmin] = useState(false);
+    const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
     const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
     const dateLocale = locale === 'fr' ? fr : enUS;
 
     useEffect(() => {
         const userRole = typeof window !== 'undefined' ? localStorage.getItem('userRole') : null;
+        const userEmail = typeof window !== 'undefined' ? localStorage.getItem('userEmail') : null;
+
         if (userRole !== 'Admin') {
             router.push('/login');
             return;
         }
         setIsAdmin(true);
+        setCurrentUserEmail(userEmail);
     }, [router]);
 
     const handleApproval = async (bookingId: string, status: 'approved' | 'rejected') => {
@@ -268,8 +273,11 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                                 </TableHeader>
                                 <TableBody>
                                     {users.map(user => (
-                                        <TableRow key={user.id}>
-                                            <TableCell className="font-medium">{user.name || 'N/A'}</TableCell>
+                                        <TableRow key={user.id} className={cn(user.email === currentUserEmail && "bg-muted/50")}>
+                                            <TableCell className="font-medium flex items-center gap-2">
+                                                {user.name || 'N/A'}
+                                                {user.email === currentUserEmail && <UserIcon className="h-4 w-4 text-primary" />}
+                                            </TableCell>
                                             <TableCell>{user.email}</TableCell>
                                             <TableCell><Badge variant={user.role === 'Admin' ? 'default' : 'secondary'}>{user.role}</Badge></TableCell>
                                             <TableCell>{format(new Date(user.joined_at), 'yyyy-MM-dd')}</TableCell>
@@ -280,7 +288,7 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                                                     </Button>
                                                     <AlertDialog>
                                                         <AlertDialogTrigger asChild>
-                                                             <Button variant="destructive" size="icon"><Trash2 className="h-4 w-4" /></Button>
+                                                             <Button variant="destructive" size="icon" disabled={user.email === currentUserEmail}><Trash2 className="h-4 w-4" /></Button>
                                                         </AlertDialogTrigger>
                                                         <AlertDialogContent>
                                                             <AlertDialogHeader>
