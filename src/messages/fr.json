@@ -19,7 +19,8 @@
     "allTypes": "Tous les types",
     "meetingRoom": "Salle de réunion",
     "noLocationsFound": "Aucun emplacement trouvé.",
-    "noLocationsFoundHint": "Essayez d'ajuster votre recherche ou vos filtres."
+    "noLocationsFoundHint": "Essayez d'ajuster votre recherche ou vos filtres.",
+    "backToLocations": "Retour aux emplacements"
   },
   "LocationDetails": {
     "selectLocation": "Sélectionnez un emplacement pour voir les détails",

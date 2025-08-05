@@ -19,7 +19,8 @@
     "allTypes": "All Types",
     "meetingRoom": "Meeting Room",
     "noLocationsFound": "No locations found.",
-    "noLocationsFoundHint": "Try adjusting your search or filters."
+    "noLocationsFoundHint": "Try adjusting your search or filters.",
+    "backToLocations": "Back to Locations"
   },
   "LocationDetails": {
     "selectLocation": "Select a location to see details",

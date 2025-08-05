@@ -12,7 +12,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { format, addDays, parse, getDay, eachDayOfInterval, formatISO, isValid, isAfter } from 'date-fns';
+import { format, addDays, parse, eachDayOfInterval, formatISO, isValid } from 'date-fns';
 import { fr, enUS } from 'date-fns/locale';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
@@ -153,7 +153,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
          toast({
             variant: "destructive",
             title: t('bookingFailedTitle'),
-            description: error.message,
+            description: error.message || "An unknown error occurred",
         });
       }
     } else {
@@ -268,7 +268,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
 
   return (
     <div className="h-full">
-        <div className="relative w-full h-64">
+        <div className="relative w-full h-48 md:h-64">
           <Image
             src={location.imageUrl ?? 'https://placehold.co/800x600.png'}
             alt={tloc(location.name as any)}
@@ -396,7 +396,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
             <div>
               <h3 className="text-xl font-semibold mb-4">{t('availability')}</h3>
               <p className="text-sm text-muted-foreground mb-4">{t('availabilityDesc')}</p>
-              <div className="rounded-lg border">
+              <div className="flex justify-center rounded-lg border">
                 {isLoading ? <Skeleton className="w-full h-[300px]" /> :
                     <Calendar
                         mode="multiple"
@@ -405,7 +405,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                         className="p-0"
                         modifiers={{ booked: approvedBookedDates }}
                         modifiersClassNames={{
-                            booked: 'bg-orange-500 text-white hover:bg-orange-500/90 focus:bg-orange-500/90',
+                            booked: 'bg-orange-500 text-white hover:bg-orange-500/90 focus:bg-orange-500/90 rounded-md',
                         }}
                     />
                 }

@@ -10,9 +10,10 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTranslations } from 'next-intl';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Search } from 'lucide-react';
+import { Search, ArrowLeft } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
 
 
 export default function HomePage() {
@@ -129,16 +130,24 @@ export default function HomePage() {
   );
 
   if (isMobile) {
-    return (
-        <main className="mobile-split-screen h-[calc(100vh-5rem)]">
-            <div className="mobile-split-screen_top">
-                <LocationList />
-            </div>
-            <div className="mobile-split-screen_bottom">
+    if (selectedLocation) {
+        return (
+            <main className="h-[calc(100vh-5rem)]">
                 <ScrollArea className="h-full">
-                     <LocationDetails location={selectedLocation} />
+                    <div className="p-4">
+                        <Button variant="ghost" onClick={() => setSelectedLocation(null)} className="mb-4">
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            {t('backToLocations')}
+                        </Button>
+                    </div>
+                    <LocationDetails location={selectedLocation} />
                 </ScrollArea>
-            </div>
+            </main>
+        )
+    }
+    return (
+        <main className="h-[calc(100vh-5rem)]">
+            <LocationList />
         </main>
     )
   }
