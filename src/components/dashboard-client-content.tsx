@@ -180,6 +180,12 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
     const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
     const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
+    const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
+    const [selectedUserForEmail, setSelectedUserForEmail] = useState<User | null>(null);
+    const [emailSubject, setEmailSubject] = useState('');
+    const [emailBody, setEmailBody] = useState('');
+    const [isSendingEmail, setIsSendingEmail] = useState(false);
+
     const dateLocale = locale === 'fr' ? fr : enUS;
 
     useEffect(() => {
@@ -263,6 +269,43 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
         if (!selectedBooking) return null;
         return locations.find(l => l.id === selectedBooking.locationId);
     }, [selectedBooking, locations]);
+
+    const handleOpenEmailDialog = (user: User) => {
+        setSelectedUserForEmail(user);
+        setEmailSubject('');
+        setEmailBody('');
+        setIsEmailDialogOpen(true);
+    };
+
+    const handleSendEmail = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedUserForEmail || !emailSubject || !emailBody) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Please fill out all fields.' });
+            return;
+        }
+        
+        setIsSendingEmail(true);
+        try {
+            const response = await fetch('/api/email/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    to: selectedUserForEmail.email,
+                    subject: emailSubject,
+                    body: emailBody,
+                }),
+            });
+
+            if (!response.ok) throw new Error('Failed to send email.');
+
+            toast({ title: 'Email Sent', description: `Your message has been sent to ${selectedUserForEmail.email}.` });
+            setIsEmailDialogOpen(false);
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not send the email. Please try again.' });
+        } finally {
+            setIsSendingEmail(false);
+        }
+    };
 
 
     if (!isAdmin) {
@@ -426,6 +469,9 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                                                     <TableCell>{format(new Date(user.joined_at), 'yyyy-MM-dd')}</TableCell>
                                                     <TableCell className="text-right">
                                                     <div className="flex items-center justify-end gap-2">
+                                                            <Button variant="outline" size="icon" onClick={() => handleOpenEmailDialog(user)}>
+                                                                <Mail className="h-4 w-4" />
+                                                            </Button>
                                                             <Button variant="outline" size="icon" asChild>
                                                                 <Link href={`/dashboard/users/${user.id}/edit`}><Pencil className="h-4 w-4" /></Link>
                                                             </Button>
@@ -510,6 +556,50 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                          </DialogFooter>
                         </>
                     )}
+                </DialogContent>
+            </Dialog>
+            <Dialog open={isEmailDialogOpen} onOpenChange={setIsEmailDialogOpen}>
+                <DialogContent>
+                    <form onSubmit={handleSendEmail}>
+                        <DialogHeader>
+                            <DialogTitle>{t('sendEmailTo', { name: selectedUserForEmail?.name || 'user' })}</DialogTitle>
+                            <DialogDescription>
+                               {t('sendEmailToDesc', { email: selectedUserForEmail?.email })}
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="email-subject" className="text-right">
+                                    {t('emailSubject')}
+                                </Label>
+                                <Input
+                                    id="email-subject"
+                                    value={emailSubject}
+                                    onChange={(e) => setEmailSubject(e.target.value)}
+                                    className="col-span-3"
+                                    required
+                                />
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="email-body" className="text-right">
+                                    {t('emailBody')}
+                                </Label>
+                                <Textarea
+                                    id="email-body"
+                                    value={emailBody}
+                                    onChange={(e) => setEmailBody(e.target.value)}
+                                    className="col-span-3"
+                                    rows={6}
+                                    required
+                                />
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button type="submit" disabled={isSendingEmail}>
+                                {isSendingEmail ? t('sendingEmail') : t('sendEmail')}
+                            </Button>
+                        </DialogFooter>
+                    </form>
                 </DialogContent>
             </Dialog>
         </div>

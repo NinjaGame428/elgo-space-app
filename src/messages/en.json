@@ -142,11 +142,15 @@
     "templateBookingRescheduledDesc": "Sent when a user changes their booking time.",
     "templateBookingCancellation": "Booking Cancellation",
     "templateBookingCancellationDesc": "Sent when a user cancels their booking.",
-    "emailSubject": "Email Subject",
-    "emailBody": "Email Body",
+    "emailSubject": "Subject",
+    "emailBody": "Body",
     "templateVariables": "Available variables",
     "saveAllTemplates": "Save All Templates",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "sendEmailTo": "Send Email to {name}",
+    "sendEmailToDesc": "Compose and send a custom email to {email}.",
+    "sendEmail": "Send Email",
+    "sendingEmail": "Sending..."
   },
   "AddRoomPage": {
       "backToDashboard": "Back to Dashboard",
