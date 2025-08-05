@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import type { Location } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Badge } from './ui/badge';
+import { useTranslations } from 'next-intl';
 
 interface LocationCardProps {
   location: Location;
@@ -15,6 +16,7 @@ interface LocationCardProps {
 }
 
 export function LocationCard({ location, isSelected, onClick }: LocationCardProps) {
+  const t = useTranslations('LocationNames');
   return (
     <Card
       onClick={onClick}
@@ -27,7 +29,7 @@ export function LocationCard({ location, isSelected, onClick }: LocationCardProp
         <div className="relative h-48 sm:h-auto sm:w-48 flex-shrink-0">
           <Image
             src={location.imageUrl}
-            alt={location.name}
+            alt={t(location.name as any)}
             fill
             className="object-cover rounded-t-lg sm:rounded-l-lg sm:rounded-t-none"
             data-ai-hint="modern office"
@@ -36,7 +38,7 @@ export function LocationCard({ location, isSelected, onClick }: LocationCardProp
         </div>
         <div className="p-4 flex flex-col">
           <CardHeader className="p-0">
-            <CardTitle className="text-xl font-bold mb-1 truncate">{location.name}</CardTitle>
+            <CardTitle className="text-xl font-bold mb-1 truncate">{t(location.name as any)}</CardTitle>
             <CardDescription className="truncate">{location.address}</CardDescription>
           </CardHeader>
           <CardContent className="p-0 mt-auto pt-4">

@@ -22,6 +22,7 @@ import { fr, enUS } from 'date-fns/locale';
 
 export default function DashboardPage() {
     const t = useTranslations('DashboardPage');
+    const tloc = useTranslations('LocationNames');
     const locale = useLocale();
     const router = useRouter();
     const { toast } = useToast();
@@ -140,7 +141,7 @@ export default function DashboardPage() {
                                     return (
                                         <div key={booking.id} className="p-4 border rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 cursor-pointer hover:bg-muted/50" onClick={() => handleBookingClick(booking)}>
                                             <div>
-                                                <p className="font-semibold">{location?.name || t('unknownLocation')}</p>
+                                                <p className="font-semibold">{location ? tloc(location.name as any) : t('unknownLocation')}</p>
                                                 <p className="text-sm text-muted-foreground">
                                                     {format(new Date(booking.startTime), 'p')} - {format(new Date(booking.endTime), 'p')}
                                                 </p>
@@ -216,7 +217,7 @@ export default function DashboardPage() {
                             <TableBody>
                                 {locations.map(location => (
                                     <TableRow key={location.id}>
-                                        <TableCell className="font-medium">{location.name}</TableCell>
+                                        <TableCell className="font-medium">{tloc(location.name as any)}</TableCell>
                                         <TableCell>{location.address}</TableCell>
                                         <TableCell className="text-right">
                                             <DropdownMenu>
@@ -333,7 +334,7 @@ export default function DashboardPage() {
                         <div className="space-y-4">
                             <div>
                                 <h4 className="font-semibold">{t('location')}</h4>
-                                <p>{selectedBookingLocation?.name}</p>
+                                <p>{selectedBookingLocation ? tloc(selectedBookingLocation.name as any) : ''}</p>
                                 <p className="text-sm text-muted-foreground">{selectedBookingLocation?.address}</p>
                             </div>
                             <div>

@@ -13,6 +13,7 @@ import { useTranslations } from 'next-intl';
 
 export default function HomePage() {
   const t = useTranslations('Home');
+  const tloc = useTranslations('LocationNames');
   const searchParams = useSearchParams();
   const initialLocationId = searchParams.get('location');
   const initialLocation = allLocations.find(l => l.id === initialLocationId) || allLocations[0];
@@ -22,7 +23,7 @@ export default function HomePage() {
   const [selectedType, setSelectedType] = useState('All Types');
 
   const filteredLocations = allLocations.filter(location => {
-    const matchesSearch = location.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = tloc(location.name as any).toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = selectedType === 'All Types' || location.bookables.some(b => b.type === selectedType);
     return matchesSearch && matchesType;
   });

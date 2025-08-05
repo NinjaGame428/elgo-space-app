@@ -18,6 +18,7 @@ import Image from 'next/image';
 
 export default function EditRoomPage() {
     const t = useTranslations('EditRoomPage');
+    const tloc = useTranslations('LocationNames');
     const router = useRouter();
     const params = useParams();
     const { id } = params;
@@ -38,7 +39,7 @@ export default function EditRoomPage() {
         const foundLocation = parsedLocations.find((l: Location) => l.id === id);
         if (foundLocation) {
             setLocation(foundLocation);
-            setName(foundLocation.name);
+            setName(tloc(foundLocation.name as any));
             setAddress(foundLocation.address);
             setImageUrl(foundLocation.imageUrl);
             setSelectedAmenities(foundLocation.amenities.map(a => a.name));
@@ -46,14 +47,20 @@ export default function EditRoomPage() {
             toast({ variant: 'destructive', title: t('roomNotFound') });
             router.push('/dashboard');
         }
-    }, [id, router, toast, t]);
+    }, [id, router, toast, t, tloc]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
+        if (!location) return;
+
+        // Note: We are saving the English name back. 
+        // For a real app, you would handle this differently,
+        // perhaps by editing the translation files or having a different data structure.
+        // But for this simulation, we'll just use the key.
         const updatedLocation: Location = {
-            ...location!,
-            name,
+            ...location,
+            name: location.name, // Keep the key
             address,
             imageUrl,
             amenities: selectedAmenities.map(name => ({ name })),
@@ -104,7 +111,7 @@ export default function EditRoomPage() {
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
                                 <Label htmlFor="name">{t('roomNameLabel')}</Label>
-                                <Input id="name" value={name} onChange={e => setName(e.target.value)} required />
+                                <Input id="name" value={name} onChange={e => setName(e.target.value)} required disabled/>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="address">{t('addressLabel')}</Label>

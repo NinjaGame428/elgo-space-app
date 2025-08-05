@@ -46,6 +46,7 @@ const timeSlots = Array.from({ length: 18 }, (_, i) => {
 export function LocationDetails({ location }: LocationDetailsProps) {
   const t = useTranslations('LocationDetails');
   const ta = useTranslations('AmenityNames');
+  const tloc = useTranslations('LocationNames');
   const locale = useLocale();
   const router = useRouter();
   const { toast } = useToast();
@@ -131,7 +132,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
       toast({
         title: t('bookingConfirmedTitle'),
         description: t('bookingConfirmedDescription', {
-          locationName: location.name,
+          locationName: tloc(location.name as any),
           startDate: format(date.from, "PPP", { locale: dateLocale }),
           endDate: format(bookingEndDate, "PPP", { locale: dateLocale }),
           startTime: startTime,
@@ -264,7 +265,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
         <div className="relative w-full h-60 md:h-80">
           <Image
             src={location.imageUrl}
-            alt={location.name}
+            alt={tloc(location.name as any)}
             fill
             className="object-cover rounded-t-lg"
             data-ai-hint="office workspace"
@@ -273,7 +274,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
         </div>
         <div className="p-4 md:p-6">
           <CardHeader className="p-0 mb-6">
-            <CardTitle className="text-3xl font-bold">{location.name}</CardTitle>
+            <CardTitle className="text-3xl font-bold">{tloc(location.name as any)}</CardTitle>
             <CardDescription className="text-base pt-1">{location.address}</CardDescription>
           </CardHeader>
           <CardContent className="p-0">

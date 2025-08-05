@@ -27,6 +27,7 @@ const timeSlots = Array.from({ length: 18 }, (_, i) => {
 
 export default function EditBookingPage() {
     const t = useTranslations('EditBookingPage');
+    const tloc = useTranslations('LocationNames');
     const router = useRouter();
     const params = useParams();
     const { id } = params;
@@ -184,7 +185,7 @@ export default function EditBookingPage() {
             <main className="flex-1 flex items-center justify-center p-4">
                 <Card className="w-full max-w-2xl">
                     <CardHeader>
-                        <CardTitle>{t('rescheduleTitle', { locationName: location.name })}</CardTitle>
+                        <CardTitle>{t('rescheduleTitle', { locationName: tloc(location.name as any) })}</CardTitle>
                         <CardDescription>{t('rescheduleDescription')}</CardDescription>
                     </CardHeader>
                     <form onSubmit={handleSubmit}>

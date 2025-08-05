@@ -3,7 +3,6 @@
   "Header": {
     "title": "Lauft",
     "login": "Connexion",
-    "signUpLink": "S'inscrire",
     "myAccount": "Mon Compte",
     "profile": "Profil",
     "myBookings": "Mes Réservations",
@@ -11,7 +10,8 @@
     "logout": "Déconnexion",
     "language": "Langue",
     "english": "Anglais",
-    "french": "Français"
+    "french": "Français",
+    "signUpLink": "S'inscrire"
   },
   "Home": {
     "locations": "Emplacements",
@@ -271,5 +271,11 @@
     "Wi-Fi": "Wi-Fi",
     "Kitchenette": "Cuisinette",
     "Parking": "Parking"
+  },
+  "LocationNames": {
+    "secretariat": "Le Secrétariat",
+    "sanctuary": "Le Sanctuaire",
+    "integration": "L'Intégration",
+    "impactJunior": "L'Impact Junior"
   }
 }

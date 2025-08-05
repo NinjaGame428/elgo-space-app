@@ -20,6 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 
 export default function MyBookingsPage() {
     const t = useTranslations('MyBookingsPage');
+    const tloc = useTranslations('LocationNames');
     const router = useRouter();
     const { toast } = useToast();
 
@@ -92,7 +93,7 @@ export default function MyBookingsPage() {
                 onClick={!isUpcoming ? () => handleBookingClick(booking) : undefined}
             >
                 <div>
-                    <p className="font-semibold">{location?.name || t('unknownLocation')}</p>
+                    <p className="font-semibold">{location ? tloc(location.name as any) : t('unknownLocation')}</p>
                     <p className="text-sm text-muted-foreground">
                         {format(new Date(booking.startTime), 'PPP, p')} - {format(new Date(booking.endTime), 'p')}
                     </p>
@@ -190,7 +191,7 @@ export default function MyBookingsPage() {
                         <div className="space-y-4">
                              <div>
                                 <h4 className="font-semibold">{t('location')}</h4>
-                                <p>{selectedBookingLocation?.name}</p>
+                                <p>{selectedBookingLocation ? tloc(selectedBookingLocation.name as any) : ''}</p>
                                 <p className="text-sm text-muted-foreground">{selectedBookingLocation?.address}</p>
                             </div>
                             <div>
@@ -211,5 +212,3 @@ export default function MyBookingsPage() {
         </div>
     );
 }
-
-    
