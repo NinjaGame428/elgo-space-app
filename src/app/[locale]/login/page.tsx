@@ -35,6 +35,7 @@ export default function LoginPage() {
         // Set auth info in localStorage
         window.localStorage.setItem('isLoggedIn', 'true');
         window.localStorage.setItem('userEmail', email);
+        window.localStorage.setItem('userRole', data.user.role);
         
         const isAdmin = data.user.role === 'Admin';
         

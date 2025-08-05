@@ -25,22 +25,23 @@ export function Header() {
   const pathname = usePathname();
   
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
     // On initial mount, check the auth status from localStorage
     const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    const email = localStorage.getItem('userEmail');
+    const role = localStorage.getItem('userRole');
     setIsAuthenticated(loggedIn);
-    setUserEmail(email);
+    setUserRole(role);
   }, []);
 
   const handleLogout = () => {
     if (typeof window !== 'undefined') {
         localStorage.removeItem('isLoggedIn');
         localStorage.removeItem('userEmail');
+        localStorage.removeItem('userRole');
         // Hard redirect to homepage to ensure all state is cleared
         window.location.href = '/';
     }
@@ -51,7 +52,7 @@ export function Header() {
     router.replace(pathname, { locale: newLocale });
   };
 
-  const isAdmin = userEmail === 'heavenkeys2022@gmail.com';
+  const isAdmin = userRole === 'Admin';
 
   const headerClasses = cn(
     "sticky top-0 z-50 w-full transition-all duration-300",

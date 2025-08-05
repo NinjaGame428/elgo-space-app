@@ -46,8 +46,8 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
     const dateLocale = locale === 'fr' ? fr : enUS;
 
     useEffect(() => {
-        const loggedInEmail = typeof window !== 'undefined' ? localStorage.getItem('userEmail') : null;
-        if (loggedInEmail !== 'heavenkeys2022@gmail.com') { // Simple admin check
+        const userRole = typeof window !== 'undefined' ? localStorage.getItem('userRole') : null;
+        if (userRole !== 'Admin') {
             router.push('/login');
             return;
         }
@@ -88,12 +88,16 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
     };
     
     const deleteLocation = (locationId: string) => {
-        setLocations(locations.filter(l => l.id !== locationId));
+        const updatedLocations = locations.filter(l => l.id !== locationId);
+        localStorage.setItem('locations', JSON.stringify(updatedLocations));
+        setLocations(updatedLocations);
         toast({ title: t('roomDeleted') });
     };
 
     const deleteUser = (userId: string) => {
-        setUsers(users.filter(u => u.id !== userId));
+        const updatedUsers = users.filter(u => u.id !== userId);
+        localStorage.setItem('users', JSON.stringify(updatedUsers));
+        setUsers(updatedUsers);
         toast({ title: t('userDeleted') });
     };
 
@@ -265,12 +269,12 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                                             <TableCell>{format(new Date(user.joined_at), 'yyyy-MM-dd')}</TableCell>
                                             <TableCell className="text-right">
                                                <div className="flex items-center justify-end gap-2">
-                                                    <Button variant="outline" size="icon" asChild disabled={user.email === 'heavenkeys2022@gmail.com'}>
+                                                    <Button variant="outline" size="icon" asChild disabled={user.role === 'Admin'}>
                                                         <Link href={`/dashboard/users/${user.id}/edit`}><Pencil className="h-4 w-4" /></Link>
                                                     </Button>
                                                     <AlertDialog>
                                                         <AlertDialogTrigger asChild>
-                                                             <Button variant="destructive" size="icon" disabled={user.email === 'heavenkeys2022@gmail.com'}><Trash2 className="h-4 w-4" /></Button>
+                                                             <Button variant="destructive" size="icon" disabled={user.role === 'Admin'}><Trash2 className="h-4 w-4" /></Button>
                                                         </AlertDialogTrigger>
                                                         <AlertDialogContent>
                                                             <AlertDialogHeader>
