@@ -33,7 +33,7 @@ export async function sendEmail({ to, subject, body, params }: { to: string, sub
 
   const sendSmtpEmail = new brevo.SendSmtpEmail();
   // IMPORTANT: You must use a verified sender email address from your Brevo account.
-  sendSmtpEmail.sender = { name: "Elgo Space", email: "noreply@yourdomain.com" };
+  sendSmtpEmail.sender = { name: "Elgo Space", email: "jackmichael@heavenkeys.ca" }; 
   sendSmtpEmail.to = [{ email: to }];
   sendSmtpEmail.subject = subject;
   sendSmtpEmail.htmlContent = htmlContent;
