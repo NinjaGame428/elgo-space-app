@@ -142,11 +142,11 @@ export default function EditUserPage() {
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="name">{t('nameLabel')}</Label>
-                            <Input id="name" value={name} onChange={e => setName(e.target.value)} required disabled={isLoading}/>
+                            <Input id="name" value={name} onChange={e => setName(e.target.value)} required />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="email">{t('emailLabel')}</Label>
-                            <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required disabled={isLoading}/>
+                            <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="role">{t('roleLabel')}</Label>
@@ -169,5 +169,3 @@ export default function EditUserPage() {
         </div>
     );
 }
-
-    
