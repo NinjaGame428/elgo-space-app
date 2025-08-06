@@ -1,11 +1,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server-client';
-import { cookies } from 'next/headers';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 
 export async function POST(req: NextRequest) {
   const { email, password } = await req.json();
-  const cookieStore = cookies();
   const supabase = createClient();
 
   if (!email || !password) {
@@ -22,27 +21,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: authError?.message || 'Invalid credentials' }, { status: 401 });
   }
 
-  // Manually set the session cookie for the browser
-  cookieStore.set(
-      `sb-${process.env.NEXT_PUBLIC_SUPABASE_URL!.split('.')[0].split('//')[1]}-auth-token`,
-      JSON.stringify({
-          access_token: authData.session.access_token,
-          refresh_token: authData.session.refresh_token,
-          expires_in: authData.session.expires_in,
-          token_type: 'bearer',
-          user: {id: authData.user.id},
-      }),
-      {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          path: '/',
-          maxAge: authData.session.expires_in,
-      },
+  // Use an admin client to fetch the user profile to bypass RLS policies
+  // This is a common pattern to avoid login issues caused by RLS.
+  const supabaseAdmin = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-
   // Now, fetch the user's profile to get their role
-  const { data: profile, error: profileError } = await supabase
+  const { data: profile, error: profileError } = await supabaseAdmin
     .from('users')
     .select('role')
     .eq('id', authData.user.id)
@@ -59,5 +46,17 @@ export async function POST(req: NextRequest) {
       role: profile.role,
   };
 
-  return NextResponse.json({ message: 'Login successful', user }, { status: 200 });
+  const response = NextResponse.json({ message: 'Login successful', user }, { status: 200 });
+
+  // Manually set the session cookie for the browser
+  await response.cookies.set({
+    name: `sb-${process.env.NEXT_PUBLIC_SUPABASE_URL!.split('.')[0].substring(8)}-auth-token`,
+    value: JSON.stringify(authData.session),
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: authData.session.expires_in,
+  });
+
+  return response;
 }
