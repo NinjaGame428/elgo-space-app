@@ -32,7 +32,7 @@ export async function sendEmail({ to, subject, body, params }: { to: string, sub
   const htmlContent = renderTemplate(body, params);
 
   const sendSmtpEmail = new brevo.SendSmtpEmail();
-  sendSmtpEmail.sender = { name: "Heavenkeys Booking", email: "noreply@heavenkeys.com" }; // Replace with your verified sender
+  sendSmtpEmail.sender = { name: "Heavenkeys Booking", email: "jackmichael@heavenkeys.ca" }; // Replace with your verified sender
   sendSmtpEmail.to = [{ email: to }];
   sendSmtpEmail.subject = subject;
   sendSmtpEmail.htmlContent = htmlContent;
