@@ -27,8 +27,10 @@ export default function EditUserPage() {
     const [email, setEmail] = useState('');
     const [role, setRole] = useState<'User' | 'Admin'>('User');
     const [isLoading, setIsLoading] = useState(true);
+    const [isCurrentUser, setIsCurrentUser] = useState(false);
     
     useEffect(() => {
+        const currentUserEmail = localStorage.getItem('userEmail');
         if (!id) return;
 
         async function fetchUser() {
@@ -42,6 +44,11 @@ export default function EditUserPage() {
                 setName(userData.name || '');
                 setEmail(userData.email || '');
                 setRole(userData.role);
+
+                if (currentUserEmail === userData.email) {
+                    setIsCurrentUser(true);
+                }
+
             } catch (error) {
                 console.error(error);
                 toast({ variant: 'destructive', title: t('userNotFound') });
@@ -124,14 +131,17 @@ export default function EditUserPage() {
         return <div className="flex items-center justify-center min-h-screen">{t('userNotFound')}</div>;
     }
 
+    const pageTitle = role === 'Admin' ? t('editAdminTitle') : t('editUserTitle');
+    const pageDescription = role === 'Admin' ? t('editAdminDescription') : t('editUserDescription');
+
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4 sm:p-6 lg:p-8">
             <Card className="w-full max-w-lg animate-fade-in-up">
                  <CardHeader>
                     <div className="flex items-center justify-between">
                         <div>
-                            <CardTitle className="text-2xl">{t('editUserTitle')}</CardTitle>
-                            <CardDescription>{t('editUserDescription')}</CardDescription>
+                            <CardTitle className="text-2xl">{pageTitle}</CardTitle>
+                            <CardDescription>{pageDescription}</CardDescription>
                         </div>
                         <Button variant="outline" size="icon" asChild>
                             <Link href="/dashboard"><ArrowLeft /></Link>
@@ -150,7 +160,7 @@ export default function EditUserPage() {
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="role">{t('roleLabel')}</Label>
-                            <Select value={role} onValueChange={(value: 'User' | 'Admin') => setRole(value)} disabled={isLoading}>
+                            <Select value={role} onValueChange={(value: 'User' | 'Admin') => setRole(value)} disabled={isLoading || isCurrentUser}>
                                 <SelectTrigger id="role">
                                     <SelectValue placeholder="Select a role" />
                                 </SelectTrigger>
@@ -159,6 +169,7 @@ export default function EditUserPage() {
                                     <SelectItem value="Admin">{t('roleAdmin')}</SelectItem>
                                 </SelectContent>
                             </Select>
+                            {isCurrentUser && <p className="text-xs text-muted-foreground mt-1">{t('cannotChangeOwnRole')}</p>}
                         </div>
                     </CardContent>
                     <CardFooter className="border-t pt-6">

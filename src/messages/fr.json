@@ -212,6 +212,8 @@
       "backToDashboard": "Retour au tableau de bord",
       "editUserTitle": "Modifier l'utilisateur",
       "editUserDescription": "Mettez à jour les détails et le rôle de l'utilisateur.",
+      "editAdminTitle": "Modifier l'administrateur",
+      "editAdminDescription": "Mettez à jour les détails et le rôle de l'administrateur.",
       "nameLabel": "Nom",
       "emailLabel": "Email",
       "roleLabel": "Rôle",
@@ -224,7 +226,8 @@
       "userUpdatedTitle": "Utilisateur mis à jour",
       "userUpdatedDescription": "Les détails de l'utilisateur ont été mis à jour avec succès.",
       "userNotFound": "Utilisateur non trouvé.",
-      "loading": "Chargement..."
+      "loading": "Chargement...",
+      "cannotChangeOwnRole": "Vous ne pouvez pas changer votre propre rôle."
   },
   "MyBookingsPage": {
     "yourReservations": "Vos réservations",

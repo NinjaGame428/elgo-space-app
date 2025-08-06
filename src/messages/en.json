@@ -212,6 +212,8 @@
       "backToDashboard": "Back to Dashboard",
       "editUserTitle": "Edit User",
       "editUserDescription": "Update the user's details and role.",
+      "editAdminTitle": "Edit Admin",
+      "editAdminDescription": "Update the admin's details and role.",
       "nameLabel": "Name",
       "emailLabel": "Email",
       "roleLabel": "Role",
@@ -224,7 +226,8 @@
       "userUpdatedTitle": "User Updated",
       "userUpdatedDescription": "The user's details have been successfully updated.",
       "userNotFound": "User not found.",
-      "loading": "Loading..."
+      "loading": "Loading...",
+      "cannotChangeOwnRole": "You cannot change your own role."
   },
   "MyBookingsPage": {
     "yourReservations": "Your Reservations",
