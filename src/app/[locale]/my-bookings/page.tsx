@@ -17,6 +17,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { createClient } from '@/lib/supabase';
 
 interface MyBookingsClientContentProps {
     bookings: Booking[];
@@ -27,16 +28,59 @@ function MyBookingsClientContent({ bookings: initialBookings, locations: initial
     const t = useTranslations('MyBookingsPage');
     const tloc = useTranslations('LocationNames');
     const { toast } = useToast();
+    const supabase = createClient();
 
     const [bookings, setBookings] = useState<Booking[]>(initialBookings);
     const [locations, setLocations] = useState<Location[]>(initialLocations);
     const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
     const [currentTime, setCurrentTime] = useState(new Date());
+    const [userEmail, setUserEmail] = useState<string | null>(null);
 
     useEffect(() => {
+        setUserEmail(localStorage.getItem('userEmail'));
         const timer = setInterval(() => setCurrentTime(new Date()), 60000); // Update every minute
         return () => clearInterval(timer);
     }, []);
+
+    useEffect(() => {
+        if (!userEmail) return;
+
+        const handleBookingChanges = (payload: any) => {
+             const { eventType, new: newRecord, old: oldRecord } = payload;
+             const recordId = newRecord?.id || oldRecord?.id;
+             if (eventType === 'INSERT' && newRecord.user_email === userEmail) {
+                 const newBooking: Booking = {
+                    id: newRecord.id,
+                    locationId: newRecord.location_id,
+                    userEmail: newRecord.user_email,
+                    startTime: newRecord.start_time,
+                    endTime: newRecord.end_time,
+                    status: newRecord.status,
+                    department: newRecord.department,
+                    occasion: newRecord.occasion,
+                 };
+                setBookings(current => [...current, newBooking]);
+             } else if (eventType === 'UPDATE' && newRecord.user_email === userEmail) {
+                setBookings(current => current.map(b => b.id === recordId ? {
+                    ...b, 
+                    status: newRecord.status, 
+                    startTime: newRecord.start_time,
+                    endTime: newRecord.end_time,
+                } : b));
+             } else if (eventType === 'DELETE' && oldRecord.user_email === userEmail) {
+                setBookings(current => current.filter(b => b.id !== recordId));
+             }
+        };
+
+        const bookingsSubscription = supabase
+            .channel(`my-bookings-${userEmail}`)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings', filter: `user_email=eq.${userEmail}` }, handleBookingChanges)
+            .subscribe();
+        
+        return () => {
+            supabase.removeChannel(bookingsSubscription);
+        };
+    }, [userEmail, supabase]);
 
     const sortedBookings = useMemo(() => {
         return [...bookings].sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
@@ -79,7 +123,7 @@ function MyBookingsClientContent({ bookings: initialBookings, locations: initial
             const response = await fetch(`/api/bookings/${bookingId}`, { method: 'DELETE' });
             if (!response.ok) throw new Error('Failed to cancel booking');
             
-            setBookings(prev => prev.filter(b => b.id !== bookingId));
+            // State will update via Supabase Realtime
             toast({ title: t('bookingCancelledTitle'), description: t('bookingCancelledDescription') });
         } catch (error) {
             toast({ variant: 'destructive', title: "Error", description: "Could not cancel booking." });

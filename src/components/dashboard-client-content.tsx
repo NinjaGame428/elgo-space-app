@@ -24,6 +24,7 @@ import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { createClient } from '@/lib/supabase';
 
 function EmailTemplatesManager() {
     const t = useTranslations('DashboardPage');
@@ -170,6 +171,7 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
     const router = useRouter();
     const { toast } = useToast();
     const isMobile = useIsMobile();
+    const supabase = createClient();
 
     const [activeTab, setActiveTab] = useState('dashboard');
     const [bookings, setBookings] = useState<Booking[]>(initialData.bookings);
@@ -201,6 +203,66 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
         setCurrentUserEmail(userEmail);
     }, [router]);
 
+    useEffect(() => {
+        const handleBookingChanges = (payload: any) => {
+             const { eventType, new: newRecord, old: oldRecord } = payload;
+             const recordId = newRecord?.id || oldRecord?.id;
+             if (eventType === 'INSERT') {
+                const newBooking = {
+                    id: newRecord.id,
+                    locationId: newRecord.location_id,
+                    userEmail: newRecord.user_email,
+                    startTime: newRecord.start_time,
+                    endTime: newRecord.end_time,
+                    status: newRecord.status,
+                    department: newRecord.department,
+                    occasion: newRecord.occasion,
+                };
+                setBookings(current => [...current, newBooking]);
+             } else if (eventType === 'UPDATE') {
+                setBookings(current => current.map(b => b.id === recordId ? {
+                    ...b, 
+                    status: newRecord.status, 
+                    startTime: newRecord.start_time,
+                    endTime: newRecord.end_time,
+                } : b));
+             } else if (eventType === 'DELETE') {
+                setBookings(current => current.filter(b => b.id !== recordId));
+             }
+        };
+
+        const handleLocationChanges = (payload: any) => {
+            // Simplified refetch for locations due to complexity of amenity relations
+            fetch('/api/locations').then(res => res.json()).then(setLocations);
+        };
+        
+        const handleUserChanges = (payload: any) => {
+            // Simplified refetch for users
+            fetch('/api/users').then(res => res.json()).then(setUsers);
+        };
+
+        const bookingsSubscription = supabase
+            .channel('bookings-dashboard')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, handleBookingChanges)
+            .subscribe();
+
+        const locationsSubscription = supabase
+            .channel('locations-dashboard')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'locations' }, handleLocationChanges)
+            .subscribe();
+        
+        const usersSubscription = supabase
+            .channel('users-dashboard')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, handleUserChanges)
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(bookingsSubscription);
+            supabase.removeChannel(locationsSubscription);
+            supabase.removeChannel(usersSubscription);
+        };
+    }, [supabase]);
+
     const handleApproval = async (bookingId: string, status: 'approved' | 'rejected') => {
         try {
             const response = await fetch(`/api/bookings/${bookingId}`, {
@@ -209,7 +271,8 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                 body: JSON.stringify({ status }),
             });
             if (!response.ok) throw new Error('Failed to update status');
-
+            
+            // State will update via Supabase Realtime, but we can do it optimistically too
             setBookings(currentBookings =>
                 currentBookings.map(b =>
                     b.id === bookingId ? { ...b, status } : b
@@ -230,8 +293,6 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                 const errorData = await response.json();
                 throw new Error(errorData.message || t('roomDeleteFailed'));
             }
-
-            setLocations(locations.filter(l => l.id !== locationId));
             toast({ title: t('roomDeleted') });
         } catch (error: any) {
             toast({ variant: 'destructive', title: "Error", description: error.message });
@@ -246,8 +307,6 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                 const errorData = await response.json();
                 throw new Error(errorData.message || t('userDeleteFailed'));
             }
-            
-            setUsers(users.filter(u => u.id !== userId));
             toast({ title: t('userDeleted') });
         } catch(error: any) {
              toast({ variant: 'destructive', title: "Error", description: error.message });
@@ -628,13 +687,11 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                                 <Button 
                                     onClick={() => handleApproval(selectedBooking.id, 'rejected')} 
                                     variant="outline"
-                                    disabled={selectedBooking.status === 'rejected'}
                                 >
                                     <XCircle/>{t('reject')}
                                 </Button>
                                 <Button 
                                     onClick={() => handleApproval(selectedBooking.id, 'approved')}
-                                    disabled={selectedBooking.status === 'approved'}
                                 >
                                     <CheckCircle/>{t('approve')}
                                 </Button>

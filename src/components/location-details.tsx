@@ -23,6 +23,7 @@ import { Skeleton } from './ui/skeleton';
 import { Separator } from './ui/separator';
 import { Input } from './ui/input';
 import type { DateRange } from 'react-day-picker';
+import { createClient } from '@/lib/supabase';
 
 const amenityIcons = {
   "24/7 Access": Clock,
@@ -52,6 +53,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
   const locale = useLocale();
   const router = useRouter();
   const { toast } = useToast();
+  const supabase = createClient();
   
   const [date, setDate] = useState<DateRange | undefined>();
   const [startTime, setStartTime] = useState<string | null>(null);
@@ -103,6 +105,51 @@ export function LocationDetails({ location }: LocationDetailsProps) {
 
   }, [location, toast]);
 
+    useEffect(() => {
+        if (!location) return;
+
+        const handleBookingChanges = (payload: any) => {
+            const { eventType, new: newRecord, old: oldRecord } = payload;
+            const recordId = newRecord?.id || oldRecord?.id;
+            
+            if (newRecord?.location_id !== location.id && oldRecord?.location_id !== location.id) {
+                return;
+            }
+
+            if (eventType === 'INSERT') {
+                const newBooking = {
+                    id: newRecord.id,
+                    locationId: newRecord.location_id,
+                    userEmail: newRecord.user_email,
+                    startTime: newRecord.start_time,
+                    endTime: newRecord.end_time,
+                    status: newRecord.status,
+                    department: newRecord.department,
+                    occasion: newRecord.occasion,
+                };
+                setBookings(current => [...current, newBooking]);
+            } else if (eventType === 'UPDATE') {
+                 setBookings(current => current.map(b => b.id === recordId ? {
+                    ...b, 
+                    status: newRecord.status, 
+                    startTime: newRecord.start_time,
+                    endTime: newRecord.end_time,
+                } : b));
+            } else if (eventType === 'DELETE') {
+                setBookings(current => current.filter(b => b.id !== recordId));
+            }
+        };
+
+        const bookingsSubscription = supabase
+            .channel(`location-details-${location.id}`)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings', filter: `location_id=eq.${location.id}` }, handleBookingChanges)
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(bookingsSubscription);
+        };
+    }, [location, supabase]);
+
   const handleBooking = async () => {
     if (!isAuthenticated || !userEmail) {
         router.push('/login');
@@ -135,9 +182,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
             throw new Error(errorData.message || 'Failed to create booking');
         }
 
-        const newBooking = await response.json();
-        setBookings(prev => [...prev, newBooking]);
-
+        // State will update via Supabase Realtime
         toast({
             title: t('bookingConfirmedTitle'),
             description: t('bookingConfirmedDescription', {
@@ -424,3 +469,5 @@ export function LocationDetails({ location }: LocationDetailsProps) {
     </div>
   );
 }
+
+    
