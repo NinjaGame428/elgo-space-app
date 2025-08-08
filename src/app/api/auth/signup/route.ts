@@ -1,6 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server-client';
+import { sendEmail } from '@/lib/email';
 
 export async function POST(req: NextRequest) {
   try {
@@ -42,6 +43,27 @@ export async function POST(req: NextRequest) {
     if (updateError) {
         // Log the error, but don't fail the request as the user is already created
         console.error('Error updating user phone number:', updateError);
+    }
+    
+    // Send notification email to admin
+    try {
+        const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
+        await sendEmail({
+            to: adminEmail,
+            subject: 'New User Registration on Elgo Space',
+            body: `
+                <p>A new user has registered on the Elgo Space platform.</p>
+                <ul>
+                    <li><strong>Name:</strong> {{name}}</li>
+                    <li><strong>Email:</strong> {{email}}</li>
+                    <li><strong>Phone:</strong> {{phone}}</li>
+                </ul>
+            `,
+            params: { name, email, phone },
+        });
+    } catch (emailError) {
+        console.error("Failed to send new user notification email to admin:", emailError);
+        // Do not fail the request if the admin email fails
     }
 
     return NextResponse.json({ message: 'Signup successful! Please check your email to confirm your account.' }, { status: 201 });
