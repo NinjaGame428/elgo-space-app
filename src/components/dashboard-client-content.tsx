@@ -624,12 +624,21 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                             </div>
                         </div>
                          <DialogFooter>
-                            {selectedBooking.status === 'pending' && (
-                                <>
-                                    <Button onClick={() => handleApproval(selectedBooking.id, 'rejected')} variant="outline"><XCircle/>{t('reject')}</Button>
-                                    <Button onClick={() => handleApproval(selectedBooking.id, 'approved')}><CheckCircle/>{t('approve')}</Button>
-                                </>
-                            )}
+                            <div className="flex items-center gap-2">
+                                <Button 
+                                    onClick={() => handleApproval(selectedBooking.id, 'rejected')} 
+                                    variant="outline"
+                                    disabled={selectedBooking.status === 'rejected'}
+                                >
+                                    <XCircle/>{t('reject')}
+                                </Button>
+                                <Button 
+                                    onClick={() => handleApproval(selectedBooking.id, 'approved')}
+                                    disabled={selectedBooking.status === 'approved'}
+                                >
+                                    <CheckCircle/>{t('approve')}
+                                </Button>
+                            </div>
                          </DialogFooter>
                         </>
                     )}
@@ -682,3 +691,5 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
         </div>
     );
 }
+
+    
