@@ -422,9 +422,6 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                                                         <div key={booking.id} className="p-4 border rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => handleBookingClick(booking)}>
                                                             <div>
                                                                 <p className="font-semibold">{location ? tloc(location.name as any) : t('unknownLocation')}</p>
-                                                                <p className="text-sm text-muted-foreground">
-                                                                    {format(new Date(booking.startTime), 'p')} - {format(new Date(booking.endTime), 'p')}
-                                                                </p>
                                                                 <p className="text-sm">{t('bookedBy', { email: booking.userEmail })}</p>
                                                             </div>
                                                             <div className="flex items-center gap-2">
@@ -672,7 +669,7 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                             </div>
                             <div>
                                 <h4 className="font-semibold text-sm text-muted-foreground">{t('dateTime')}</h4>
-                                <p>{format(new Date(selectedBooking.startTime), 'PPP, p')} - {format(new Date(selectedBooking.endTime), 'p')}</p>
+                                <p>{format(new Date(selectedBooking.startTime), 'PPP')}</p>
                             </div>
                             <div>
                                 <h4 className="font-semibold text-sm text-muted-foreground">{t('status')}</h4>

@@ -11,16 +11,14 @@ import { Calendar } from '@/components/ui/calendar';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { format, addDays, parse, eachDayOfInterval, formatISO, isValid, setHours, setMinutes, getDay, isBefore, startOfDay, endOfDay } from 'date-fns';
+import { format, addDays, eachDayOfInterval, formatISO, isValid, startOfDay, endOfDay } from 'date-fns';
 import { fr, enUS } from 'date-fns/locale';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
 import { useRouter } from 'next/navigation';
 import { Clock, Coffee, Printer, Phone, Wifi, Car, UtensilsCrossed, Building } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import type { Booking } from '@/lib/types';
 import { Skeleton } from './ui/skeleton';
-import { Separator } from './ui/separator';
 import { Input } from './ui/input';
 import type { DateRange } from 'react-day-picker';
 import { createClient } from '@/lib/supabase';
@@ -39,13 +37,6 @@ interface LocationDetailsProps {
   location: Location | null;
 }
 
-const timeSlots = Array.from({ length: 28 }, (_, i) => {
-    const hour = 7 + Math.floor(i / 2);
-    const minute = i % 2 === 0 ? '00' : '30';
-    if(hour > 20) return null
-    return `${String(hour).padStart(2, '0')}:${minute}`;
-}).filter(Boolean) as string[];
-
 export function LocationDetails({ location }: LocationDetailsProps) {
   const t = useTranslations('LocationDetails');
   const ta = useTranslations('AmenityNames');
@@ -56,8 +47,6 @@ export function LocationDetails({ location }: LocationDetailsProps) {
   const supabase = createClient();
   
   const [date, setDate] = useState<DateRange | undefined>();
-  const [startTime, setStartTime] = useState<string | null>(null);
-  const [endTime, setEndTime] = useState<string | null>(null);
   const [department, setDepartment] = useState('');
   const [occasion, setOccasion] = useState('');
   
@@ -78,8 +67,6 @@ export function LocationDetails({ location }: LocationDetailsProps) {
 
   useEffect(() => {
     setDate(undefined);
-    setStartTime(null);
-    setEndTime(null);
     setDepartment('');
     setOccasion('');
 
@@ -156,10 +143,10 @@ export function LocationDetails({ location }: LocationDetailsProps) {
         return;
     }
 
-    if (location && date?.from && startTime && endTime && department && occasion) {
+    if (location && date?.from && department && occasion) {
       const bookingEndDate = date.to || date.from;
-      const startDateTime = parse(startTime, 'HH:mm', date.from);
-      const endDateTime = parse(endTime, 'HH:mm', bookingEndDate);
+      const startDateTime = startOfDay(date.from);
+      const endDateTime = endOfDay(bookingEndDate);
       
       const newBookingData = {
         locationId: location.id,
@@ -182,14 +169,11 @@ export function LocationDetails({ location }: LocationDetailsProps) {
             throw new Error(errorData.message || 'Failed to create booking');
         }
 
-        // State will update via Supabase Realtime
         toast({
             title: t('bookingConfirmedTitle'),
-            description: t('bookingConfirmedDescription', {
+            description: t('bookingConfirmedDescription_dateOnly', {
               locationName: tloc(location.name as any),
               date: format(date.from, "PPP", { locale: dateLocale }),
-              startTime: format(startDateTime, 'p', { locale: dateLocale }),
-              endTime: format(endDateTime, 'p', { locale: dateLocale }),
             }),
         });
         
@@ -211,11 +195,6 @@ export function LocationDetails({ location }: LocationDetailsProps) {
     }
   };
   
-  const selectedDates = useMemo(() => {
-    if (!date?.from) return [];
-    return eachDayOfInterval({ start: date.from, end: date.to || date.from });
-  }, [date]);
-
   const approvedBookedDates = useMemo(() => {
     return bookings
       .filter(b => b.status === 'approved')
@@ -227,74 +206,6 @@ export function LocationDetails({ location }: LocationDetailsProps) {
       });
   }, [bookings]);
 
-  const isTimeBooked = useCallback((time: string, checkDate: Date) => {
-    const checkTime = parse(time, 'HH:mm', checkDate).getTime();
-    
-    return bookings.some(booking => {
-        if(booking.status !== 'approved') return false;
-        const bookingStart = new Date(booking.startTime).getTime();
-        const bookingEnd = new Date(booking.endTime).getTime();
-        return checkTime >= bookingStart && checkTime < bookingEnd;
-    });
-  }, [bookings]);
-  
-  const isTimeSlotDisabled = useCallback((time: string) => {
-      if (selectedDates.length === 0) return true;
-      for (const day of selectedDates) {
-          if (isTimeBooked(time, day)) {
-              return true;
-          }
-      }
-      return false;
-  }, [selectedDates, isTimeBooked]);
-
-  const isRangeInvalid = useMemo(() => {
-    if (!startTime || !endTime || selectedDates.length === 0) return false;
-    const start = parse(startTime, 'HH:mm', new Date());
-    const end = parse(endTime, 'HH:mm', new Date());
-
-    for (const day of selectedDates) {
-        for (let d = new Date(start); d < end; d.setMinutes(d.getMinutes() + 30)) {
-            const timeStr = format(d, 'HH:mm');
-            if (isTimeBooked(timeStr, day)) {
-                return true;
-            }
-        }
-    }
-    return false;
-  }, [startTime, endTime, selectedDates, isTimeBooked]);
-    
-  const availableEndTimes = useMemo(() => {
-      if (!startTime || selectedDates.length === 0) return [];
-      const startIndex = timeSlots.indexOf(startTime);
-      let endIndex = timeSlots.length;
-
-      for (let i = startIndex + 1; i < timeSlots.length; i++) {
-          const currentTimeSlot = timeSlots[i];
-          let isDisabled = false;
-          for (const day of selectedDates) {
-              if (isTimeBooked(currentTimeSlot, day)) {
-                  isDisabled = true;
-                  break;
-              }
-          }
-          if (isDisabled) {
-              endIndex = i;
-              break;
-          }
-      }
-      return timeSlots.slice(startIndex + 1, endIndex + 1);
-  }, [startTime, selectedDates, isTimeBooked]);
-
-
-  useEffect(() => {
-    setStartTime(null);
-    setEndTime(null);
-  }, [date]);
-
-  useEffect(() => {
-    setEndTime(null);
-  }, [startTime]);
 
   if (!location) {
     return (
@@ -382,7 +293,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                                     mode="range"
                                     selected={date}
                                     onSelect={setDate}
-                                    disabled={(day) => day < startOfDay(new Date()) || day > addDays(new Date(), 60)}
+                                    disabled={(day) => approvedBookedDates.some(bookedDate => format(bookedDate, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd')) || day < startOfDay(new Date()) || day > addDays(new Date(), 60)}
                                     initialFocus
                                     locale={dateLocale}
                                     modifiers={{ booked: approvedBookedDates }}
@@ -396,62 +307,25 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                         {date?.from && (
                             <div className="animate-fade-in-up space-y-4">
                                 <div>
-                                    <Label className="font-medium mb-2 block text-center">{t('selectTime')}</Label>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <Select value={startTime || ''} onValueChange={setStartTime} disabled={isLoading || !date?.from}>
-                                            <SelectTrigger className="h-11 bg-background">
-                                                <SelectValue placeholder={t('startTime')} />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {timeSlots.map(time => (
-                                                    <SelectItem key={time} value={time} disabled={isTimeSlotDisabled(time)}>
-                                                        {time}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <Select value={endTime || ''} onValueChange={setEndTime} disabled={isLoading || !startTime}>
-                                            <SelectTrigger className="h-11 bg-background">
-                                                <SelectValue placeholder={t('endTime')} />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {availableEndTimes.map(time => (
-                                                    <SelectItem key={time} value={time}>
-                                                        {time}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    {isRangeInvalid && (
-                                        <p className="text-sm text-destructive mt-2 text-center">{t('rangeInvalid')}</p>
-                                    )}
+                                    <Label htmlFor="department" className="font-medium mb-2 block text-center">{t('departmentLabel')}</Label>
+                                    <Input 
+                                        id="department"
+                                        value={department}
+                                        onChange={(e) => setDepartment(e.target.value)}
+                                        placeholder={t('departmentPlaceholder')}
+                                        className="bg-background"
+                                    />
                                 </div>
-
-                                {startTime && endTime && !isRangeInvalid && (
-                                    <div className="animate-fade-in-up space-y-4">
-                                        <div>
-                                            <Label htmlFor="department" className="font-medium mb-2 block text-center">{t('departmentLabel')}</Label>
-                                            <Input 
-                                                id="department"
-                                                value={department}
-                                                onChange={(e) => setDepartment(e.target.value)}
-                                                placeholder={t('departmentPlaceholder')}
-                                                className="bg-background"
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label htmlFor="occasion" className="font-medium mb-2 block text-center">{t('occasionLabel')}</Label>
-                                            <Input
-                                                id="occasion"
-                                                value={occasion}
-                                                onChange={(e) => setOccasion(e.target.value)}
-                                                placeholder={t('occasionPlaceholder')}
-                                                className="bg-background"
-                                            />
-                                        </div>
-                                    </div>
-                                )}
+                                <div>
+                                    <Label htmlFor="occasion" className="font-medium mb-2 block text-center">{t('occasionLabel')}</Label>
+                                    <Input
+                                        id="occasion"
+                                        value={occasion}
+                                        onChange={(e) => setOccasion(e.target.value)}
+                                        placeholder={t('occasionPlaceholder')}
+                                        className="bg-background"
+                                    />
+                                </div>
                             </div>
                         )}
                      </div>
@@ -459,7 +333,7 @@ export function LocationDetails({ location }: LocationDetailsProps) {
                      <Button 
                         onClick={handleBooking} 
                         className="w-full h-12 text-base font-semibold mt-auto"
-                        disabled={isLoading || !date || !startTime || !endTime || !department || !occasion || isRangeInvalid}
+                        disabled={isLoading || !date?.from || !department || !occasion}
                     >
                         {t('confirmBooking')}
                     </Button>

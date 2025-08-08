@@ -40,13 +40,14 @@
     "endTime": "Heure de fin",
     "noSlots": "Aucun créneau disponible pour cette journée.",
     "rangeInvalid": "Cette plage horaire chevauche une réservation existante.",
-    "departmentLabel": "3. Quel département réserve ?",
+    "departmentLabel": "2. Quel département réserve ?",
     "departmentPlaceholder": "ex. Marketing",
-    "occasionLabel": "4. Quelle est l'occasion ?",
+    "occasionLabel": "3. Quelle est l'occasion ?",
     "occasionPlaceholder": "ex. Synchro hebdomadaire",
     "confirmBooking": "Confirmer la réservation",
     "bookingConfirmedTitle": "Réservation en attente !",
     "bookingConfirmedDescription": "Votre demande pour {locationName} le {date} de {startTime} à {endTime} a été envoyée pour approbation.",
+    "bookingConfirmedDescription_dateOnly": "Votre demande pour {locationName} le {date} a été envoyée pour approbation.",
     "bookingFailedTitle": "Échec de la réservation",
     "bookingFailedDescription": "Veuillez sélectionner une plage de date et d'heure valide et remplir tous les champs."
   },
@@ -130,7 +131,7 @@
     "bookingDetailsDescription": "Détails complets de cette réservation.",
     "location": "Emplacement",
     "user": "Utilisateur",
-    "dateTime": "Date et heure",
+    "dateTime": "Date",
     "status": "Statut",
     "department": "Département",
     "occasion": "Occasion",
@@ -259,7 +260,7 @@
     "bookingDetails": "Détails de la réservation",
     "bookingDetailsDescription": "Résumé de votre réservation.",
     "location": "Emplacement",
-    "dateTime": "Date et heure",
+    "dateTime": "Date",
     "status": "Statut",
     "department": "Département",
     "occasion": "Occasion",
@@ -270,6 +271,7 @@
     "backToBookings": "Retour à Mes Réservations",
     "rescheduleTitle": "Reporter : {locationName}",
     "rescheduleDescription": "Sélectionnez une nouvelle date et heure pour votre réservation.",
+    "rescheduleDescription_dateOnly": "Sélectionnez une nouvelle date pour votre réservation.",
     "selectDateRange": "1. Sélectionnez une nouvelle plage de dates",
     "pickDateRange": "Choisissez une plage de dates",
     "selectTime": "2. Sélectionnez une nouvelle heure",
@@ -334,3 +336,5 @@
     "impactJunior": "L'Impact Junior"
   }
 }
+
+    

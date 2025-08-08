@@ -40,13 +40,14 @@
     "endTime": "End Time",
     "noSlots": "No available slots for this day.",
     "rangeInvalid": "This time range overlaps with an existing booking.",
-    "departmentLabel": "3. Which department is booking?",
+    "departmentLabel": "2. Which department is booking?",
     "departmentPlaceholder": "e.g. Marketing",
-    "occasionLabel": "4. What is the occasion?",
+    "occasionLabel": "3. What is the occasion?",
     "occasionPlaceholder": "e.g. Weekly Sync",
     "confirmBooking": "Confirm Booking",
     "bookingConfirmedTitle": "Booking Pending!",
     "bookingConfirmedDescription": "Your request for {locationName} on {date} from {startTime} to {endTime} has been sent for approval.",
+    "bookingConfirmedDescription_dateOnly": "Your request for {locationName} on {date} has been sent for approval.",
     "bookingFailedTitle": "Booking Failed",
     "bookingFailedDescription": "Please select a valid date, time, and fill in all fields."
   },
@@ -130,7 +131,7 @@
     "bookingDetailsDescription": "Full details for this reservation.",
     "location": "Location",
     "user": "User",
-    "dateTime": "Date & Time",
+    "dateTime": "Date",
     "status": "Status",
     "department": "Department",
     "occasion": "Occasion",
@@ -259,7 +260,7 @@
     "bookingDetails": "Booking Details",
     "bookingDetailsDescription": "Summary of your reservation.",
     "location": "Location",
-    "dateTime": "Date & Time",
+    "dateTime": "Date",
     "status": "Status",
     "department": "Department",
     "occasion": "Occasion",
@@ -270,6 +271,7 @@
     "backToBookings": "Back to My Bookings",
     "rescheduleTitle": "Reschedule: {locationName}",
     "rescheduleDescription": "Select a new date and time for your booking.",
+    "rescheduleDescription_dateOnly": "Select a new date for your booking.",
     "selectDateRange": "1. Select new date range",
     "pickDateRange": "Pick a date range",
     "selectTime": "2. Select new time",
@@ -334,3 +336,5 @@
     "impactJunior": "The Impact Junior"
   }
 }
+
+    

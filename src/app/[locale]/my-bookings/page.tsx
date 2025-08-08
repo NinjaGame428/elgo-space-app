@@ -145,6 +145,7 @@ function MyBookingsClientContent({ bookings: initialBookings, locations: initial
         const startTime = new Date(booking.startTime);
         const endTime = new Date(booking.endTime);
         const areDatesValid = isValid(startTime) && isValid(endTime);
+        const isMultiDay = areDatesValid && format(startTime, 'yyyy-MM-dd') !== format(endTime, 'yyyy-MM-dd');
         
         const now = currentTime;
         const isUpcoming = areDatesValid && isBefore(now, startTime);
@@ -168,8 +169,10 @@ function MyBookingsClientContent({ bookings: initialBookings, locations: initial
                         </p>
                         <p className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
                            <CalendarDays className="h-4 w-4" />
-                            {areDatesValid 
-                                ? `${format(startTime, 'PPP, p')} - ${format(endTime, 'p')}`
+                           {areDatesValid 
+                                ? isMultiDay
+                                    ? `${format(startTime, 'PPP')} - ${format(endTime, 'PPP')}`
+                                    : format(startTime, 'PPP')
                                 : t('invalidDate')
                             }
                         </p>
@@ -288,6 +291,7 @@ function MyBookingsClientContent({ bookings: initialBookings, locations: initial
                         const startDate = new Date(selectedBooking.startTime);
                         const endDate = new Date(selectedBooking.endTime);
                         const areDatesValid = isValid(startDate) && isValid(endDate);
+                        const isMultiDay = areDatesValid && format(startDate, 'yyyy-MM-dd') !== format(endDate, 'yyyy-MM-dd');
                         return (
                             <div className="space-y-4 pt-4">
                                 <div>
@@ -305,9 +309,11 @@ function MyBookingsClientContent({ bookings: initialBookings, locations: initial
                                 </div>
                                 <div>
                                     <h4 className="font-semibold text-sm text-muted-foreground">{t('dateTime')}</h4>
-                                    <p>
+                                     <p>
                                         {areDatesValid 
-                                            ? `${format(startDate, 'PPP, p')} - ${format(endDate, 'p')}`
+                                            ? isMultiDay
+                                                ? `${format(startDate, 'PPP')} - ${format(endDate, 'PPP')}`
+                                                : format(startDate, 'PPP')
                                             : t('invalidDate')
                                         }
                                     </p>
