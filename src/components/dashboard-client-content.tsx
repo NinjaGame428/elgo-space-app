@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation';
 import type { Booking, Location, User, EmailTemplate } from '@/lib/types';
 import { Link } from '@/navigation';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PlusCircle, Pencil, Trash2, CheckCircle, XCircle, User as UserIcon, Mail } from 'lucide-react';
+import { PlusCircle, Pencil, Trash2, CheckCircle, XCircle, User as UserIcon, Mail, MapPin, Building, Calendar as CalendarIcon, Clock, Edit } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -23,6 +23,7 @@ import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 function EmailTemplatesManager() {
     const t = useTranslations('DashboardPage');
@@ -168,6 +169,7 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
     const locale = useLocale();
     const router = useRouter();
     const { toast } = useToast();
+    const isMobile = useIsMobile();
 
     const [activeTab, setActiveTab] = useState('dashboard');
     const [bookings, setBookings] = useState<Booking[]>(initialData.bookings);
@@ -332,7 +334,7 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                                     <CardTitle>{t('bookingCalendar')}</CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="rounded-lg">
+                                    <div className="rounded-lg flex justify-center">
                                         <Calendar
                                             mode="single"
                                             selected={selectedDate}
@@ -393,21 +395,16 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                                     </Button>
                                 </CardHeader>
                                 <CardContent>
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead>{t('roomName')}</TableHead>
-                                                <TableHead>{t('address')}</TableHead>
-                                                <TableHead className="text-right">{t('actions')}</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
+                                    {isMobile ? (
+                                        <div className="space-y-4">
                                             {locations.map(location => (
-                                                <TableRow key={location.id}>
-                                                    <TableCell className="font-medium">{tloc(location.name as any)}</TableCell>
-                                                    <TableCell>{location.address}</TableCell>
-                                                    <TableCell className="text-right">
-                                                        <div className="flex items-center justify-end gap-2">
+                                                <Card key={location.id} className="p-4">
+                                                    <div className="flex justify-between items-start">
+                                                        <div>
+                                                            <p className="font-semibold">{tloc(location.name as any)}</p>
+                                                            <p className="text-sm text-muted-foreground">{location.address}</p>
+                                                        </div>
+                                                        <div className="flex items-center justify-end gap-2 flex-shrink-0">
                                                             <Button variant="outline" size="icon" asChild>
                                                                 <Link href={`/dashboard/rooms/${location.id}/edit`}><Pencil className="h-4 w-4" /></Link>
                                                             </Button>
@@ -427,11 +424,51 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                                                                 </AlertDialogContent>
                                                             </AlertDialog>
                                                         </div>
-                                                    </TableCell>
-                                                </TableRow>
+                                                    </div>
+                                                </Card>
                                             ))}
-                                        </TableBody>
-                                    </Table>
+                                        </div>
+                                    ) : (
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>{t('roomName')}</TableHead>
+                                                    <TableHead>{t('address')}</TableHead>
+                                                    <TableHead className="text-right">{t('actions')}</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {locations.map(location => (
+                                                    <TableRow key={location.id}>
+                                                        <TableCell className="font-medium">{tloc(location.name as any)}</TableCell>
+                                                        <TableCell>{location.address}</TableCell>
+                                                        <TableCell className="text-right">
+                                                            <div className="flex items-center justify-end gap-2">
+                                                                <Button variant="outline" size="icon" asChild>
+                                                                    <Link href={`/dashboard/rooms/${location.id}/edit`}><Pencil className="h-4 w-4" /></Link>
+                                                                </Button>
+                                                                <AlertDialog>
+                                                                    <AlertDialogTrigger asChild>
+                                                                        <Button variant="destructive" size="icon"><Trash2 className="h-4 w-4" /></Button>
+                                                                    </AlertDialogTrigger>
+                                                                    <AlertDialogContent>
+                                                                        <AlertDialogHeader>
+                                                                            <AlertDialogTitle>{t('areYouSure')}</AlertDialogTitle>
+                                                                            <AlertDialogDescription>{t('deleteRoomWarning')}</AlertDialogDescription>
+                                                                        </AlertDialogHeader>
+                                                                        <AlertDialogFooter>
+                                                                            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+                                                                            <AlertDialogAction onClick={() => deleteLocation(location.id)}>{t('delete')}</AlertDialogAction>
+                                                                        </AlertDialogFooter>
+                                                                    </AlertDialogContent>
+                                                                </AlertDialog>
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    )}
                                 </CardContent>
                             </Card>
 
@@ -446,55 +483,96 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                                     </Button>
                                 </CardHeader>
                                 <CardContent>
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead>{t('name')}</TableHead>
-                                                <TableHead>{t('email')}</TableHead>
-                                                <TableHead>{t('role')}</TableHead>
-                                                <TableHead>{t('joined')}</TableHead>
-                                                <TableHead className="text-right">{t('actions')}</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
+                                     {isMobile ? (
+                                        <div className="space-y-4">
                                             {users.map(user => (
-                                                <TableRow key={user.id} className={cn(user.email === currentUserEmail && "bg-muted/50")}>
-                                                    <TableCell className="font-medium flex items-center gap-2">
-                                                        {user.name || 'N/A'}
-                                                        {user.email === currentUserEmail && <UserIcon className="h-4 w-4 text-primary" />}
-                                                    </TableCell>
-                                                    <TableCell>{user.email}</TableCell>
-                                                    <TableCell><Badge variant={user.role === 'Admin' ? 'default' : 'secondary'}>{user.role}</Badge></TableCell>
-                                                    <TableCell>{format(new Date(user.joined_at), 'yyyy-MM-dd')}</TableCell>
-                                                    <TableCell className="text-right">
-                                                    <div className="flex items-center justify-end gap-2">
-                                                            <Button variant="outline" size="icon" onClick={() => handleOpenEmailDialog(user)}>
-                                                                <Mail className="h-4 w-4" />
-                                                            </Button>
-                                                            <Button variant="outline" size="icon" asChild>
-                                                                <Link href={`/dashboard/users/${user.id}/edit`}><Pencil className="h-4 w-4" /></Link>
-                                                            </Button>
-                                                            <AlertDialog>
-                                                                <AlertDialogTrigger asChild>
-                                                                    <Button variant="destructive" size="icon" disabled={user.email === currentUserEmail}><Trash2 className="h-4 w-4" /></Button>
-                                                                </AlertDialogTrigger>
-                                                                <AlertDialogContent>
-                                                                    <AlertDialogHeader>
-                                                                        <AlertDialogTitle>{t('areYouSure')}</AlertDialogTitle>
-                                                                        <AlertDialogDescription>{t('deleteUserWarning')}</AlertDialogDescription>
-                                                                    </AlertDialogHeader>
-                                                                    <AlertDialogFooter>
-                                                                        <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-                                                                        <AlertDialogAction onClick={() => deleteUser(user.id)}>{t('delete')}</AlertDialogAction>
-                                                                    </AlertDialogFooter>
-                                                                </AlertDialogContent>
-                                                            </AlertDialog>
-                                                        </div>
-                                                    </TableCell>
-                                                </TableRow>
+                                                 <Card key={user.id} className={cn("p-4", user.email === currentUserEmail && "bg-muted/50")}>
+                                                     <div className="flex justify-between items-center mb-2">
+                                                         <div className="font-semibold flex items-center gap-2">
+                                                            {user.name || 'N/A'}
+                                                            {user.email === currentUserEmail && <UserIcon className="h-4 w-4 text-primary" />}
+                                                         </div>
+                                                         <Badge variant={user.role === 'Admin' ? 'default' : 'secondary'}>{user.role}</Badge>
+                                                     </div>
+                                                     <p className="text-sm text-muted-foreground">{user.email}</p>
+                                                     <p className="text-sm text-muted-foreground">{t('joined')}: {format(new Date(user.joined_at), 'PPP')}</p>
+                                                     <div className="flex items-center justify-end gap-2 mt-4">
+                                                        <Button variant="outline" size="icon" onClick={() => handleOpenEmailDialog(user)}>
+                                                            <Mail className="h-4 w-4" />
+                                                        </Button>
+                                                        <Button variant="outline" size="icon" asChild>
+                                                            <Link href={`/dashboard/users/${user.id}/edit`}><Pencil className="h-4 w-4" /></Link>
+                                                        </Button>
+                                                        <AlertDialog>
+                                                            <AlertDialogTrigger asChild>
+                                                                <Button variant="destructive" size="icon" disabled={user.email === currentUserEmail}><Trash2 className="h-4 w-4" /></Button>
+                                                            </AlertDialogTrigger>
+                                                            <AlertDialogContent>
+                                                                <AlertDialogHeader>
+                                                                    <AlertDialogTitle>{t('areYouSure')}</AlertDialogTitle>
+                                                                    <AlertDialogDescription>{t('deleteUserWarning')}</AlertDialogDescription>
+                                                                </AlertDialogHeader>
+                                                                <AlertDialogFooter>
+                                                                    <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+                                                                    <AlertDialogAction onClick={() => deleteUser(user.id)}>{t('delete')}</AlertDialogAction>
+                                                                </AlertDialogFooter>
+                                                            </AlertDialogContent>
+                                                        </AlertDialog>
+                                                    </div>
+                                                 </Card>
                                             ))}
-                                        </TableBody>
-                                    </Table>
+                                        </div>
+                                     ) : (
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>{t('name')}</TableHead>
+                                                    <TableHead>{t('email')}</TableHead>
+                                                    <TableHead>{t('role')}</TableHead>
+                                                    <TableHead>{t('joined')}</TableHead>
+                                                    <TableHead className="text-right">{t('actions')}</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {users.map(user => (
+                                                    <TableRow key={user.id} className={cn(user.email === currentUserEmail && "bg-muted/50")}>
+                                                        <TableCell className="font-medium flex items-center gap-2">
+                                                            {user.name || 'N/A'}
+                                                            {user.email === currentUserEmail && <UserIcon className="h-4 w-4 text-primary" />}
+                                                        </TableCell>
+                                                        <TableCell>{user.email}</TableCell>
+                                                        <TableCell><Badge variant={user.role === 'Admin' ? 'default' : 'secondary'}>{user.role}</Badge></TableCell>
+                                                        <TableCell>{format(new Date(user.joined_at), 'yyyy-MM-dd')}</TableCell>
+                                                        <TableCell className="text-right">
+                                                        <div className="flex items-center justify-end gap-2">
+                                                                <Button variant="outline" size="icon" onClick={() => handleOpenEmailDialog(user)}>
+                                                                    <Mail className="h-4 w-4" />
+                                                                </Button>
+                                                                <Button variant="outline" size="icon" asChild>
+                                                                    <Link href={`/dashboard/users/${user.id}/edit`}><Pencil className="h-4 w-4" /></Link>
+                                                                </Button>
+                                                                <AlertDialog>
+                                                                    <AlertDialogTrigger asChild>
+                                                                        <Button variant="destructive" size="icon" disabled={user.email === currentUserEmail}><Trash2 className="h-4 w-4" /></Button>
+                                                                    </AlertDialogTrigger>
+                                                                    <AlertDialogContent>
+                                                                        <AlertDialogHeader>
+                                                                            <AlertDialogTitle>{t('areYouSure')}</AlertDialogTitle>
+                                                                            <AlertDialogDescription>{t('deleteUserWarning')}</AlertDialogDescription>
+                                                                        </AlertDialogHeader>
+                                                                        <AlertDialogFooter>
+                                                                            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+                                                                            <AlertDialogAction onClick={() => deleteUser(user.id)}>{t('delete')}</AlertDialogAction>
+                                                                        </AlertDialogFooter>
+                                                                    </AlertDialogContent>
+                                                                </AlertDialog>
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                     )}
                                 </CardContent>
                             </Card>
                         </div>
