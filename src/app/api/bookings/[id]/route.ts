@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server-client";
 import { getEmailTemplate, getLocations } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { sendEmail } from "@/lib/email";
+import { v4 as uuidv4 } from 'uuid';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,13 +29,15 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
         if (error) throw error;
         
-        // If status was changed, send the appropriate email
-        if (body.status) {
+        // If status was changed, send the appropriate email and create notification
+        if (body.status && (body.status === 'approved' || body.status === 'rejected')) {
+            const allLocations = await getLocations();
+            const location = allLocations.find(l => l.id === data.location_id);
+            const locationName = location?.name || `Location ID: ${data.location_id}`;
+             
+             // Send email
              try {
-                const allLocations = await getLocations();
-                const location = allLocations.find(l => l.id === data.location_id);
                 const templateName = body.status === 'approved' ? 'booking_approved' : 'booking_rejected';
-                
                 const template = await getEmailTemplate(templateName);
                 
                 await sendEmail({
@@ -43,15 +46,27 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
                     body: template.body,
                     params: {
                         name: data.user_email.split('@')[0], // Simple name extraction
-                        locationName: location?.name || `Location ID: ${data.location_id}`,
+                        locationName: locationName,
                         date: new Date(data.start_time).toLocaleDateString(),
                         startTime: new Date(data.start_time).toLocaleTimeString(),
                         endTime: new Date(data.end_time).toLocaleTimeString(),
                     }
                 });
-
             } catch(emailError) {
                 console.error(`Failed to send booking ${body.status} email:`, emailError);
+            }
+
+            // Create notification in DB
+            try {
+                const notificationMessage = `Your booking for ${locationName} has been ${body.status}.`;
+                await supabase.from('notifications').insert({
+                    id: `notif-${uuidv4()}`,
+                    user_email: data.user_email,
+                    message: notificationMessage,
+                    link: '/my-bookings'
+                });
+            } catch (notificationError) {
+                console.error('Failed to create notification:', notificationError);
             }
         }
         
@@ -79,10 +94,12 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
         if (error) throw error;
 
+        const allLocations = await getLocations();
+        const location = allLocations.find(l => l.id === booking.location_id);
+        const locationName = location?.name || `Location ID: ${booking.location_id}`;
+            
         // Send cancellation email
         try {
-            const allLocations = await getLocations();
-            const location = allLocations.find(l => l.id === booking.location_id);
             const template = await getEmailTemplate('booking_cancellation');
             
             await sendEmail({
@@ -91,12 +108,25 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
                 body: template.body,
                 params: {
                     name: booking.user_email.split('@')[0],
-                    locationName: location?.name || `Location ID: ${booking.location_id}`,
+                    locationName: locationName,
                     date: new Date(booking.start_time).toLocaleDateString(),
                 }
             });
         } catch(emailError) {
             console.error("Failed to send cancellation email:", emailError);
+        }
+
+         // Create cancellation notification in DB
+        try {
+            const notificationMessage = `Your booking for ${locationName} has been cancelled.`;
+            await supabase.from('notifications').insert({
+                id: `notif-${uuidv4()}`,
+                user_email: booking.user_email,
+                message: notificationMessage,
+                link: '/my-bookings'
+            });
+        } catch (notificationError) {
+            console.error('Failed to create cancellation notification:', notificationError);
         }
         
         return NextResponse.json({ message: `Booking ${id} deleted successfully.` }, { status: 200 });

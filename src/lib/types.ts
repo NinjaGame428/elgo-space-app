@@ -50,3 +50,12 @@ export interface EmailTemplate {
     created_at: string;
     updated_at: string;
 }
+
+export interface Notification {
+    id: string;
+    user_email: string;
+    message: string;
+    is_read: boolean;
+    created_at: string;
+    link?: string;
+}

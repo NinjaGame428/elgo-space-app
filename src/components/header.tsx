@@ -13,11 +13,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, Moon, Sun, Bell } from 'lucide-react';
+import { User, Bell, Mail } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { ElgoIcon } from '@/components/elgo-icon';
+import type { Notification } from '@/lib/types';
+import { formatDistanceToNow } from 'date-fns';
 
 export function Header() {
   const t = useTranslations('Header');
@@ -27,23 +29,65 @@ export function Header() {
   
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [hasUnread, setHasUnread] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
-    // On initial mount, check the auth status from localStorage
     const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
     const role = localStorage.getItem('userRole');
+    const email = localStorage.getItem('userEmail');
+    
     setIsAuthenticated(loggedIn);
     setUserRole(role);
+    setUserEmail(email);
+
+    if (loggedIn && email) {
+        fetchNotifications(email);
+    }
   }, []);
+
+  useEffect(() => {
+    setHasUnread(notifications.some(n => !n.is_read));
+  }, [notifications]);
+
+  const fetchNotifications = async (email: string) => {
+    try {
+        const response = await fetch(`/api/notifications?userEmail=${email}`);
+        if(response.ok) {
+            const data: Notification[] = await response.json();
+            setNotifications(data);
+        }
+    } catch (error) {
+        console.error("Failed to fetch notifications", error);
+    }
+  };
+
+  const markNotificationsAsRead = async () => {
+    if (hasUnread) {
+        try {
+            const response = await fetch('/api/notifications/read', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userEmail }),
+            });
+            if (response.ok) {
+                setNotifications(notifications.map(n => ({ ...n, is_read: true })));
+            }
+        } catch (error) {
+            console.error("Failed to mark notifications as read", error);
+        }
+    }
+  };
+
 
   const handleLogout = () => {
     if (typeof window !== 'undefined') {
         localStorage.removeItem('isLoggedIn');
         localStorage.removeItem('userEmail');
         localStorage.removeItem('userRole');
-        // Hard redirect to homepage to ensure all state is cleared
         window.location.href = '/';
     }
   };
@@ -97,21 +141,40 @@ export function Header() {
             <Label htmlFor="language-switch" className="text-sm font-medium">FR</Label>
           </div>
             
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <Bell className="h-5 w-5" />
-                <span className="sr-only">{t('notifications')}</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="glass-card w-64">
-                <DropdownMenuLabel>{t('notifications')}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <div className="p-4 text-center text-sm text-muted-foreground">
-                    {t('noNotifications')}
-                </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {isAuthenticated && (
+            <DropdownMenu onOpenChange={(open) => { if(open) markNotificationsAsRead(); }}>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full relative">
+                  <Bell className="h-5 w-5" />
+                  {hasUnread && <span className="absolute top-2 right-2 block h-2 w-2 rounded-full bg-destructive" />}
+                  <span className="sr-only">{t('notifications')}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="glass-card w-80">
+                  <DropdownMenuLabel>{t('notifications')}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {notifications.length > 0 ? (
+                      notifications.map(notification => (
+                          <DropdownMenuItem key={notification.id} asChild>
+                             <Link href={notification.link || '/my-bookings'} className="flex flex-col items-start gap-1 whitespace-normal">
+                                <div className="flex items-center gap-2">
+                                  <Mail className="h-4 w-4 text-primary" />
+                                  <p className="text-sm">{notification.message}</p>
+                                </div>
+                                <p className="text-xs text-muted-foreground ml-6">
+                                  {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                                </p>
+                              </Link>
+                          </DropdownMenuItem>
+                      ))
+                  ) : (
+                      <div className="p-4 text-center text-sm text-muted-foreground">
+                          {t('noNotifications')}
+                      </div>
+                  )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
 
           <nav className="flex items-center">
             {isAuthenticated ? (

@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     
     // Send notification email to admin
     try {
-        const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
+        const adminEmail = process.env.ADMIN_EMAIL || 'heavenkeys2022@gmail.com';
         await sendEmail({
             to: adminEmail,
             subject: 'New User Registration on Elgo Space',
