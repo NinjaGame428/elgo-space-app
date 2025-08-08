@@ -11,7 +11,9 @@
     "language": "Language",
     "english": "English",
     "french": "French",
-    "signUpLink": "Sign up"
+    "signUpLink": "Sign up",
+    "notifications": "Notifications",
+    "noNotifications": "You have no new notifications."
   },
   "Footer": {
     "builtBy": "Built by Heavenkeys Ltd"

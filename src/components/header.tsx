@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, Moon, Sun } from 'lucide-react';
+import { User, Moon, Sun, Bell } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
@@ -85,7 +85,7 @@ export function Header() {
                 <span className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">{t('title')}</span>
             </Link>
         </div>
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 md:space-x-4">
           <div className="flex items-center space-x-2">
             <Label htmlFor="language-switch" className="text-sm font-medium">EN</Label>
             <Switch
@@ -96,6 +96,22 @@ export function Header() {
             />
             <Label htmlFor="language-switch" className="text-sm font-medium">FR</Label>
           </div>
+            
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <Bell className="h-5 w-5" />
+                <span className="sr-only">{t('notifications')}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="glass-card w-64">
+                <DropdownMenuLabel>{t('notifications')}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <div className="p-4 text-center text-sm text-muted-foreground">
+                    {t('noNotifications')}
+                </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <nav className="flex items-center">
             {isAuthenticated ? (
