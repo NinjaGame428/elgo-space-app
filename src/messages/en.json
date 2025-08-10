@@ -67,7 +67,8 @@
     "welcomeBackAdmin": "Welcome back, Admin!",
     "welcomeBackUser": "Welcome back!",
     "loginFailedTitle": "Login Failed",
-    "loginFailedDescription": "Invalid email or password. Please try again."
+    "loginFailedDescription": "Invalid email or password. Please try again.",
+    "forgotPasswordLink": "Forgot your password?"
   },
   "SignupPage": {
     "signUp": "Create an account",
@@ -320,6 +321,23 @@
     "accountDeletedTitle": "Account Deleted",
     "accountDeletedDescription": "Your account has been permanently deleted."
   },
+  "ForgotPasswordPage": {
+    "title": "Forgot Password?",
+    "description": "No problem. Enter your email and we'll send you a link to reset it.",
+    "emailLabel": "Email",
+    "sendButton": "Send Reset Link",
+    "sendingButton": "Sending...",
+    "backToLoginLink": "Back to login",
+    "requestFailedTitle": "Request Failed",
+    "requestFailedDescription": "Could not process the request. Please try again."
+  },
+  "ForgotPasswordSentPage": {
+    "title": "Check Your Email",
+    "description": "We've sent a password reset link to your email address. Please check your inbox and spam folder.",
+    "backToLoginLink": "Back to Login",
+    "didNotReceiveEmail": "Didn't receive the email?",
+    "tryAgainLink": "Try again"
+  },
   "AmenityNames": {
     "24/7 Access": "24/7 Access",
     "Coffee & Tea": "Coffee & Tea",
@@ -336,5 +354,3 @@
     "impactJunior": "The Impact Junior"
   }
 }
-
-    

@@ -2,6 +2,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,49 +12,35 @@ import { Link } from '@/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ElgoIcon } from '@/components/elgo-icon';
 
-export default function LoginPage() {
-  const t = useTranslations('LoginPage');
+export default function ForgotPasswordPage() {
+  const t = useTranslations('ForgotPasswordPage');
+  const router = useRouter();
   const { toast } = useToast();
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleResetRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email }),
       });
 
-      const data = await response.json();
-
       if (response.ok) {
-        // Set auth info in localStorage
-        window.localStorage.setItem('isLoggedIn', 'true');
-        window.localStorage.setItem('userEmail', email);
-        window.localStorage.setItem('userRole', data.user.role);
-        
-        const isAdmin = data.user.role === 'Admin';
-        
-        toast({
-            title: t('loginSuccessTitle'),
-            description: isAdmin ? t('welcomeBackAdmin') : t('welcomeBackUser'),
-        });
-
-        // Hard redirect to ensure header state is re-evaluated
-        window.location.href = isAdmin ? '/dashboard' : '/my-bookings';
-        
+        // Even if the user doesn't exist, we show a success message
+        // to prevent email enumeration attacks.
+        router.push('/forgot-password/sent');
       } else {
+        const data = await response.json();
         toast({
           variant: "destructive",
-          title: t('loginFailedTitle'),
-          description: data.message || t('loginFailedDescription'),
+          title: t('requestFailedTitle'),
+          description: data.message || t('requestFailedDescription'),
         });
-        setIsLoading(false);
       }
     } catch (error) {
        toast({
@@ -61,28 +48,28 @@ export default function LoginPage() {
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
       });
-      setIsLoading(false);
+    } finally {
+        setIsLoading(false);
     }
   };
 
   return (
     <div className="w-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 min-h-[calc(100vh-5rem)]">
-      <div className="aurora-bg"></div>
-        <Card className="mx-auto w-full max-w-md space-y-6 glass-card">
+        <Card className="mx-auto w-full max-w-md space-y-6">
           <CardHeader className="text-center">
              <div className="flex items-center justify-center space-x-2 mb-4">
                 <ElgoIcon className="h-8 w-8 text-primary" />
                 <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">Elgo Space</span>
              </div>
             <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
-              {t('login')}
+              {t('title')}
             </CardTitle>
             <CardDescription className="mt-2">
-              {t('loginDescription')}
+              {t('description')}
             </CardDescription>
           </CardHeader>
            <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleResetRequest} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">{t('emailLabel')}</Label>
                   <Input
@@ -96,31 +83,13 @@ export default function LoginPage() {
                     className="h-12 text-base"
                   />
                 </div>
-                <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                        <Label htmlFor="password">{t('passwordLabel')}</Label>
-                         <Link href="/forgot-password" passHref className="text-sm font-medium text-primary hover:underline">
-                            {t('forgotPasswordLink')}
-                        </Link>
-                    </div>
-                  <Input 
-                    id="password" 
-                    type="password" 
-                    required 
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    disabled={isLoading}
-                    className="h-12 text-base"
-                  />
-                </div>
                 <Button type="submit" className="w-full h-12 text-base font-bold" disabled={isLoading}>
-                  {isLoading ? t('loggingInButton') : t('loginButton')}
+                  {isLoading ? t('sendingButton') : t('sendButton')}
                 </Button>
               </form>
               <p className="mt-6 text-center text-sm text-muted-foreground">
-                  {t('noAccount')}{' '}
-                  <Link href="/signup" className="font-medium text-primary hover:underline">
-                      {t('signUpLink')}
+                  <Link href="/login" className="font-medium text-primary hover:underline">
+                      {t('backToLoginLink')}
                   </Link>
               </p>
            </CardContent>

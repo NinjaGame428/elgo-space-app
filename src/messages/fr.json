@@ -67,7 +67,8 @@
     "welcomeBackAdmin": "Bon retour, Admin !",
     "welcomeBackUser": "Bon retour !",
     "loginFailedTitle": "Échec de la connexion",
-    "loginFailedDescription": "Email ou mot de passe invalide. Veuillez réessayer."
+    "loginFailedDescription": "Email ou mot de passe invalide. Veuillez réessayer.",
+    "forgotPasswordLink": "Mot de passe oublié ?"
   },
   "SignupPage": {
     "signUp": "Créer un compte",
@@ -320,6 +321,23 @@
     "accountDeletedTitle": "Compte supprimé",
     "accountDeletedDescription": "Votre compte a été supprimé définitivement."
   },
+  "ForgotPasswordPage": {
+    "title": "Mot de passe oublié ?",
+    "description": "Aucun problème. Entrez votre e-mail et nous vous enverrons un lien pour le réinitialiser.",
+    "emailLabel": "Email",
+    "sendButton": "Envoyer le lien de réinitialisation",
+    "sendingButton": "Envoi en cours...",
+    "backToLoginLink": "Retour à la connexion",
+    "requestFailedTitle": "Échec de la demande",
+    "requestFailedDescription": "Impossible de traiter la demande. Veuillez réessayer."
+  },
+  "ForgotPasswordSentPage": {
+    "title": "Vérifiez votre e-mail",
+    "description": "Nous avons envoyé un lien de réinitialisation de mot de passe à votre adresse e-mail. Veuillez vérifier votre boîte de réception et votre dossier de spam.",
+    "backToLoginLink": "Retour à la connexion",
+    "didNotReceiveEmail": "Vous n'avez pas reçu l'e-mail ?",
+    "tryAgainLink": "Réessayer"
+  },
   "AmenityNames": {
     "24/7 Access": "Accès 24/7",
     "Coffee & Tea": "Café et thé",
@@ -336,5 +354,3 @@
     "impactJunior": "L'Impact Junior"
   }
 }
-
-    
