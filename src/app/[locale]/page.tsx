@@ -42,16 +42,12 @@ export default function HomePage() {
         setFilteredLocations(locationsData);
 
         const initialLocationId = searchParams.get('location');
-        if (initialLocationId) {
-            const initialLocation = locationsData.find(l => l.id === initialLocationId);
-            if (initialLocation) {
-              handleLocationSelect(initialLocation);
-            }
+        const initialLocation = locationsData.find(l => l.id === initialLocationId);
+
+        if (initialLocation) {
+          setSelectedLocation(initialLocation);
         } else if (!isMobile && locationsData.length > 0) {
             setSelectedLocation(locationsData[0]);
-        } else if (isMobile && locationsData.length > 0) {
-            // On mobile, don't pre-select a location unless specified in URL
-            setSelectedLocation(null);
         }
 
       } catch (error) {
