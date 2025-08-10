@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
         phone: phone
     };
 
-    return NextResponse.json({ message: 'Signup successful! Please check your email to confirm your account.', user: userResponse }, { status: 201 });
+    return NextResponse.json({ message: 'Account created successfully! You can now log in.', user: userResponse }, { status: 201 });
 
   } catch (error) {
     console.error('Signup error:', error);
