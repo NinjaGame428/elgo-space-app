@@ -154,7 +154,7 @@ export default function EditUserPage() {
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="role">{t('roleLabel')}</Label>
-                            <Select value={role} onValueChange={(value: 'User' | 'Admin') => setRole(value)} disabled={isLoading}>
+                            <Select value={role} onValueChange={(value: 'User' | 'Admin') => setRole(value)}>
                                 <SelectTrigger id="role">
                                     <SelectValue placeholder="Select a role" />
                                 </SelectTrigger>

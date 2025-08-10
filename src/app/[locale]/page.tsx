@@ -49,6 +49,9 @@ export default function HomePage() {
             }
         } else if (!isMobile && locationsData.length > 0) {
             setSelectedLocation(locationsData[0]);
+        } else if (isMobile && locationsData.length > 0) {
+            // On mobile, don't pre-select a location unless specified in URL
+            setSelectedLocation(null);
         }
 
       } catch (error) {

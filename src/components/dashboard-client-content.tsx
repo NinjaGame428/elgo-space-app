@@ -561,7 +561,7 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                                                         </Button>
                                                         <AlertDialog>
                                                             <AlertDialogTrigger asChild>
-                                                                <Button variant="destructive" size="icon" disabled={user.email === currentUserEmail}><Trash2 className="h-4 w-4" /></Button>
+                                                                <Button variant="destructive" size="icon" disabled={user.role === 'Admin' && users.filter(u => u.role === 'Admin').length === 1}><Trash2 className="h-4 w-4" /></Button>
                                                             </AlertDialogTrigger>
                                                             <AlertDialogContent>
                                                                 <AlertDialogHeader>
@@ -609,7 +609,7 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
                                                                 </Button>
                                                                 <AlertDialog>
                                                                     <AlertDialogTrigger asChild>
-                                                                        <Button variant="destructive" size="icon" disabled={user.email === currentUserEmail}><Trash2 className="h-4 w-4" /></Button>
+                                                                        <Button variant="destructive" size="icon" disabled={user.role === 'Admin' && users.filter(u => u.role === 'Admin').length === 1}><Trash2 className="h-4 w-4" /></Button>
                                                                     </AlertDialogTrigger>
                                                                     <AlertDialogContent>
                                                                         <AlertDialogHeader>
@@ -745,5 +745,3 @@ export function DashboardClientContent({ initialData }: DashboardClientContentPr
         </div>
     );
 }
-
-    
