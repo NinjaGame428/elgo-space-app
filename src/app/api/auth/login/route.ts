@@ -1,5 +1,5 @@
 
-import { createRouteHandlerClient } from '@supabase/ssr';
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
@@ -7,7 +7,23 @@ import { createClient as createAdminClient } from '@supabase/supabase-js';
 export async function POST(req: NextRequest) {
   const { email, password } = await req.json();
   const cookieStore = cookies();
-  const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value
+        },
+        set(name: string, value: string, options) {
+          cookieStore.set({ name, value, ...options })
+        },
+        remove(name: string, options) {
+          cookieStore.set({ name, value: '', ...options })
+        },
+      },
+    }
+  );
 
   if (!email || !password) {
     return NextResponse.json({ message: 'Email and password are required' }, { status: 400 });
@@ -38,7 +54,14 @@ export async function POST(req: NextRequest) {
 
   if (profileError || !profile) {
       console.error('Profile fetch error:', profileError);
-      return NextResponse.json({ message: 'Could not find user profile.' }, { status: 404 });
+      // Even if the profile isn't found, the user is logged in.
+      // We can default the role to 'User' on the client.
+      const user = {
+        id: authData.user.id,
+        email: authData.user.email,
+        role: 'User',
+      };
+      return NextResponse.json({ message: 'Login successful, but profile not found.', user }, { status: 200 });
   }
     
   const user = {
