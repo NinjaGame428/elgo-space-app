@@ -1,4 +1,6 @@
 
+'use server';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server-client';
 import { sendEmail } from '@/lib/email';
@@ -34,15 +36,18 @@ export async function POST(req: NextRequest) {
     }
 
     // The trigger `on_auth_user_created` in the database will automatically create a profile in the `users` table.
-    // We now need to update that profile with the phone number.
+    // We now need to update that profile with the phone number and full name.
     const { error: updateError } = await supabase
       .from('users')
-      .update({ phone: phone })
+      .update({ 
+        phone: phone,
+        name: name
+      })
       .eq('id', authData.user.id);
 
     if (updateError) {
         // Log the error, but don't fail the request as the user is already created
-        console.error('Error updating user phone number:', updateError);
+        console.error('Error updating user profile:', updateError);
     }
     
     // Send notification email to admin
@@ -66,7 +71,15 @@ export async function POST(req: NextRequest) {
         // Do not fail the request if the admin email fails
     }
 
-    return NextResponse.json({ message: 'Signup successful! Please check your email to confirm your account.' }, { status: 201 });
+    // Return the created user's data (without sensitive info)
+    const userResponse = {
+        id: authData.user.id,
+        email: authData.user.email,
+        name: name,
+        phone: phone
+    };
+
+    return NextResponse.json({ message: 'Signup successful! Please check your email to confirm your account.', user: userResponse }, { status: 201 });
 
   } catch (error) {
     console.error('Signup error:', error);
