@@ -26,26 +26,31 @@ export default function ProfilePage() {
   const [isUpdating, setIsUpdating] = useState(false);
   
   useEffect(() => {
-    const userEmail = localStorage.getItem('userEmail');
-    if (!userEmail) {
+    // Check if logged in, redirect if not.
+    const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    if (!loggedIn) {
       router.push('/login');
       return;
     }
 
     async function fetchUser() {
         try {
-            // Find user by email - a more robust approach would be to have a dedicated endpoint
-            const res = await fetch(`/api/users?email=${userEmail}`);
-            if(!res.ok) throw new Error('Failed to fetch user');
-            const users: User[] = await res.json();
-            if(users.length > 0) {
-                const currentUser = users[0];
-                setUser(currentUser);
-                setName(currentUser.name || '');
-                setEmail(currentUser.email || '');
-            } else {
-                 throw new Error('User not found');
+            // Use the new dedicated endpoint to fetch the current user's profile
+            const res = await fetch(`/api/users/me`);
+            if(!res.ok) {
+              if (res.status === 401) {
+                // Not authenticated, redirect to login
+                router.push('/login');
+              }
+              throw new Error('Failed to fetch user profile');
             }
+
+            const currentUser: User = await res.json();
+            
+            setUser(currentUser);
+            setName(currentUser.name || '');
+            setEmail(currentUser.email || '');
+
         } catch (error) {
             console.error(error);
             toast({ variant: 'destructive', title: "Error", description: "Could not load your profile data." });
@@ -144,7 +149,12 @@ export default function ProfilePage() {
   }
 
   if(!user) {
-    return <div className="flex items-center justify-center min-h-screen">User not found.</div>;
+    return (
+        <div className="flex items-center justify-center min-h-screen">
+            <p>User not found. You may need to log in again.</p>
+            <Button onClick={() => router.push('/login')} className="ml-4">Login</Button>
+        </div>
+    );
   }
 
   return (
