@@ -27,10 +27,8 @@ export default function EditUserPage() {
     const [email, setEmail] = useState('');
     const [role, setRole] = useState<'User' | 'Admin'>('User');
     const [isLoading, setIsLoading] = useState(true);
-    const [isCurrentUser, setIsCurrentUser] = useState(false);
     
     useEffect(() => {
-        const currentUserEmail = localStorage.getItem('userEmail');
         if (!id) return;
 
         async function fetchUser() {
@@ -44,10 +42,6 @@ export default function EditUserPage() {
                 setName(userData.name || '');
                 setEmail(userData.email || '');
                 setRole(userData.role);
-
-                if (currentUserEmail === userData.email) {
-                    setIsCurrentUser(true);
-                }
 
             } catch (error) {
                 console.error(error);
@@ -160,7 +154,7 @@ export default function EditUserPage() {
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="role">{t('roleLabel')}</Label>
-                            <Select value={role} onValueChange={(value: 'User' | 'Admin') => setRole(value)} disabled={isLoading || isCurrentUser}>
+                            <Select value={role} onValueChange={(value: 'User' | 'Admin') => setRole(value)} disabled={isLoading}>
                                 <SelectTrigger id="role">
                                     <SelectValue placeholder="Select a role" />
                                 </SelectTrigger>
@@ -169,7 +163,6 @@ export default function EditUserPage() {
                                     <SelectItem value="Admin">{t('roleAdmin')}</SelectItem>
                                 </SelectContent>
                             </Select>
-                            {isCurrentUser && <p className="text-xs text-muted-foreground mt-1">{t('cannotChangeOwnRole')}</p>}
                         </div>
                     </CardContent>
                     <CardFooter className="border-t pt-6">
