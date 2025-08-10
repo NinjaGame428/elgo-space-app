@@ -16,10 +16,22 @@ export async function POST(req: NextRequest) {
           return cookieStore.get(name)?.value
         },
         set(name: string, value: string, options) {
-          cookieStore.set({ name, value, ...options })
+          try {
+            cookieStore.set({ name, value, ...options })
+          } catch (error) {
+            // The `set` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
         },
         remove(name: string, options) {
-          cookieStore.set({ name, value: '', ...options })
+          try {
+            cookieStore.set({ name, value: '', ...options })
+          } catch (error) {
+            // The `delete` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
         },
       },
     }
@@ -36,6 +48,7 @@ export async function POST(req: NextRequest) {
   });
 
   if (authError || !authData.user) {
+    console.error('Login auth error:', authError);
     return NextResponse.json({ message: authError?.message || 'Invalid credentials' }, { status: 401 });
   }
 
