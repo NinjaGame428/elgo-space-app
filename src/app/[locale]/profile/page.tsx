@@ -26,7 +26,6 @@ export default function ProfilePage() {
   const [isUpdating, setIsUpdating] = useState(false);
   
   useEffect(() => {
-    // Check if logged in, redirect if not.
     const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
     if (!loggedIn) {
       router.push('/login');
@@ -35,12 +34,12 @@ export default function ProfilePage() {
 
     async function fetchUser() {
         try {
-            // Use the new dedicated endpoint to fetch the current user's profile
             const res = await fetch(`/api/users/me`);
             if(!res.ok) {
               if (res.status === 401) {
-                // Not authenticated, redirect to login
+                toast({ variant: 'destructive', title: "Authentication Error", description: "Please log in again." });
                 router.push('/login');
+                return;
               }
               throw new Error('Failed to fetch user profile');
             }
@@ -58,6 +57,7 @@ export default function ProfilePage() {
             setIsLoading(false);
         }
     }
+
     fetchUser();
   }, [router, toast]);
 
